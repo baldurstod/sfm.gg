@@ -1,0 +1,29 @@
+:host {
+	--content-bg-color: rgba(20, 78, 202, 0.493);
+}
+
+.canvas-container {
+	display: flex;
+	flex: 1;
+	position: relative;
+}
+
+.canvas-container canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: rgb(78, 63, 63);
+	width: 100%;
+}
+
+.camera-selector {
+	width: 10rem;
+}
+
+select {
+	cursor: pointer;
+}
+
+button {
+	cursor: pointer;
+}

@@ -1,5 +1,8 @@
 {
 	"lang": "french",
 	"strings": {
+		"#viewport": "Affichage",
+		"#timeline": "Chronologie",
+		"": ""
 	}
 }
