@@ -1,4 +1,4 @@
-import { Camera } from 'harmony-3d';
+import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
 import { documentStyle, I18n } from 'harmony-ui';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
@@ -28,7 +28,23 @@ class Application {
 	}
 
 	static #initListeners() {
-		Controller.addEventListener('addcamera', (event) => this.#addCamera(event.detail));
+		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
+		Controller.addEventListener('userselectcamera', (event) => {
+			const clip = this.#session.getActiveClip();
+			const camera = event.detail;
+
+			// Check if the camera if part of the current clip
+			if (!clip.hasCamera(camera)) {
+				return;
+			}
+
+			Controller.dispatchEvent('setactivecamera', {
+				detail: {
+					camera,
+					clip,
+				}
+			});
+		});
 	}
 
 	static #initHTML() {
@@ -42,8 +58,12 @@ class Application {
 		const clip = this.#session.getActiveClip();
 		const camera = new Camera({ name: `camera${clip.getCameras().size + 1}` });
 		camera.copy(source ?? workCamera)
+		camera.setPosition([-10, clip.getCameras().size * 2, 0])
+		camera.addChild(new CameraFrustum());
 		clip.addCamera(camera);
 		clip.setActiveCamera(camera);
+
+		camera.addChild(new Text2D({ text: camera.name }));
 
 		Controller.dispatchEvent('cameraadded', {
 			detail: {

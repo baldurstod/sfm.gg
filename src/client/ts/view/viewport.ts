@@ -13,10 +13,13 @@ export class ViewportPanel extends Panel {
 	#activeClip: Clip | null = null;
 	//#activeCamera: Camera | null = null;
 	#camerasOptions = new WeakMap<Camera, HTMLOptionElement>();
+	#optionsCameras = new WeakMap<HTMLOptionElement, Camera>();
 	#useWorkCamera = true;
 	#cameraControl = new FirstPersonControl(workCamera);
 	#canvasAttributes: CanvasAttributes | null = null;
 	#orbitGizmo = new OrbitGizmo();
+	static nextId = 0;
+	#id = ++ViewportPanel.nextId;
 
 	constructor() {
 		super();
@@ -45,15 +48,30 @@ export class ViewportPanel extends Panel {
 			],
 		}) as HTMLCanvasElement;
 
+		this.#cameraControl.canvas = this.#htmlCanvas;
+
 		createElement('div', {
 			parent: this.panel!.getContent(),
 			childs: [
 				this.#htmlCameraSelector = createElement('select', {
 					class: 'camera-selector',
+					$input: () => {
+						const option = this.#htmlCameraSelector!.selectedOptions[0];
+						if (option) {
+							const camera = this.#optionsCameras.get(option);
+							if (camera) {
+								Controller.dispatchEvent('userselectcamera', { detail: camera });
+								this.#useWorkCamera = false;
+							}
+						}
+					},
 				}) as HTMLSelectElement,
 				createElement('button', {
 					innerHTML: videoCameraBackAddSVG,
-					$click: () => Controller.dispatchEvent('addcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeClip?.activeCamera ?? null }),
+					$click: () => {
+						Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeClip?.activeCamera ?? null });
+						this.#useWorkCamera = false;
+					},
 				}) as HTMLButtonElement,
 				createElement('button', {
 					innerHTML: cameraswitchSVG,
@@ -66,7 +84,7 @@ export class ViewportPanel extends Panel {
 		//scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
 
 		this.#canvasAttributes = Graphics.addCanvas({
-			name: 'TODO',
+			name: `viewport${this.#id}`,
 			//scene,
 			autoResize: true,
 			canvas: this.#htmlCanvas,
@@ -110,7 +128,7 @@ export class ViewportPanel extends Panel {
 
 		option.selected = true;
 
-		this.#useWorkCamera = false;
+		//this.#useWorkCamera = false;
 		this.#setCanvasCamera(detail.camera);
 	}
 
@@ -136,6 +154,7 @@ export class ViewportPanel extends Panel {
 			}) as HTMLOptionElement;
 
 			this.#camerasOptions.set(camera, option);
+			this.#optionsCameras.set(option, camera);
 		}
 	}
 
@@ -147,7 +166,9 @@ export class ViewportPanel extends Panel {
 
 	#setCanvasCamera(camera?: Camera): void {
 		//let camera: Camera;
-		if (!camera) {
+		if (camera) {
+			this.#useWorkCamera = false;
+		} else {
 			if (this.#useWorkCamera) {
 				camera = workCamera;
 			} else {

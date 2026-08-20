@@ -32,4 +32,8 @@ export class Clip {
 	getCameras(): Set<Camera> {
 		return new Set(this.#cameras);
 	}
+
+	hasCamera(camera: Camera): boolean {
+		return this.#cameras.has(camera);
+	}
 }
