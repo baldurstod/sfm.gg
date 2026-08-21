@@ -2,6 +2,8 @@
 	"lang": "french",
 	"strings": {
 		"#viewport": "Affichage",
+		"#primary_viewport": "Affichage primaire",
+		"#secondary_viewport": "Affichage secondaire",
 		"#timeline": "Chronologie",
 		"": ""
 	}

@@ -20,8 +20,9 @@ export class ViewportPanel extends Panel {
 	#orbitGizmo = new OrbitGizmo();
 	static nextId = 0;
 	#id = ++ViewportPanel.nextId;
+	#titleI18n?: string;
 
-	constructor() {
+	constructor(titleI18n?: string) {
 		super();
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
 		Controller.addEventListener('setactiveclip', (event) => this.#setActiveClip(event.detail));
@@ -31,6 +32,7 @@ export class ViewportPanel extends Panel {
 
 		this.#cameraControl.movementSpeed = 100;
 		this.#cameraControl.lookSpeed = 0.1;
+		this.#titleI18n = titleI18n;
 		//this.#orbitGizmo.orbitControl = this.#cameraControl;
 	}
 
@@ -38,7 +40,7 @@ export class ViewportPanel extends Panel {
 		if (this.panel) {
 			return;
 		}
-		super.initPanel({ size: 1, adoptStyle: viewportCSS, titleI18n: '#viewport', layout: 'column' });
+		super.initPanel({ size: 1, adoptStyle: viewportCSS, titleI18n: this.#titleI18n ?? '#viewport', layout: 'column' });
 		createElement('div', {
 			class: 'canvas-container',
 			parent: this.panel!.getContent(),

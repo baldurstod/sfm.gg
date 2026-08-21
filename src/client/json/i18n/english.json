@@ -2,6 +2,8 @@
 	"lang": "english",
 	"strings": {
 		"#viewport": "Viewport",
+		"#primary_viewport": "Primary viewport",
+		"#secondary_viewport": "Secondary viewport",
 		"#timeline": "Timeline",
 		"": ""
 	}

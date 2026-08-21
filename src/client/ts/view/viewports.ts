@@ -4,12 +4,12 @@ import { ViewportPanel } from './viewport';
 
 export class Viewports extends Panel {
 	protected initPanel(): void {
-		super.initPanel({ size: 1, adoptStyle: viewportsCSS, });
+		super.initPanel({ size: 1, adoptStyle: viewportsCSS, dropTarget: true, });
 
-		const vp1 = new ViewportPanel();
+		const vp1 = new ViewportPanel('#primary_viewport');
 		this.panel!.append(vp1.getPanel());
 
-		const vp2 = new ViewportPanel();
+		const vp2 = new ViewportPanel('#secondary_viewport');
 		this.panel!.append(vp2.getPanel());
 	}
 }

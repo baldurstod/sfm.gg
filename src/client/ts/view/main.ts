@@ -7,7 +7,7 @@ export class MainPanel extends Panel {
 	#timeline = new TimelinePanel();
 
 	protected initPanel(): void {
-		super.initPanel({ size: 3, layout: 'column', });
+		super.initPanel({ size: 3, layout: 'column', dropTarget: true, });
 		this.panel!.append(this.#viewports.getPanel(), this.#timeline.getPanel());
 	}
 }
