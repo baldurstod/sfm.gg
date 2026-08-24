@@ -1,5 +1,4 @@
 import { generateRandomUUID } from 'harmony-3d';
-import { JSONObject } from 'harmony-types';
 import { JSONSerializable } from './serializer';
 
 /*
@@ -21,13 +20,25 @@ export interface SerializableParameters {
 
 export class Serializable {
 	readonly isSerializable = true as const;
-	id: string;
-	name: string;
+	#id: string;
+	#name: string;
 	protected readonly children = new Set<Serializable>();
 
 	constructor(params: SerializableParameters = {}) {
-		this.id = params.id ?? generateRandomUUID();
-		this.name = params.name ?? '';
+		this.#id = params.id ?? generateRandomUUID();
+		this.#name = params.name ?? '';
+	}
+
+	getId(): string {
+		return this.#id;
+	}
+
+	getName(): string {
+		return this.#name;
+	}
+
+	setName(name: string): void {
+		this.#name = name;
 	}
 
 	addChild(child: Serializable): Serializable | null {
@@ -86,16 +97,16 @@ export class Serializable {
 	}
 	*/
 
-	serialize(json: JSONObject, elements: Map<string, Serializable>): void {
-		this.id = json.id as string;
-		this.name = json.name as string;
-	}
-
-	unserialize(): JSONSerializable {
+	serialize(): JSONSerializable {
 		return {
-			id: this.id,
-			name: this.name,
+			id: this.#id,
+			name: this.#name,
 			type: (this.constructor as typeof Serializable).getTypeName(),
 		};
+	}
+
+	unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
+		this.#id = json.id as string;
+		this.#name = json.name as string;
 	}
 }

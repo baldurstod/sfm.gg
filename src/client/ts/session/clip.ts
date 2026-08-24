@@ -1,7 +1,7 @@
-import { Box, Camera, Scene } from 'harmony-3d';
-import { workCamera } from '../graphics/graphics';
-import { Serializable, SerializableParameters } from '../serialize/serializable';
-import { SFMSerializer } from '../serialize/serializer';
+import { Camera, Scene } from 'harmony-3d';
+import { Serializable } from '../serialize/serializable';
+import { JSONSerializable, SFMSerializer } from '../serialize/serializer';
+import { SfmCamera } from './camera';
 
 /*
 export type LightParameters = EntityParameters & {
@@ -16,10 +16,11 @@ export interface ClipParameters extends SerializableParameters {
 }
 */
 
-export class Clip extends Serializable {
+export class SfmClip extends Serializable {
+	readonly isClip = true as const;
 	scene = new Scene();
-	#cameras = new Set<Camera>();
-	activeCamera: Camera | null = null;
+	#cameras = new Set<SfmCamera>();
+	activeCamera?: SfmCamera;
 	#visible = true;
 	#mute = false;
 	start = 0;
@@ -27,39 +28,67 @@ export class Clip extends Serializable {
 	volume = 1;
 	mute = false;
 
-	constructor(params: SerializableParameters = {}) {
-		super(params);
-		//this.name = name;
-		this.scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
-		this.scene.addChild(workCamera);
-		return this
-	}
-
 	setScene(scene: Scene): void {
 		this.scene = scene;
 	}
 
-	addCamera(camera: Camera): void {
+	addCamera(camera: SfmCamera): void {
 		this.#cameras.add(camera);
 
-		this.scene.addChild(camera);
+		this.scene.addChild(camera.getCamera());
 	}
 
-	setActiveCamera(camera: Camera): void {
+	setActiveCamera(camera: SfmCamera): void {
 		this.activeCamera = camera;
 	}
 
-	getCameras(): Set<Camera> {
+	getCameras(): Set<SfmCamera> {
 		return new Set(this.#cameras);
 	}
 
-	hasCamera(camera: Camera): boolean {
+	hasCamera(camera: SfmCamera): boolean {
 		return this.#cameras.has(camera);
 	}
 
 	static override getTypeName(): string {
 		return 'Clip';
 	}
+
+	override serialize(): JSONSerializable {
+		const json = super.serialize();
+
+		if (this.activeCamera) {
+			json.active_camera = this.activeCamera;
+		}
+
+		if (this.#cameras.size) {
+			json.cameras = [...this.#cameras];
+		}
+
+		return json;
+	}
+
+	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
+		super.unserialize(json, elements);
+
+
+		this.activeCamera = undefined;
+		this.#cameras.clear();
+
+		if (json.active_camera) {
+			this.activeCamera = elements.get(json.active_camera as string) as SfmCamera | undefined; // TODO: check if it's actually a camera
+		}
+
+		if (json.cameras) {
+			for (const cameraId of json.cameras as string[]) {
+				const camera = elements.get(cameraId) as SfmCamera | undefined; // TODO: check if it's actually a camera
+
+				if (camera) {
+					this.#cameras.add(camera);
+				}
+			}
+		}
+	}
 }
 
-SFMSerializer.registerSerializable(Clip);
+SFMSerializer.registerSerializable(SfmClip);

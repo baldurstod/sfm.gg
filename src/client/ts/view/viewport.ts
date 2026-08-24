@@ -4,18 +4,19 @@ import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
 import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
-import { Clip } from '../session/clip';
+import { SfmCamera } from '../session/camera';
+import { SfmClip } from '../session/clip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlCameraSelector?: HTMLSelectElement;
-	#activeClip: Clip | null = null;
+	#activeClip: SfmClip | null = null;
 	//#activeCamera: Camera | null = null;
-	#camerasOptions = new WeakMap<Camera, HTMLOptionElement>();
-	#optionsCameras = new WeakMap<HTMLOptionElement, Camera>();
+	#camerasOptions = new WeakMap<SfmCamera, HTMLOptionElement>();
+	#optionsCameras = new WeakMap<HTMLOptionElement, SfmCamera>();
 	#useWorkCamera = true;
-	#cameraControl = new FirstPersonControl(workCamera);
+	#cameraControl = new FirstPersonControl(workCamera.getCamera()!);
 	#canvasAttributes: CanvasAttributes | null = null;
 	#orbitGizmo = new OrbitGizmo();
 	static nextId = 0;
@@ -94,7 +95,7 @@ export class ViewportPanel extends Panel {
 
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
 		if (view) {
-			view.camera = workCamera;
+			view.camera = workCamera.getCamera();
 		}
 	}
 
@@ -104,7 +105,7 @@ export class ViewportPanel extends Panel {
 	}
 	*/
 
-	#setActiveClip(clip: Clip): void {
+	#setActiveClip(clip: SfmClip): void {
 		this.#activeClip = clip;
 
 		new SceneExplorer().scene = clip.scene;
@@ -131,7 +132,7 @@ export class ViewportPanel extends Panel {
 		option.selected = true;
 
 		//this.#useWorkCamera = false;
-		this.#setCanvasCamera(detail.camera);
+		this.#setCanvasCamera(detail.camera.getCamera());
 	}
 
 	#cameraAdded(detail: CameraAdded): void {
@@ -150,8 +151,8 @@ export class ViewportPanel extends Panel {
 
 		for (const camera of this.#activeClip.getCameras()) {
 			const option = createElement('option', {
-				value: camera.name,
-				innerText: camera.name,
+				value: camera.getName(),
+				innerText: camera.getName(),
 				parent: this.#htmlCameraSelector,
 			}) as HTMLOptionElement;
 
@@ -172,9 +173,9 @@ export class ViewportPanel extends Panel {
 			this.#useWorkCamera = false;
 		} else {
 			if (this.#useWorkCamera) {
-				camera = workCamera;
+				camera = workCamera.getCamera()!;
 			} else {
-				camera = this.#activeClip?.activeCamera ?? workCamera;
+				camera = this.#activeClip?.activeCamera?.getCamera() ?? workCamera.getCamera()!;
 			}
 		}
 

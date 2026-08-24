@@ -1,4 +1,5 @@
 import { Camera, Graphics, GraphicsEvent, GraphicsEvents, GraphicTickEvent, WebGLStats } from 'harmony-3d';
+import { SfmCamera } from '../session/camera';
 
 export function initGraphics(): void {
 	Graphics.initCanvas({
@@ -20,4 +21,7 @@ export function initGraphics(): void {
 	Graphics.play();
 }
 
-export const workCamera = new Camera({ name: 'Work camera', position: [0, 0, 0] });
+export const workCamera = new SfmCamera({
+	name: 'Work camera',
+	//camera: new Camera({ name: 'Work camera', position: [0, 0, 0] }),
+})

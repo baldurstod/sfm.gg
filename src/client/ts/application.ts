@@ -1,4 +1,4 @@
-import { Camera, CameraFrustum, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, Text2D, WebRepository } from 'harmony-3d';
+import { Box, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
 import { documentStyle, I18n } from 'harmony-ui';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
@@ -8,8 +8,9 @@ import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { JSONFile, SFMSerializer } from './serialize/serializer';
-import { Clip } from './session/clip';
-import { Session } from './session/session';
+import { SfmCamera } from './session/camera';
+import { SfmClip } from './session/clip';
+import { SfmSession } from './session/session';
 import { AppPanel } from './view/app';
 
 
@@ -18,7 +19,7 @@ documentStyle(varsCSS);
 
 class Application {
 	static #main = new AppPanel();
-	static #session = new Session({ name: 'session' });
+	static #session = new SfmSession({ name: 'session' });
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -36,6 +37,7 @@ class Application {
 
 	static #initListeners() {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
+		Controller.addEventListener('usersavesession', (event) => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
 			const clip = this.#session.getActiveClip();
 			if (!clip) {
@@ -64,38 +66,47 @@ class Application {
 	static #initOptions() {
 	}
 
-	static #addCamera(source: Camera | null): void {
+	static #addCamera(source: SfmCamera | null): void {
 		const clip = this.#session.getActiveClip();
 		if (!clip) {
 			return;
 		}
-		const camera = new Camera({ name: `camera${clip.getCameras().size + 1}` });
-		camera.copy(source ?? workCamera)
-		camera.setPosition([-10, clip.getCameras().size * 2, 0])
-		camera.addChild(new CameraFrustum());
-		clip.addCamera(camera);
-		clip.setActiveCamera(camera);
+		const sfmCamera = new SfmCamera({ name: `camera${clip.getCameras().size + 1}` });
+		if (source) {
+			sfmCamera.copy(source);
+		}
 
-		camera.addChild(new Text2D({ text: camera.name }));
+		//const camera = new Camera({ name: sfmCamera.#name });
+		//camera.copy(source?.getCamera() ?? workCamera.getCamera()!);
+		//camera.setPosition([-10, clip.getCameras().size * 2, 0])
+		//camera.addChild(new CameraFrustum());
+		clip.addCamera(sfmCamera);
+		clip.setActiveCamera(sfmCamera);
+		//sfmCamera.setCamera(camera);
+
+		//camera.addChild(new Text2D({ text: sfmCamera.getCamera().name }));
 
 		Controller.dispatchEvent('cameraadded', {
 			detail: {
-				camera,
+				camera: sfmCamera,
 				clip,
 			}
 		});
 		Controller.dispatchEvent('setactivecamera', {
 			detail: {
-				camera,
+				camera: sfmCamera,
 				clip,
 			}
 		});
 	}
 
 	static createNewSession(): void {
-		this.#session = new Session({ name: 'session' });
+		this.#session = new SfmSession({ name: 'session' });
 
-		const clip = new Clip({ name: 'shot1' });
+		const clip = new SfmClip({ name: 'shot1' });
+		clip.scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
+		clip.scene.addChild(workCamera.getCamera());
+
 		this.#session.addClip(clip);
 		this.#session.setActiveClip(clip);
 
@@ -132,7 +143,8 @@ class Application {
 	}
 }
 
-async function load() {
+async function load(file: JSONFile) {
+	/*
 	const session: JSONFile =
 	{
 		"file_infos": {
@@ -146,19 +158,22 @@ async function load() {
 			}
 		],
 	};
+	*/
 
 
 	//const json = JSON.parse(session) as JSONObject;
-	const root = await SFMSerializer.fromJSON(session);
-	console.info(root);
+	const session = await SFMSerializer.unserializeJSON(file);
+	console.info('load', session);
 
-	const result = SFMSerializer.serializeJSON(root as Session);
-	console.info(result);
+	//const result = SFMSerializer.serializeJSON(root as Session);
+	//console.info(result);
 
 }
 
-async function save(session: Session) {
+async function save(session: SfmSession) {
 	const result = SFMSerializer.serializeJSON(session);
-	console.info(result);
+	console.info('save', result);
+
+	load(result);
 
 }
