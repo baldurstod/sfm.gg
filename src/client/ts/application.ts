@@ -4,11 +4,13 @@ import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
+import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
+import { JSONFile, SFMSerializer } from './serialize/serializer';
+import { Clip } from './session/clip';
 import { Session } from './session/session';
 import { AppPanel } from './view/app';
-import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 
 
 documentStyle(htmlCSS);
@@ -16,7 +18,7 @@ documentStyle(varsCSS);
 
 class Application {
 	static #main = new AppPanel();
-	static #session = new Session();
+	static #session = new Session({ name: 'session' });
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -27,12 +29,18 @@ class Application {
 		this.#initOptions();
 		initGraphics();
 		this.createNewSession();
+
+		//load();
+		save(this.#session);
 	}
 
 	static #initListeners() {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
 		Controller.addEventListener('userselectcamera', (event) => {
 			const clip = this.#session.getActiveClip();
+			if (!clip) {
+				return;
+			}
 			const camera = event.detail;
 
 			// Check if the camera if part of the current clip
@@ -58,6 +66,9 @@ class Application {
 
 	static #addCamera(source: Camera | null): void {
 		const clip = this.#session.getActiveClip();
+		if (!clip) {
+			return;
+		}
 		const camera = new Camera({ name: `camera${clip.getCameras().size + 1}` });
 		camera.copy(source ?? workCamera)
 		camera.setPosition([-10, clip.getCameras().size * 2, 0])
@@ -82,9 +93,13 @@ class Application {
 	}
 
 	static createNewSession(): void {
-		this.#session = new Session();
+		this.#session = new Session({ name: 'session' });
 
-		Controller.dispatchEvent('setactiveclip', { detail: this.#session.getActiveClip() });
+		const clip = new Clip({ name: 'shot1' });
+		this.#session.addClip(clip);
+		this.#session.setActiveClip(clip);
+
+		Controller.dispatchEvent('setactiveclip', { detail: clip });
 	}
 
 	static #iniRepositories(): void {
@@ -115,4 +130,35 @@ class Application {
 			tf2WebRepository.setFiles(j);
 		});
 	}
+}
+
+async function load() {
+	const session: JSONFile =
+	{
+		"file_infos": {
+		},
+		"session": "5f41e251-520b-4e64-8815-37f215c98c81",
+		"elements": [
+			{
+				"id": "5f41e251-520b-4e64-8815-37f215c98c81",
+				"name": "session",
+				"type": "Session",
+			}
+		],
+	};
+
+
+	//const json = JSON.parse(session) as JSONObject;
+	const root = await SFMSerializer.fromJSON(session);
+	console.info(root);
+
+	const result = SFMSerializer.serializeJSON(root as Session);
+	console.info(result);
+
+}
+
+async function save(session: Session) {
+	const result = SFMSerializer.serializeJSON(session);
+	console.info(result);
+
 }
