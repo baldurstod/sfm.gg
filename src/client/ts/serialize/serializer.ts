@@ -1,5 +1,5 @@
 import { JSONObject, JSONValue } from 'harmony-types';
-import { SfmSession } from '../session/session';
+import { SfmSession } from '../model/session';
 import { Serializable } from './serializable';
 
 //export type SerializableValueSingle = string | number | Serializable;

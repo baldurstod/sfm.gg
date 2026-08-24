@@ -1,6 +1,6 @@
-import { SfmCamera } from './session/camera';
-import { SfmClip } from './session/clip';
-import { SfmSession } from './session/session';
+import { SfmCamera } from './model/camera';
+import { SfmClip } from './model/clip';
+import { SfmSession } from './model/session';
 
 export type ControllerEvent = 'setsession' | 'cameraadded' | 'setactiveclip' | 'setactivecamera' | 'useraddcamera' | 'userselectcamera' | 'usersavesession';
 

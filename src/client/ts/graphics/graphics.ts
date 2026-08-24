@@ -1,5 +1,5 @@
 import { Camera, Graphics, GraphicsEvent, GraphicsEvents, GraphicTickEvent, WebGLStats } from 'harmony-3d';
-import { SfmCamera } from '../session/camera';
+import { SfmCamera } from '../model/camera';
 
 export function initGraphics(): void {
 	Graphics.initCanvas({

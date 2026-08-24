@@ -8,9 +8,9 @@ import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { JSONFile, SFMSerializer } from './serialize/serializer';
-import { SfmCamera } from './session/camera';
-import { SfmClip } from './session/clip';
-import { SfmSession } from './session/session';
+import { SfmCamera } from './model/camera';
+import { SfmClip } from './model/clip';
+import { SfmSession } from './model/session';
 import { AppPanel } from './view/app';
 
 

@@ -4,8 +4,8 @@ import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
 import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
-import { SfmCamera } from '../session/camera';
-import { SfmClip } from '../session/clip';
+import { SfmCamera } from '../model/camera';
+import { SfmClip } from '../model/clip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
