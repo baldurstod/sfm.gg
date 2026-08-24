@@ -174,27 +174,6 @@ export class SFMSerializer {
 		}
 	}
 
-	static #serializeElementJSON(element: JSONSerializable, elements: Map<string, JSONObject>): JSONObject {
-		const json: JSONObject = {};
-		for (const key in element) {
-			const value = element[key];
-
-			if (value instanceof Serializable) {
-				if (!elements.has(value.getId())) {
-
-					this.#serializeElement(value, elements);
-
-				}
-				//json[key] = this.#serializeElement(value, elements);
-				json[key] = value.getId();
-
-			}
-
-		}
-
-		return {};
-	}
-
 	static #checkJSON(json: JSONObject): boolean {
 		return true;
 	}
@@ -208,57 +187,6 @@ export class SFMSerializer {
 
 		return new serializableType({ name: json.name as string, id: json.id as string });
 	}
-
-	/*
-	static async #fromJSON(file: SFMFile): Promise<Serializable | null> {
-		let loadedResolve: Function = () => { };// Note: typescript falsely complains about loadedResolve not being assigned without this.
-		const loadedPromise = new Promise<void>(resolve => {
-			loadedResolve = resolve;
-		});
-		const entities = new Map<string, Serializable>();
-		let root: Serializable | null = null;
-		for (const o of file) {
-			const serializable = await this.loadSerializable(o, entities, loadedPromise);
-			if (!root) {
-				root = serializable;
-			}
-		}
-
-		loadedResolve(true);
-		return root;
-	}
-	*/
-
-	/*
-	static async loadSerializable(jsonSerializable: JSONObject, entities: Map<string, Serializable>, loadedPromise: Promise<void>): Promise<Serializable | null> {
-		const type = jsonSerializable.type;
-		if (typeof type !== 'string') {
-			return null;
-		}
-		const serializableType = this.#getSerializableClass(type);
-		if (!serializableType) {
-			console.error('Unknown constructor', type);
-			return null;
-		}
-		//const serializable = await serializableType.constructFromJSON(jsonSerializable/*, entities, loadedPromise* /);
-		const serializable = new serializableType({ name: jsonSerializable.name as string, id: jsonSerializable.id as string })//.constructFromJSON(jsonSerializable/*, entities, loadedPromise* /);
-		if (!serializable) {
-			return null;
-		}
-		serializable.fromJSON(jsonSerializable);
-		entities.set(serializable.id, serializable);
-
-		if (jsonSerializable.children) {
-			for (const child of jsonSerializable.children as JSONObject[]) {
-				const childSerializable = await this.loadSerializable(child, entities, loadedPromise);
-				if (childSerializable) {
-					serializable.addChild(childSerializable as Serializable);
-				}
-			}
-		}
-		return serializable;
-	}
-	*/
 
 	static registerSerializable(type: typeof Serializable): void {
 		const name = type.getTypeName().toLowerCase();

@@ -35,12 +35,6 @@ export class SfmSession extends Serializable {
 		return 'Session';
 	}
 
-	/*
-	static override async constructFromJSON(json: JSONObject): Promise<Session> {
-		return new Session(json);
-	}
-	*/
-
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
