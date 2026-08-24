@@ -1,6 +1,7 @@
 import { Serializable } from '../serialize/serializable';
-import { JSONSerializable, SFMSerializer } from '../serialize/serializer';
+import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip } from './clip';
+import { SfmFilmClip } from './filmclip';
 
 /*
 export interface SessionParameters extends SerializableParameters {
@@ -8,7 +9,7 @@ export interface SessionParameters extends SerializableParameters {
 */
 
 export class SfmSession extends Serializable {
-	#activeClip?: SfmClip;
+	#activeClip?: SfmFilmClip;
 	#clips = new Set<SfmClip>();
 
 	addClip(clip: SfmClip): void {
@@ -19,7 +20,7 @@ export class SfmSession extends Serializable {
 		this.#clips.delete(clip);
 	}
 
-	setActiveClip(clip: SfmClip): boolean {
+	setActiveFilmClip(clip: SfmFilmClip): boolean {
 		if (this.#clips.has(clip)) {
 			this.#activeClip = clip;
 			return true;
@@ -27,7 +28,7 @@ export class SfmSession extends Serializable {
 		return false;
 	}
 
-	getActiveClip(): SfmClip | undefined {
+	getActiveFilmClip(): SfmFilmClip | undefined {
 		return this.#activeClip;
 	}
 
@@ -56,7 +57,7 @@ export class SfmSession extends Serializable {
 		this.#clips.clear();
 
 		if (json.active_clip) {
-			this.#activeClip = elements.get(json.active_clip as string) as SfmClip | undefined; // TODO: check if it's actually a clip
+			this.#activeClip = elements.get(json.active_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
 		}
 
 		if (json.clips) {
@@ -71,4 +72,4 @@ export class SfmSession extends Serializable {
 	}
 }
 
-SFMSerializer.registerSerializable(SfmSession);
+SfmSerializer.registerSerializable(SfmSession);

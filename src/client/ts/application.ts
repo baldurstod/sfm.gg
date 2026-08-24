@@ -7,10 +7,10 @@ import french from '../json/i18n/french.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
-import { JSONFile, SFMSerializer } from './serialize/serializer';
 import { SfmCamera } from './model/camera';
-import { SfmClip } from './model/clip';
+import { SfmFilmClip } from './model/filmclip';
 import { SfmSession } from './model/session';
+import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 
 
@@ -39,7 +39,7 @@ class Application {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
 		Controller.addEventListener('usersavesession', (event) => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
-			const clip = this.#session.getActiveClip();
+			const clip = this.#session.getActiveFilmClip();
 			if (!clip) {
 				return;
 			}
@@ -67,7 +67,7 @@ class Application {
 	}
 
 	static #addCamera(source: SfmCamera | null): void {
-		const clip = this.#session.getActiveClip();
+		const clip = this.#session.getActiveFilmClip();
 		if (!clip) {
 			return;
 		}
@@ -103,14 +103,14 @@ class Application {
 	static createNewSession(): void {
 		this.#session = new SfmSession({ name: 'session' });
 
-		const clip = new SfmClip({ name: 'shot1' });
-		clip.scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
-		clip.scene.addChild(workCamera.getCamera());
+		const clip = new SfmFilmClip({ name: 'shot1' });
+		clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
+		clip.scene.getScene().addChild(workCamera.getCamera());
 
 		this.#session.addClip(clip);
-		this.#session.setActiveClip(clip);
+		this.#session.setActiveFilmClip(clip);
 
-		Controller.dispatchEvent('setactiveclip', { detail: clip });
+		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
 	}
 
 	static #iniRepositories(): void {
@@ -162,16 +162,12 @@ async function load(file: JSONFile) {
 
 
 	//const json = JSON.parse(session) as JSONObject;
-	const session = await SFMSerializer.unserializeJSON(file);
+	const session = await SfmSerializer.unserializeJSON(file);
 	console.info('load', session);
-
-	//const result = SFMSerializer.serializeJSON(root as Session);
-	//console.info(result);
-
 }
 
 async function save(session: SfmSession) {
-	const result = SFMSerializer.serializeJSON(session);
+	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);
 
 	load(result);

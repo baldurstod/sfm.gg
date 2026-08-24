@@ -36,7 +36,7 @@ export type JSONFile = {
 	elements: JSONElement[];
 };
 
-export class SFMSerializer {
+export class SfmSerializer {
 
 	static readonly #entities = new Map<string, typeof Serializable>();
 

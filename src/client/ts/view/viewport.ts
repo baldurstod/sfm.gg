@@ -6,12 +6,13 @@ import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
 import { SfmCamera } from '../model/camera';
 import { SfmClip } from '../model/clip';
+import { SfmFilmClip } from '../model/filmclip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlCameraSelector?: HTMLSelectElement;
-	#activeClip: SfmClip | null = null;
+	#activeFilmClip: SfmFilmClip | null = null;
 	//#activeCamera: Camera | null = null;
 	#camerasOptions = new WeakMap<SfmCamera, HTMLOptionElement>();
 	#optionsCameras = new WeakMap<HTMLOptionElement, SfmCamera>();
@@ -26,7 +27,7 @@ export class ViewportPanel extends Panel {
 	constructor(titleI18n?: string) {
 		super();
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
-		Controller.addEventListener('setactiveclip', (event) => this.#setActiveClip(event.detail));
+		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
 
 		GraphicsEvents.addEventListener(GraphicsEvent.Tick, (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
@@ -72,7 +73,7 @@ export class ViewportPanel extends Panel {
 				createElement('button', {
 					innerHTML: videoCameraBackAddSVG,
 					$click: () => {
-						Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeClip?.activeCamera ?? null });
+						Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeFilmClip?.activeCamera ?? null });
 						this.#useWorkCamera = false;
 					},
 				}) as HTMLButtonElement,
@@ -99,28 +100,22 @@ export class ViewportPanel extends Panel {
 		}
 	}
 
-	/*
-	#setSession(): void {
-		this.#setActiveClip(null)
-	}
-	*/
+	#setActiveFilmClip(clip: SfmFilmClip): void {
+		this.#activeFilmClip = clip;
 
-	#setActiveClip(clip: SfmClip): void {
-		this.#activeClip = clip;
-
-		new SceneExplorer().scene = clip.scene;
+		new SceneExplorer().scene = clip.scene.getScene();
 
 
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
 		if (view) {
-			view.scene = clip.scene;
+			view.scene = clip.scene.getScene();
 		}
 
 		this.#refreshCameras();
 	}
 
 	#setActiveCamera(detail: SetActiveCamera): void {
-		if (detail.clip !== this.#activeClip) {
+		if (detail.clip !== this.#activeFilmClip) {
 			return;
 		}
 
@@ -136,7 +131,7 @@ export class ViewportPanel extends Panel {
 	}
 
 	#cameraAdded(detail: CameraAdded): void {
-		if (detail.clip === this.#activeClip) {
+		if (detail.clip === this.#activeFilmClip) {
 			this.#refreshCameras();
 		}
 	}
@@ -145,11 +140,11 @@ export class ViewportPanel extends Panel {
 		this.initPanel();
 		this.#htmlCameraSelector?.replaceChildren();
 
-		if (!this.#activeClip) {
+		if (!this.#activeFilmClip) {
 			return;
 		}
 
-		for (const camera of this.#activeClip.getCameras()) {
+		for (const camera of this.#activeFilmClip.getCameras()) {
 			const option = createElement('option', {
 				value: camera.getName(),
 				innerText: camera.getName(),
@@ -175,7 +170,7 @@ export class ViewportPanel extends Panel {
 			if (this.#useWorkCamera) {
 				camera = workCamera.getCamera()!;
 			} else {
-				camera = this.#activeClip?.activeCamera?.getCamera() ?? workCamera.getCamera()!;
+				camera = this.#activeFilmClip?.activeCamera?.getCamera() ?? workCamera.getCamera()!;
 			}
 		}
 
