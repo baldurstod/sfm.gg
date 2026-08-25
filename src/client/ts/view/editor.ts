@@ -4,6 +4,7 @@ import { Panel } from './panel';
 import { ScriptEditorPanel } from './scripteditor';
 import { ShaderEditorPanel } from './shadereditor';
 import { Viewports } from './viewports';
+import editorCSS from '../../css/editor.css';
 
 export class EditorPanel extends Panel {
 	#viewports = new Viewports();
@@ -16,7 +17,7 @@ export class EditorPanel extends Panel {
 		if (this.panel) {
 			return;
 		}
-		super.initPanel({ size: 3, layout: 'tabs', dropTarget: true, });
+		super.initPanel({ size: 3, adoptStyle: editorCSS, layout: 'tabs', dropTarget: true, });
 		this.panel!.append(
 			this.#viewports.getPanel(),
 			this.#scriptEditor.getPanel(),
