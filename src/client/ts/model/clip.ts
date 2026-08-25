@@ -1,18 +1,19 @@
-import { Serializable } from '../serialize/serializable';
+import { Serializable, SerializableParameters } from '../serialize/serializable';
 import { JSONSerializable } from '../serialize/serializer';
-import { SfmCamera } from './camera';
-import { SfmScene } from './scene';
-import { SfmTimeFrame } from './timeframe';
+import { SfmTimeFrame, TimeFrameParameters } from './timeframe';
 
-/*
 export interface ClipParameters extends SerializableParameters {
+	timeFrame?: TimeFrameParameters;
 }
-*/
 
 export class SfmClip extends Serializable {
 	readonly isSfmClip = true as const;
-	#visible = true;
-	#timeFrame = new SfmTimeFrame();
+	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
+
+	constructor(params: ClipParameters = {}) {
+		super(params);
+		this.#timeFrame = new SfmTimeFrame(params.timeFrame);
+	}
 
 	static override getTypeName(): string {
 		return 'Clip';

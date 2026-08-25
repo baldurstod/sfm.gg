@@ -5,6 +5,14 @@
 		"#primary_viewport": "Primary viewport",
 		"#secondary_viewport": "Secondary viewport",
 		"#timeline": "Timeline",
+		"#script_editor": "Script editor",
+		"#shader_editor": "Shader editor",
+		"#viewports": "Viewports",
+		"#scene_explorer": "Scene explorer",
+		"#outline": "Outline",
+		"#options": "Options",
+		"#advanced_options": "Advanced options",
+		"#language": "Language",
 		"": ""
 	}
 }

@@ -4,7 +4,10 @@ import { ViewportPanel } from './viewport';
 
 export class Viewports extends Panel {
 	protected initPanel(): void {
-		super.initPanel({ size: 1, adoptStyle: viewportsCSS, dropTarget: true, });
+		if (this.panel) {
+			return;
+		}
+		super.initPanel({ size: 1, adoptStyle: viewportsCSS, dropTarget: true, titleI18n: '#viewports', });
 
 		const vp1 = new ViewportPanel('#primary_viewport');
 		this.panel!.append(vp1.getPanel());

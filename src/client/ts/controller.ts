@@ -3,7 +3,8 @@ import { SfmClip } from './model/clip';
 import { SfmFilmClip } from './model/filmclip';
 import { SfmSession } from './model/session';
 
-export type ControllerEvent = 'setsession' | 'cameraadded' | 'setactivefilmclip' | 'setactivecamera' | 'useraddcamera' | 'userselectcamera' | 'usersavesession';
+export type ControllerEvent = 'setsession' | 'cameraadded' | 'setactivefilmclip' | 'setactivecamera' | 'useraddcamera' | 'userselectcamera' | 'usersavesession' |
+'useropenoptions' | 'useropenadvancedoptions';
 
 interface ControllerEventInit<T = any> extends EventInit {
 	detail: T;
@@ -19,6 +20,8 @@ export class Controller {
 	static addEventListener(type: 'useraddcamera', callback: (evt: CustomEvent<SfmCamera | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcamera', callback: (evt: CustomEvent<SfmCamera>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersavesession', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useropenoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -31,6 +34,8 @@ export class Controller {
 	static dispatchEvent(type: 'setactivefilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'userselectcamera', options: ControllerEventInit<SfmCamera>): boolean;
 	static dispatchEvent(type: 'usersavesession', options?: ControllerEventInit<void>): boolean;
+	static dispatchEvent(type: 'useropenoptions', options?: ControllerEventInit<void>): boolean;
+	static dispatchEvent(type: 'useropenadvancedoptions', options?: ControllerEventInit<void>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));

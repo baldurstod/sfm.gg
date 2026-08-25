@@ -1,18 +1,22 @@
 import { Box, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
-import { documentStyle, I18n } from 'harmony-ui';
+import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents } from 'harmony-browser-utils';
+import { JSONObject } from 'harmony-types';
+import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
+import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { SfmCamera } from './model/camera';
 import { SfmFilmClip } from './model/filmclip';
 import { SfmSession } from './model/session';
+import { SfmTrack } from './model/track';
+import { SfmTrackGroup } from './model/trackgroup';
 import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
-
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -20,6 +24,7 @@ documentStyle(varsCSS);
 class Application {
 	static #main = new AppPanel();
 	static #session = new SfmSession({ name: 'session' });
+	static #translations = new Map<string, I18nTranslation>();
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -37,7 +42,7 @@ class Application {
 
 	static #initListeners() {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
-		Controller.addEventListener('usersavesession', (event) => save(this.#session));
+		Controller.addEventListener('usersavesession', () => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
 			const clip = this.#session.getActiveFilmClip();
 			if (!clip) {
@@ -57,13 +62,19 @@ class Application {
 				}
 			});
 		});
+
+		Controller.addEventListener('useropenadvancedoptions', () => OptionsManager.showOptionsManager());
+	}
+
+	static #initOptions(): void {
+		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#setLang((event as CustomEvent<OptionsManagerEvent<string>>).detail.value as string));
+
+
+		OptionsManager.init({ json: optionsmanager });
 	}
 
 	static #initHTML() {
 		//this.#main.getHTML();
-	}
-
-	static #initOptions() {
 	}
 
 	static #addCamera(source: SfmCamera | null): void {
@@ -107,7 +118,8 @@ class Application {
 		clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
 		clip.scene.getScene().addChild(workCamera.getCamera());
 
-		this.#session.addClip(clip);
+		//this.#session.addClip(clip);
+		this.#session.getFilm().addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1' })).addClip(clip);
 		this.#session.setActiveFilmClip(clip);
 
 		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
@@ -140,6 +152,31 @@ class Application {
 
 			tf2WebRepository.setFiles(j);
 		});
+	}
+
+	static #setLang(lang: string): void {
+		this.#getLanguage(lang).then(json => {
+			I18n.setOptions({ translations: [json as I18nTranslation] });
+			I18n.setLang(lang);
+		});
+	}
+
+	static async #getLanguage(lang: string): Promise<JSONObject> {
+		const translation = this.#translations.get(lang);
+		if (translation) {
+			return translation;
+		}
+
+		const p = new Promise<JSONObject>(resolve => {
+			void (async (): Promise<void> => {
+				const response = await fetch(`/json/i18n/${lang}.json`);
+
+				const json = await response.json();
+				resolve(json);
+			})();
+		});
+		this.#translations.set(lang, await p as I18nTranslation);
+		return p;
 	}
 }
 

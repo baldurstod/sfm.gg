@@ -6,8 +6,9 @@ export class SfmTrackGroup extends Serializable {
 	readonly isSfmTrackGroup = true as const;
 	readonly #tracks = new Set<SfmTrack>();
 
-	addTrack(track: SfmTrack): void {
+	addTrack(track: SfmTrack): SfmTrack {
 		this.#tracks.add(track);
+		return track;
 	}
 
 	deleteTrack(track: SfmTrack): void {

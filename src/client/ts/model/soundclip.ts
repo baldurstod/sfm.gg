@@ -4,7 +4,6 @@ import { SfmClip } from './clip';
 
 export class SfmSoundClip extends SfmClip {
 	readonly isSfmSoundClip = true as const;
-	#mute = false;
 	volume = 1;
 	mute = false;
 
@@ -14,11 +13,18 @@ export class SfmSoundClip extends SfmClip {
 
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
+
+		json.mute = this.mute;
+		json.volume = this.volume;
+
 		return json;
 	}
 
 	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
 		super.unserialize(json, elements);
+
+		this.mute = json.mute as boolean ?? false;
+		this.volume = json.volume as number ?? 1;
 	}
 }
 

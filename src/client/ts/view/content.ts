@@ -8,6 +8,9 @@ export class ContentPanel extends Panel {
 	#main = new MainPanel();
 
 	protected initPanel(): void {
+		if (this.panel) {
+			return;
+		}
 		super.initPanel({ size: 1, layout: 'row', });
 		this.panel!.append(this.#outline.getPanel(), this.#main.getPanel());
 	}

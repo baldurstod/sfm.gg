@@ -1,6 +1,6 @@
 import { ContentPanel } from './content';
 import { Panel } from './panel';
-import { Statusbar } from './statusbar';
+import { StatusBar } from './statusbar';
 import { Toolbar } from './toolbar';
 
 export class AppPanel extends Panel {
@@ -10,10 +10,13 @@ export class AppPanel extends Panel {
 		super();
 		this.addPanel('toobar', new Toolbar());
 		this.addPanel('content', new ContentPanel());
-		this.addPanel('statusbar', new Statusbar());
+		this.addPanel('statusbar', new StatusBar());
 	}
 
 	protected initPanel(): void {
+		if (this.panel) {
+			return;
+		}
 		super.initPanel({ layout: 'column' });
 		//this.panel!.setDirection('column');
 		document.body.append(this.panel!.htmlElement);

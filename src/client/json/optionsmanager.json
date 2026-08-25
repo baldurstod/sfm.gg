@@ -1,0 +1,34 @@
+{
+	"categories": [
+		"app.lang",
+		"app",
+		"engine",
+		"app.css.variables"
+	],
+	"options": [
+		{
+			"name": "app.css.theme",
+			"type": "list",
+			"default": "",
+			"datalist": [
+				"",
+				"dark",
+				"light"
+			]
+		},
+		{
+			"name": "app.backgroundcolor",
+			"type": "color",
+			"default": "#13385DFF"
+		},
+		{
+			"name": "app.lang",
+			"type": "list",
+			"default": "english",
+			"datalist": [
+				"english",
+				"french"
+			]
+		}
+	]
+}

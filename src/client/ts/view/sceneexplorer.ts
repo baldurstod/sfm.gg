@@ -3,6 +3,9 @@ import { Panel } from './panel';
 
 export class SceneExplorerPanel extends Panel {
 	protected initPanel(): void {
+		if (this.panel) {
+			return;
+		}
 		super.initPanel({ size: 1, layout: 'column', titleI18n: '#scene_explorer', });
 		this.panel!.append(new SceneExplorer().htmlElement);
 	}

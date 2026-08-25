@@ -5,6 +5,14 @@
 		"#primary_viewport": "Affichage primaire",
 		"#secondary_viewport": "Affichage secondaire",
 		"#timeline": "Chronologie",
+		"#script_editor": "Éditeur de scripts",
+		"#shader_editor": "Éditeur de shaders",
+		"#viewports": "Affichages",
+		"#scene_explorer": "Explorateur de scène",
+		"#outline": "Schéma",
+		"#options": "Options",
+		"#advanced_options": "Options avancées",
+		"#language": "Langue :",
 		"": ""
 	}
 }

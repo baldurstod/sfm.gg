@@ -52,9 +52,11 @@ for (const buildOption of BUILD_OPTIONS) {
 				}),
 				//isProduction ? terser() : null,
 				copy({
+					copyOnce:true,
 					targets: [
 						{ src: 'src/client/index.html', dest: 'build/client/' },
 						{ src: 'src/client/ads.txt', dest: 'build/client/' },
+						{ src: 'src/client/json/', dest: 'build/client/' },
 					]
 				}),
 			]
