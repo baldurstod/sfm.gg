@@ -4,6 +4,13 @@
 	--time-offset: 0;
 	--play-head: 0;
 	--ruler-unit: 10px;
+	--counter-scale: 1;
+}
+
+@container style(--time-scale > 5) {
+	.ruler {
+		--counter-scale: 0.1;
+	}
 }
 
 .time-track {
@@ -57,7 +64,7 @@
 	left: calc(var(--ruler-unit) * var(--time-offset));
 	*/
 	color: var(--ruler-num-c);
-	counter-reset: d calc(-1 * var(--ruler2-space));
+	counter-reset: d calc(-1 * var(--ruler2-space) * var(--counter-scale));
 	display: flex;
 	font-size: var(--ruler-num-fz);
 	line-height: 1;
@@ -83,12 +90,12 @@
 }
 
 .ruler li {
-	counter-increment: d var(--ruler2-space);
-	flex: 0 0 calc(var(--ruler-unit) * var(--ruler2-space) * var(--time-scale));
+	counter-increment: d calc(var(--ruler2-space) * var(--counter-scale));
+	flex: 0 0 calc(var(--ruler-unit) * var(--ruler2-space) * var(--time-scale) * var(--counter-scale));
 }
 
 .ruler li::after {
-	content: counter(d)"";
+	content: counter(d);
 	line-height: 1;
 	padding-inline-start: var(--ruler-num-pi);
 }
