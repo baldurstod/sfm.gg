@@ -17,7 +17,7 @@ export function initGraphics(): void {
 		Graphics.renderMultiCanvas((event as CustomEvent<GraphicTickEvent>).detail.delta, /*TODO: add context*/);
 	}
 
-	GraphicsEvents.addEventListener(GraphicsEvent.Tick, handleTick);
+	GraphicsEvents.addEventListener('tick', handleTick);
 	Graphics.play();
 }
 

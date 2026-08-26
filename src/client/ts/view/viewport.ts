@@ -30,7 +30,7 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
 
-		GraphicsEvents.addEventListener(GraphicsEvent.Tick, (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
+		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
 
 		this.#cameraControl.movementSpeed = 100;
 		this.#cameraControl.lookSpeed = 0.1;
