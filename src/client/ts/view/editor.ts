@@ -1,10 +1,10 @@
+import editorCSS from '../../css/editor.css';
 import { AdvancedOptionsPanel } from './advancedoptions';
 import { OptionsPanel } from './options';
 import { Panel } from './panel';
 import { ScriptEditorPanel } from './scripteditor';
 import { ShaderEditorPanel } from './shadereditor';
 import { Viewports } from './viewports';
-import editorCSS from '../../css/editor.css';
 
 export class EditorPanel extends Panel {
 	#viewports = new Viewports();

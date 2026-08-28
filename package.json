@@ -8,6 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
+    "@rollup/plugin-image": "^3.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
@@ -23,9 +24,11 @@
     "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
+    "gl-matrix": "^3.4.4",
     "harmony-3d": "github:baldurstod/harmony-3d",
     "harmony-3d-utils": "github:baldurstod/harmony-3d-utils",
     "harmony-types": "github:baldurstod/harmony-types",
-    "harmony-ui": "github:baldurstod/harmony-ui"
+    "harmony-ui": "github:baldurstod/harmony-ui",
+    "harmony-utils": "github:baldurstod/harmony-utils"
   }
 }

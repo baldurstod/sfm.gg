@@ -1,3 +1,4 @@
+import { Character } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmClip } from './model/clip';
 import { SfmFilm } from './model/film';
@@ -14,6 +15,10 @@ export type ControllerEvent = 'setsession'
 	| 'usersavesession'
 	| 'useropenoptions'
 	| 'useropenadvancedoptions'
+	| 'useraddmodel'
+	| 'userselectcharacter'
+	| 'userselectcharacterselectapp'
+	| 'useraddcharacter'
 	;
 
 interface ControllerEventInit<T = any> extends EventInit {
@@ -33,6 +38,9 @@ export class Controller {
 	static addEventListener(type: 'usersavesession', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddmodel' | 'userselectcharacter', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userselectcharacterselectapp', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<Character>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -48,6 +56,9 @@ export class Controller {
 	static dispatchEvent(type: 'usersavesession', options?: ControllerEventInit<void>): boolean;
 	static dispatchEvent(type: 'useropenoptions', options?: ControllerEventInit<void>): boolean;
 	static dispatchEvent(type: 'useropenadvancedoptions', options?: ControllerEventInit<void>): boolean;
+	static dispatchEvent(type: 'useraddmodel' | 'userselectcharacter', options?: ControllerEventInit<void>): boolean;
+	static dispatchEvent(type: 'userselectcharacterselectapp', options: ControllerEventInit<number>): boolean;
+	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<Character>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));

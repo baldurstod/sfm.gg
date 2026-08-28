@@ -1,4 +1,4 @@
-import { fileOpenSVG, manufacturingSVG, saveSVG, settingsSVG } from 'harmony-svg';
+import { addSVG, fileOpenSVG, manufacturingSVG, saveSVG, settingsSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import toolbarCSS from '../../css/toolbar.css';
 import { Controller } from '../controller';
@@ -38,6 +38,18 @@ export class Toolbar extends Panel {
 					innerHTML: manufacturingSVG,
 					$click: () => {
 						Controller.dispatchEvent('useropenadvancedoptions');
+					},
+				}) as HTMLButtonElement,
+				createElement('button', {
+					innerHTML: addSVG,
+					$click: () => {
+						Controller.dispatchEvent('useraddmodel');
+					},
+				}) as HTMLButtonElement,
+				createElement('button', {
+					innerHTML: addSVG,
+					$click: () => {
+						Controller.dispatchEvent('userselectcharacter');
 					},
 				}) as HTMLButtonElement,
 			],

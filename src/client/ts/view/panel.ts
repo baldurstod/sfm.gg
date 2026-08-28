@@ -19,6 +19,10 @@ export class Panel {
 		return this.panel!;
 	}
 
+	open(): void {
+		this.getPanel();
+	}
+
 	hide(): void {
 		//hide(this.shadowRoot?.host as HTMLElement);
 	}

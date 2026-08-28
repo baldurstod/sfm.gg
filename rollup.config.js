@@ -6,6 +6,7 @@ import typescript from '@rollup/plugin-typescript';
 import wasm from '@rollup/plugin-wasm';
 import copy from 'rollup-plugin-copy';
 import css from 'rollup-plugin-import-css';
+import image from '@rollup/plugin-image';
 
 const isProduction = process.env.BUILD === 'production';
 
@@ -46,13 +47,14 @@ for (const buildOption of BUILD_OPTIONS) {
 						maxFileSize: 1000000
 					}
 				),
+				image(),
 				typescript({ compilerOptions: { target: 'es2023' } }),
 				nodeResolve({
 					dedupe: ['gl-matrix', 'harmony-ui', 'harmony-browser-utils'],
 				}),
 				//isProduction ? terser() : null,
 				copy({
-					copyOnce:true,
+					copyOnce: true,
 					targets: [
 						{ src: 'src/client/index.html', dest: 'build/client/' },
 						{ src: 'src/client/ads.txt', dest: 'build/client/' },

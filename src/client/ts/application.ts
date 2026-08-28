@@ -10,6 +10,7 @@ import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
+import { Character, characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmFilmClip } from './model/filmclip';
 import { SfmSession } from './model/session';
@@ -17,6 +18,8 @@ import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
 import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
+import { CharacterSelectorPanel } from './view/characterselector';
+import { ModelSelectorPanel } from './view/modelselector';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -25,6 +28,9 @@ class Application {
 	static #main = new AppPanel();
 	static #session = new SfmSession({ name: 'session' });
 	static #translations = new Map<string, I18nTranslation>();
+
+	static #modelSelectorPanel?: ModelSelectorPanel;
+	static #characterSelectorPanel?: CharacterSelectorPanel;
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -64,6 +70,13 @@ class Application {
 		});
 
 		Controller.addEventListener('useropenadvancedoptions', () => OptionsManager.showOptionsManager());
+		Controller.addEventListener('useraddmodel', () => this.#userAddModel());
+		Controller.addEventListener('userselectcharacter', () => this.#userselectCharacter());
+		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
+		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
+
+		Controller.dispatchEvent('userselectcharacter');
+		Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
 	}
 
 	static #initOptions(): void {
@@ -177,6 +190,51 @@ class Application {
 		});
 		this.#translations.set(lang, await p as I18nTranslation);
 		return p;
+	}
+
+	static #userAddModel(): void {
+		if (!this.#modelSelectorPanel) {
+			this.#modelSelectorPanel = new ModelSelectorPanel();
+		}
+
+		this.#modelSelectorPanel.open();
+	}
+
+	static #userselectCharacter(): void {
+		this.#getCharacterSelectorPanel().open();
+	}
+
+	static #getCharacterSelectorPanel(): CharacterSelectorPanel {
+		if (!this.#characterSelectorPanel) {
+			this.#characterSelectorPanel = new CharacterSelectorPanel();
+		}
+		return this.#characterSelectorPanel;
+	}
+
+	static #userSelectCharacterSelectApp(appId: number): void {
+		switch (appId) {
+			case 440:
+				this.#getCharacterSelectorPanel().setCharacters(getTf2Characters());
+				break;
+
+			default:
+				throw new Error(`Unknown app id ${appId}`);
+		}
+	}
+
+	static async #userAddCharacter(character: Character): Promise<void> {
+		const clip = this.#session.getActiveFilmClip();
+		if (!clip) {
+			return;
+		}
+
+		const sfmScene = clip.scene;
+
+		//const node = new SfmNode();
+		sfmScene.getScene().addChild(
+			await characterToModel(character)
+		)
+
 	}
 }
 
