@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters } from '../serialize/serializable';
+import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 
 export interface TimeFrameParameters extends SerializableParameters {
@@ -44,8 +44,8 @@ export class SfmTimeFrame extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		this.#start = json.start as number ?? 0;
 		this.#duration = json.duration as number ?? 0;

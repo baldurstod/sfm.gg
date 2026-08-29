@@ -1,4 +1,4 @@
-import { Serializable } from '../serialize/serializable';
+import { UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip } from './clip';
 
@@ -20,8 +20,8 @@ export class SfmSoundClip extends SfmClip {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		this.mute = json.mute as boolean ?? false;
 		this.volume = json.volume as number ?? 1;

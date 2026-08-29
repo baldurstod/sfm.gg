@@ -18,6 +18,11 @@ export interface SerializableParameters {
 	name?: string;
 }
 
+export type UnserializationContext = {
+	elements: Map<string, Serializable>;
+	fileVersion: number;
+}
+
 export class Serializable {
 	readonly isSerializable = true as const;
 	#id: string;
@@ -52,7 +57,7 @@ export class Serializable {
 		};
 	}
 
-	unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		this.#id = json.id as string;
 		this.#name = json.name as string;
 	}

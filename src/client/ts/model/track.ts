@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters } from '../serialize/serializable';
+import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip } from './clip';
 import { SfmFilmClip } from './filmclip';
@@ -68,12 +68,12 @@ export class SfmTrack extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		if (json.clips) {
 			for (const clipId of json.clips as string[]) {
-				const clip = elements.get(clipId) as SfmClip | undefined; // TODO: check if it's actually a clip
+				const clip = context.elements.get(clipId) as SfmClip | undefined; // TODO: check if it's actually a clip
 
 				if (clip) {
 					this.#clips.add(clip);

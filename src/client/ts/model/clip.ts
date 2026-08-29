@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters } from '../serialize/serializable';
+import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable } from '../serialize/serializer';
 import { SfmTimeFrame, TimeFrameParameters } from './timeframe';
 
@@ -27,11 +27,11 @@ export class SfmClip extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		if (json.time_frame) {
-			const timeFrame = elements.get(json.time_frame as string) as SfmTimeFrame | undefined; // TODO: check if it's actually a timeframe
+			const timeFrame = context.elements.get(json.time_frame as string) as SfmTimeFrame | undefined; // TODO: check if it's actually a timeframe
 			if (timeFrame) {
 				this.#timeFrame = timeFrame;
 			} else {

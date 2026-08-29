@@ -1,5 +1,5 @@
 import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
-import { Serializable, SerializableParameters } from '../serialize/serializable';
+import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 
 /*
@@ -39,15 +39,6 @@ export class SfmCamera extends Serializable {
 
 	static override getTypeName(): string {
 		return 'Camera';
-	}
-
-	override serialize(): JSONSerializable {
-		const json = super.serialize();
-		return json;
-	}
-
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
 	}
 }
 

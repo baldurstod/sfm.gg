@@ -1,4 +1,4 @@
-import { Serializable } from '../serialize/serializable';
+import { Serializable, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmTrackGroup } from './trackgroup';
 
@@ -29,14 +29,14 @@ export class SfmFilm extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		this.#trackGroups.clear();
 
 		if (json.track_groups) {
 			for (const trackGroupId of json.track_groups as string[]) {
-				const trackGroup = elements.get(trackGroupId) as SfmTrackGroup | undefined; // TODO: check if it's actually a track group
+				const trackGroup = context.elements.get(trackGroupId) as SfmTrackGroup | undefined; // TODO: check if it's actually a track group
 
 				if (trackGroup) {
 					this.#trackGroups.add(trackGroup);

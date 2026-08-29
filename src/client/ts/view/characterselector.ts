@@ -129,7 +129,6 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	setCharacters(characters: Character[]): void {
-		console.info(characters);
 		this.#selectedCharacter = undefined;
 		this.initPanel();
 		this.#htmlCharacters!.innerText = '';
@@ -308,7 +307,7 @@ export class CharacterSelectorPanel extends Panel {
 		this.panel?.close();
 
 		Controller.dispatchEvent('useraddcharacter', { detail: this.#selectedCharacter });
-
+		//equipedItems
 	}
 
 	async #itemClick(item: Item): Promise<void> {

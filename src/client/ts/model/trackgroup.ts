@@ -1,4 +1,4 @@
-import { Serializable } from '../serialize/serializable';
+import { Serializable, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmTrack } from './track';
 
@@ -29,12 +29,12 @@ export class SfmTrackGroup extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
 
 		if (json.tracks) {
 			for (const trackId of json.tracks as string[]) {
-				const track = elements.get(trackId) as SfmTrack | undefined; // TODO: check if it's actually a track
+				const track = context.elements.get(trackId) as SfmTrack | undefined; // TODO: check if it's actually a track
 
 				if (track) {
 					this.#tracks.add(track);

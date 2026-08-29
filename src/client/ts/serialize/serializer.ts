@@ -112,7 +112,7 @@ export class SfmSerializer {
 		*/
 
 		for (const [element, json] of elements2) {
-			element.unserialize(json, elements);
+			element.unserialize(json, { elements, fileVersion: 1/*TODO: add an actual file version*/ });
 		}
 
 		if (file.session) {

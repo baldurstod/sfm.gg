@@ -1,4 +1,4 @@
-import { Serializable } from '../serialize/serializable';
+import { Serializable, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilm } from './film';
 import { SfmFilmClip } from './filmclip';
@@ -59,8 +59,10 @@ export class SfmSession extends Serializable {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
+
+		const elements = context.elements;
 
 		this.#activeClip = undefined;
 		this.#film = new SfmFilm();

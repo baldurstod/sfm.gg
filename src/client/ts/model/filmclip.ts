@@ -1,4 +1,4 @@
-import { Serializable } from '../serialize/serializable';
+import { Serializable, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
 import { SfmClip } from './clip';
@@ -40,6 +40,8 @@ export class SfmFilmClip extends SfmClip {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
+		json.scene = this.scene;
+
 		if (this.activeCamera) {
 			json.active_camera = this.activeCamera;
 		}
@@ -51,11 +53,20 @@ export class SfmFilmClip extends SfmClip {
 		return json;
 	}
 
-	override unserialize(json: JSONSerializable, elements: Map<string, Serializable>): void {
-		super.unserialize(json, elements);
+	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+		super.unserialize(json, context);
+
+		const elements = context.elements;
 
 		this.activeCamera = undefined;
 		this.#cameras.clear();
+
+		if (json.scene) {
+			const scene = elements.get(json.scene as string) as SfmScene | undefined; // TODO: check if it's actually a scene
+			if (scene) {
+				this.scene = scene;
+			}
+		}
 
 		if (json.active_camera) {
 			this.activeCamera = elements.get(json.active_camera as string) as SfmCamera | undefined; // TODO: check if it's actually a camera
