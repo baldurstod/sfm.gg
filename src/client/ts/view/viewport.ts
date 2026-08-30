@@ -1,17 +1,18 @@
-import { Camera, CanvasAttributes, FirstPersonControl, Graphics, GraphicsEvent, GraphicsEvents, GraphicTickEvent, OrbitGizmo, SceneExplorer } from 'harmony-3d';
-import { cameraswitchSVG, videoCameraBackAddSVG } from 'harmony-svg';
+import { Camera, CanvasAttributes, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, SceneExplorer } from 'harmony-3d';
+import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
 import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
 import { SfmCamera } from '../model/camera';
-import { SfmClip } from '../model/clip';
 import { SfmFilmClip } from '../model/filmclip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlCameraSelector?: HTMLSelectElement;
+	#htmlPlayPauseButton?: HTMLButtonElement;
+	#playing = false;
 	#activeFilmClip: SfmFilmClip | null = null;
 	//#activeCamera: Camera | null = null;
 	#camerasOptions = new WeakMap<SfmCamera, HTMLOptionElement>();
@@ -29,6 +30,8 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
+		Controller.addEventListener('userpause', () => this.#setPlaying(false));
+		Controller.addEventListener('userplay', () => this.#setPlaying(true));
 
 		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
 
@@ -55,34 +58,74 @@ export class ViewportPanel extends Panel {
 		this.#cameraControl.canvas = this.#htmlCanvas;
 
 		createElement('div', {
+			class: 'controls',
 			parent: this.panel!.getContent(),
 			childs: [
-				this.#htmlCameraSelector = createElement('select', {
-					class: 'camera-selector',
-					$input: () => {
-						const option = this.#htmlCameraSelector!.selectedOptions[0];
-						if (option) {
-							const camera = this.#optionsCameras.get(option);
-							if (camera) {
-								Controller.dispatchEvent('userselectcamera', { detail: camera });
+				createElement('span', {
+					childs: [
+						this.#htmlCameraSelector = createElement('select', {
+							class: 'camera-selector',
+							$input: () => {
+								const option = this.#htmlCameraSelector!.selectedOptions[0];
+								if (option) {
+									const camera = this.#optionsCameras.get(option);
+									if (camera) {
+										Controller.dispatchEvent('userselectcamera', { detail: camera });
+										this.#useWorkCamera = false;
+									}
+								}
+							},
+						}) as HTMLSelectElement,
+						createElement('button', {
+							innerHTML: videoCameraBackAddSVG,
+							$click: () => {
+								Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeFilmClip?.activeCamera ?? null });
 								this.#useWorkCamera = false;
-							}
-						}
-					},
-				}) as HTMLSelectElement,
-				createElement('button', {
-					innerHTML: videoCameraBackAddSVG,
-					$click: () => {
-						Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeFilmClip?.activeCamera ?? null });
-						this.#useWorkCamera = false;
-					},
-				}) as HTMLButtonElement,
-				createElement('button', {
-					innerHTML: cameraswitchSVG,
-					$click: () => this.#switchCamera(),
-				}) as HTMLButtonElement,
+							},
+						}),
+						createElement('button', {
+							innerHTML: cameraswitchSVG,
+							$click: () => this.#switchCamera(),
+						}),
+					],
+				}),
+
+				createElement('span', {
+					class: 'playback',
+					childs: [
+						createElement('button', {
+							innerHTML: fastRewindSVG,
+							$click: () => Controller.dispatchEvent('usergotofirstframe'),
+						}),
+						createElement('button', {
+							innerHTML: keyboardDoubleArrowLeftSVG,
+							$click: () => Controller.dispatchEvent('usergotopreviousclip'),
+						}),
+						createElement('button', {
+							innerHTML: skipPreviousSVG,
+							$click: () => Controller.dispatchEvent('usergotopreviousframe'),
+						}),
+						this.#htmlPlayPauseButton = createElement('button', {
+							innerHTML: playSVG,
+							$click: () => this.#togglePlayPause(),
+						}) as HTMLButtonElement,
+						createElement('button', {
+							innerHTML: skipNextSVG,
+							$click: () => Controller.dispatchEvent('usergotonextframe'),
+						}),
+						createElement('button', {
+							innerHTML: keyboardDoubleArrowRightSVG,
+							$click: () => Controller.dispatchEvent('usergotonextclip'),
+						}),
+						createElement('button', {
+							innerHTML: fastForwardSVG,
+							$click: () => Controller.dispatchEvent('usergotolastframe'),
+						}),
+					],
+				}),
+
 			],
-		}) as HTMLSelectElement;
+		});
 
 		//const scene = new Scene();
 		//scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
@@ -100,15 +143,35 @@ export class ViewportPanel extends Panel {
 		}
 	}
 
+	#togglePlayPause(): void {
+		// Dispatch an event so all viewports toggle in sync
+		if (this.#playing) {
+			Controller.dispatchEvent('userpause');
+		} else {
+			Controller.dispatchEvent('userplay');
+		}
+	}
+
+	#setPlaying(playing: boolean): void {
+		this.#playing = playing;
+		if (this.#playing) {
+			this.#htmlPlayPauseButton!.innerHTML = pauseSVG;
+		} else {
+			this.#htmlPlayPauseButton!.innerHTML = playSVG;
+		}
+	}
+
 	#setActiveFilmClip(clip: SfmFilmClip): void {
 		this.#activeFilmClip = clip;
 
-		new SceneExplorer().scene = clip.scene.getScene();
-
+		const scene = clip.scene?.getScene();
+		if (scene) {
+			new SceneExplorer().setScene(scene);
+		}
 
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
 		if (view) {
-			view.scene = clip.scene.getScene();
+			view.scene = clip.scene?.getScene();
 		}
 
 		this.#refreshCameras();
