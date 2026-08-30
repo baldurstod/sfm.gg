@@ -12,7 +12,12 @@ import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Character, characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
+import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmFilmClip } from './model/filmclip';
+import { SfmNode } from './model/node';
+import { SfmModuloOperator } from './model/operators/math/modulo';
+import { SfmPrimitiveBox } from './model/primitives/box';
+import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
@@ -26,7 +31,7 @@ documentStyle(varsCSS);
 
 class Application {
 	static #main = new AppPanel();
-	static #session = new SfmSession({ name: 'session' });
+	static #session = new SfmSession();
 	static #translations = new Map<string, I18nTranslation>();
 
 	static #modelSelectorPanel?: ModelSelectorPanel;
@@ -75,8 +80,8 @@ class Application {
 		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
 
-		Controller.dispatchEvent('userselectcharacter');
-		Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
+		//Controller.dispatchEvent('userselectcharacter');
+		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
 	}
 
 	static #initOptions(): void {
@@ -127,15 +132,20 @@ class Application {
 	static createNewSession(): void {
 		this.#session = new SfmSession({ name: 'session' });
 
-		const clip = new SfmFilmClip({ name: 'shot1' });
-		clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
-		clip.scene.getScene().addChild(workCamera.getCamera());
+		const film = new SfmFilmClip({ name: 'Film' });
+		this.#session.setActiveFilmClip(film);
+
+
+		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene() });
+		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
+		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
+		clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		//this.#session.addClip(clip);
-		this.#session.getFilm().addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1' })).addClip(clip);
-		this.#session.setActiveFilmClip(clip);
+		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
 
 		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
+		Controller.dispatchEvent('viewelement', { detail: this.#session });
 	}
 
 	static #iniRepositories(): void {
@@ -231,9 +241,7 @@ class Application {
 		const sfmScene = clip.scene;
 
 		//const node = new SfmNode();
-		sfmScene.getScene().addChild(
-			await characterToModel(character)
-		)
+		sfmScene?.getScene().addChild(await characterToModel(character))
 
 	}
 }
@@ -262,9 +270,54 @@ async function load(file: JSONFile) {
 }
 
 async function save(session: SfmSession) {
+	session = new SfmSession({ name: 'session' });
+	const activeFilmClip = session.getActiveFilmClip();
+	if (activeFilmClip?.scene) {
+		activeFilmClip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
+	}
+
+	session = new SfmSession({ name: 'session' });
+
+	const film = new SfmFilmClip({ name: 'Film' });
+	session.setActiveFilmClip(film);
+
+	const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), });
+	clip.scene!.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
+	clip.scene!.getScene().addChild(workCamera.getCamera());
+	clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
+
+	const operatorsTrackGroup = clip.addTrackGroup(new SfmTrackGroup({ name: 'Operators' }))
+	const operatorsTrack = operatorsTrackGroup.addTrack(new SfmTrack({ name: 'Operators', trackType: 'operator', }));
+	const operatorClip = operatorsTrack.addClip(new SfmOperatorClip({ name: 'Operators' })) as SfmOperatorClip;
+	operatorClip.addOperator(new SfmModuloOperator({ name: 'Modulo' }));
+
+	//this.#session.addClip(clip);
+	film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
+
 	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);
 
 	load(result);
 
 }
+
+
+/*
+
+		this.#session = new SfmSession({ name: 'session' });
+
+		const film = new SfmFilmClip({ name: 'Film' });
+		this.#session.setActiveFilmClip(film);
+
+
+		const clip = new SfmFilmClip({ name: 'shot1' });
+		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16 * / }));
+		clip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
+		clip.scene.getScene().addChild(workCamera.getCamera());
+
+		//this.#session.addClip(clip);
+		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1' })).addClip(clip);
+
+		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
+		Controller.dispatchEvent('viewelement', { detail: this.#session });
+		*/

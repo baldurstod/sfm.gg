@@ -24,7 +24,13 @@ export class ElementViewerPanel extends Panel {
 		super.initPanel({ size: 1, adoptStyle: elementViewerCSS, layout: 'column', titleI18n: '#element_viewer', dropTarget: true, });
 
 		this.#htmlTree = new HarmonyTree();
-		this.#htmlTree.addEventListener('itemclick', (event: Event) => this.#expandItem((event as CustomEvent<ItemClickEventData>).detail.item));
+		this.#htmlTree.addEventListener('itemclick', (event: Event) => {
+			const item = (event as CustomEvent<ItemClickEventData>).detail.item;
+
+			if (!this!.#htmlTree!.isExpanded(item)) {
+				this.#expandItem(item)
+			}
+		});
 		this.panel!.append(this.#htmlTree.htmlElement);
 	}
 

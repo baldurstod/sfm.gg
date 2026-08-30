@@ -1,16 +1,35 @@
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
-import { SfmClip } from './clip';
+import { ClipParameters, SfmClip } from './clip';
 import { SfmScene } from './scene';
 import { SfmTrackGroup } from './trackgroup';
 
+export interface FilmClipParameters extends ClipParameters {
+	scene?: SfmScene;
+	camera?: SfmCamera;
+	trackGroups?: SfmTrackGroup[];
+}
+
 export class SfmFilmClip extends SfmClip {
 	readonly isSfmFilmClip = true as const;
-	scene = new SfmScene();
-	#cameras = new Set<SfmCamera>();
+	scene?: SfmScene;
+	readonly #cameras = new Set<SfmCamera>();
 	activeCamera?: SfmCamera;
-	#trackGroups = new Set<SfmTrackGroup>();
+	readonly #trackGroups = new Set<SfmTrackGroup>();
+
+	constructor(params: FilmClipParameters = {}) {
+		super(params);
+
+		this.scene = params.scene;
+		this.activeCamera = params.camera;
+
+		if (params.trackGroups) {
+			for (const trackGroup of params.trackGroups) {
+				this.addTrackGroup(trackGroup);
+			}
+		}
+	}
 
 	addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
 		this.#trackGroups.add(group);
@@ -28,7 +47,7 @@ export class SfmFilmClip extends SfmClip {
 	addCamera(camera: SfmCamera): void {
 		this.#cameras.add(camera);
 
-		this.scene.getScene().addChild(camera.getCamera());
+		this.scene?.getScene().addChild(camera.getCamera());
 	}
 
 	setActiveCamera(camera: SfmCamera): void {
@@ -42,7 +61,6 @@ export class SfmFilmClip extends SfmClip {
 	hasCamera(camera: SfmCamera): boolean {
 		return this.#cameras.has(camera);
 	}
-
 
 	static override getTypeName(): string {
 		return 'FilmClip';
@@ -87,6 +105,7 @@ export class SfmFilmClip extends SfmClip {
 			this.activeCamera = elements.get(json.active_camera as string) as SfmCamera | undefined; // TODO: check if it's actually a camera
 		}
 
+		this.#cameras.clear();
 		if (json.cameras) {
 			for (const cameraId of json.cameras as string[]) {
 				const camera = elements.get(cameraId) as SfmCamera | undefined; // TODO: check if it's actually a camera
