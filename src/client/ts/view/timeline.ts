@@ -1,14 +1,16 @@
 import { createElement } from 'harmony-ui';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
-import { SfmFilm } from '../model/film';
+import { SfmClip } from '../model/clip';
 import { SfmFilmClip } from '../model/filmclip';
 import { SfmTrack } from '../model/track';
 import { Panel } from './panel';
 
 export class TimelinePanel extends Panel {
-	#activeFilmClip: SfmFilmClip | null = null;
-	#activeFilm: SfmFilm | null = null;
+	// Current clip displayed in the timeline
+	#currentClip: SfmClip | null = null;
+	// Selected sub clip
+	#activeClip: SfmClip | null = null;
 	#playHeadPos = 0;
 	#htmlTracks = new WeakMap<SfmTrack, HTMLElement>();
 	#htmlContent?: HTMLElement;
@@ -52,16 +54,16 @@ export class TimelinePanel extends Panel {
 	constructor() {
 		super();
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
-		Controller.addEventListener('setactivefilm', (event) => this.#setActiveFilm(event.detail));
+		Controller.addEventListener('setcurrentclip', (event) => this.#setCurrentClip(event.detail));
 	}
 
 	#setActiveFilmClip(clip: SfmFilmClip): void {
-		this.#activeFilmClip = clip;
+		this.#activeClip = clip;
 		this.refreshHTML();
 	}
 
-	#setActiveFilm(film: SfmFilm): void {
-		this.#activeFilm = film;
+	#setCurrentClip(clip: SfmClip): void {
+		this.#currentClip = clip;
 		this.refreshHTML();
 	}
 

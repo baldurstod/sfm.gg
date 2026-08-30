@@ -1,14 +1,25 @@
-import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
 import { SfmClip } from './clip';
 import { SfmScene } from './scene';
+import { SfmTrackGroup } from './trackgroup';
 
 export class SfmFilmClip extends SfmClip {
 	readonly isSfmFilmClip = true as const;
 	scene = new SfmScene();
 	#cameras = new Set<SfmCamera>();
 	activeCamera?: SfmCamera;
+	#trackGroups = new Set<SfmTrackGroup>();
+
+	addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
+		this.#trackGroups.add(group);
+		return group;
+	}
+
+	deleteTrackGroup(group: SfmTrackGroup): void {
+		this.#trackGroups.delete(group);
+	}
 
 	setScene(scene: SfmScene): void {
 		this.scene = scene;
@@ -50,6 +61,10 @@ export class SfmFilmClip extends SfmClip {
 			json.cameras = [...this.#cameras];
 		}
 
+		if (this.#trackGroups.size) {
+			json.track_groups = [...this.#trackGroups];
+		}
+
 		return json;
 	}
 
@@ -81,6 +96,17 @@ export class SfmFilmClip extends SfmClip {
 				}
 			}
 		}
+
+		this.#trackGroups.clear();
+		if (json.track_groups) {
+			for (const trackGroupId of json.track_groups as string[]) {
+				const trackGroup = context.elements.get(trackGroupId) as SfmTrackGroup | undefined; // TODO: check if it's actually a track group
+
+				if (trackGroup) {
+					this.#trackGroups.add(trackGroup);
+				}
+			}
+		}
 	}
 
 	override getProperties(): SerializableProperty[] {
@@ -97,6 +123,12 @@ export class SfmFilmClip extends SfmClip {
 				//type: typeof SfmCamera,
 				settable: true,
 			},
+			{
+				name: 'trackGroups',
+				i18n: '#track_groups',
+				//type: typeof nodeArray,
+				settable: false,
+			},
 		];
 	}
 
@@ -106,6 +138,8 @@ export class SfmFilmClip extends SfmClip {
 				return this.scene;
 			case 'activeCamera':
 				return this.activeCamera;
+			case 'trackGroups':
+				return [...this.#trackGroups];
 			default:
 				throw new Error("do me " + name);
 		}
