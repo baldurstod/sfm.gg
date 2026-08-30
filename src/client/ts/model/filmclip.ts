@@ -1,4 +1,4 @@
-import { Serializable, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
 import { SfmClip } from './clip';
@@ -53,7 +53,7 @@ export class SfmFilmClip extends SfmClip {
 		return json;
 	}
 
-	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
 		const elements = context.elements;
@@ -80,6 +80,34 @@ export class SfmFilmClip extends SfmClip {
 					this.#cameras.add(camera);
 				}
 			}
+		}
+	}
+
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'scene',
+				i18n: '#scene',
+				//type: typeof SfmScene,
+				settable: true,
+			},
+			{
+				name: 'activeCamera',
+				i18n: '#active_camera',
+				//type: typeof SfmCamera,
+				settable: true,
+			},
+		];
+	}
+
+	override getProperty(name: string): SerializablePropertyType {
+		switch (name) {
+			case 'scene':
+				return this.scene;
+			case 'activeCamera':
+				return this.activeCamera;
+			default:
+				throw new Error("do me " + name);
 		}
 	}
 }

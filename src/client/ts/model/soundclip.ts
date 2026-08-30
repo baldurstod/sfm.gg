@@ -20,7 +20,7 @@ export class SfmSoundClip extends SfmClip {
 		return json;
 	}
 
-	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
 		this.mute = json.mute as boolean ?? false;

@@ -23,6 +23,15 @@ export type UnserializationContext = {
 	fileVersion: number;
 }
 
+export type SerializablePropertyType = boolean | string | number | Serializable | undefined | null | boolean[] | string[] | number[] | Serializable[];
+
+export type SerializableProperty = {
+	name: string;
+	i18n: string;
+	//type: SerializablePropertyType | SerializablePropertyType[];
+	settable: boolean;
+}
+
 export class Serializable {
 	readonly isSerializable = true as const;
 	#id: string;
@@ -60,5 +69,18 @@ export class Serializable {
 	unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		this.#id = json.id as string;
 		this.#name = json.name as string;
+	}
+
+	getProperties(): SerializableProperty[] {
+		throw new Error('TODO: override me');
+
+	}
+
+	getProperty(name: string): SerializablePropertyType {
+		return null;
+	}
+
+	setProperty(name: string, value: SerializablePropertyType): boolean {
+		return true;
 	}
 }

@@ -1,4 +1,4 @@
-import { Serializable, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmTrackGroup } from './trackgroup';
 
@@ -29,7 +29,7 @@ export class SfmFilm extends Serializable {
 		return json;
 	}
 
-	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
 		this.#trackGroups.clear();
@@ -42,6 +42,27 @@ export class SfmFilm extends Serializable {
 					this.#trackGroups.add(trackGroup);
 				}
 			}
+		}
+	}
+
+	override getProperties(): SerializableProperty[] {
+
+		return [
+			{
+				name: 'trackGroups',
+				i18n: '#track_groups',
+				//type: typeof nodeArray,
+				settable: false,
+			},
+		];
+	}
+
+	override getProperty(name: string): SerializablePropertyType {
+		switch (name) {
+			case 'trackGroups':
+				return [...this.#trackGroups];
+			default:
+				throw new Error("do me " + name);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip } from './clip';
 import { SfmFilmClip } from './filmclip';
@@ -68,7 +68,7 @@ export class SfmTrack extends Serializable {
 		return json;
 	}
 
-	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
 		if (json.clips) {
@@ -85,6 +85,50 @@ export class SfmTrack extends Serializable {
 		this.volume = json.volume as number ?? 1;
 
 		this.#trackType = json.track_type as SfmTrackType | undefined ?? 'film';// TODO: check value
+	}
+
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'clips',
+				i18n: '#clips',
+				//type: typeof nodeArray,
+				settable: false,
+			},
+			{
+				name: 'trackType',
+				i18n: '#track_type',
+				//type: typeof nodeArray,
+				settable: true,
+			},
+			{
+				name: 'mute',
+				i18n: '#mute',
+				//type: typeof nodeArray,
+				settable: true,
+			},
+			{
+				name: 'volume',
+				i18n: '#volume',
+				//type: typeof nodeArray,
+				settable: true,
+			},
+		];
+	}
+
+	override getProperty(name: string): SerializablePropertyType {
+		switch (name) {
+			case 'clips':
+				return [...this.#clips];
+			case 'trackType':
+				return this.#trackType;
+			case 'mute':
+				return this.mute;
+			case 'volume':
+				return this.volume;
+			default:
+				throw new Error("do me " + name);
+		}
 	}
 }
 

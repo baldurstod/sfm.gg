@@ -15,6 +15,7 @@
 		"#language": "Language",
 		"#model_selector": "Model selector",
 		"#character_selector": "Character selector",
+		"#element_viewer": "Element viewer",
 		"": ""
 	}
 }

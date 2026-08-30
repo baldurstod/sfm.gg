@@ -4,6 +4,7 @@ import { SfmClip } from './model/clip';
 import { SfmFilm } from './model/film';
 import { SfmFilmClip } from './model/filmclip';
 import { SfmSession } from './model/session';
+import { Serializable } from './serialize/serializable';
 
 export type ControllerEvent = 'setsession'
 	| 'cameraadded'
@@ -19,6 +20,7 @@ export type ControllerEvent = 'setsession'
 	| 'userselectcharacter'
 	| 'userselectcharacterselectapp'
 	| 'useraddcharacter'
+	| 'viewelement'
 	;
 
 interface ControllerEventInit<T = any> extends EventInit {
@@ -41,6 +43,7 @@ export class Controller {
 	static addEventListener(type: 'useraddmodel' | 'userselectcharacter', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcharacterselectapp', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<Character>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -59,6 +62,7 @@ export class Controller {
 	static dispatchEvent(type: 'useraddmodel' | 'userselectcharacter', options?: ControllerEventInit<void>): boolean;
 	static dispatchEvent(type: 'userselectcharacterselectapp', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<Character>): boolean;
+	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));

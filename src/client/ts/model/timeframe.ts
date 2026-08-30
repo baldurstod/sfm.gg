@@ -44,7 +44,7 @@ export class SfmTimeFrame extends Serializable {
 		return json;
 	}
 
-	unserialize(json: JSONSerializable, context: UnserializationContext): void {
+	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
 		this.#start = json.start as number ?? 0;

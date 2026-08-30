@@ -1,9 +1,9 @@
 import { MainPanel } from './main';
-import { Outline } from './outline';
+import { OutlinePanel } from './outline';
 import { Panel } from './panel';
 
 export class ContentPanel extends Panel {
-	#outline = new Outline();
+	#outline = new OutlinePanel();
 	//#viewports = new Viewports();
 	#main = new MainPanel();
 
