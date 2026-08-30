@@ -15,6 +15,10 @@ export class SfmClip extends Serializable {
 		this.#timeFrame = new SfmTimeFrame(params.timeFrame);
 	}
 
+	inTimeFrame(time: number): boolean {
+		return this.#timeFrame.inTimeFrame(time);
+	}
+
 	static override getTypeName(): string {
 		return 'Clip';
 	}

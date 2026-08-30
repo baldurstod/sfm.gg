@@ -21,6 +21,7 @@ import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
+import { Player } from './player';
 import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
@@ -33,9 +34,9 @@ class Application {
 	static #main = new AppPanel();
 	static #session = new SfmSession();
 	static #translations = new Map<string, I18nTranslation>();
-
 	static #modelSelectorPanel?: ModelSelectorPanel;
 	static #characterSelectorPanel?: CharacterSelectorPanel;
+	static #player = new Player();
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -79,6 +80,9 @@ class Application {
 		Controller.addEventListener('userselectcharacter', () => this.#userselectCharacter());
 		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
+		Controller.addEventListener('usergotopreviousframe', () => this.#userPreviousFrame());
+		Controller.addEventListener('usergotonextframe', () => this.#userNextFrame());
+		Controller.addEventListener('usersetcurrenttime', (event) => this.#userSetTime(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -136,13 +140,15 @@ class Application {
 		this.#session.setActiveFilmClip(film);
 
 
-		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene() });
+		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { duration: 0.5 } });
 		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
 		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 		clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		//this.#session.addClip(clip);
 		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
+
+		this.#player.setFilmClip(film);
 
 		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
@@ -242,7 +248,30 @@ class Application {
 
 		//const node = new SfmNode();
 		sfmScene?.getScene().addChild(await characterToModel(character))
+	}
 
+	static #userPreviousFrame(): void {
+		this.#player.previousFrame();
+		this.#updateCurrentTime();
+	}
+
+	static #userNextFrame(): void {
+		this.#player.nextFrame();
+		this.#updateCurrentTime();
+	}
+
+	static #userSetTime(time: number): void {
+		Controller.dispatchEvent('userpause');
+		this.#player.setCurrentTime(time);
+		this.#updateCurrentTime();
+		/*
+		this.#player.nextFrame();
+		this.#setCurrentTime();
+		*/
+	}
+
+	static #updateCurrentTime(): void {
+		Controller.dispatchEvent('setcurrenttime', { detail: this.#player.getCurrentTime() });
 	}
 }
 

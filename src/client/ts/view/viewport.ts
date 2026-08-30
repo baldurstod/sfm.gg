@@ -9,6 +9,7 @@ import { SfmFilmClip } from '../model/filmclip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
+	#htmTime?: HTMLElement;
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlCameraSelector?: HTMLSelectElement;
 	#htmlPlayPauseButton?: HTMLButtonElement;
@@ -32,6 +33,7 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
 		Controller.addEventListener('userpause', () => this.#setPlaying(false));
 		Controller.addEventListener('userplay', () => this.#setPlaying(true));
+		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 
 		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
 
@@ -46,14 +48,23 @@ export class ViewportPanel extends Panel {
 			return;
 		}
 		super.initPanel({ size: 1, adoptStyle: viewportCSS, titleI18n: this.#titleI18n ?? '#viewport', layout: 'column' });
+
+		createElement('div', {
+			class: 'header',
+			parent: this.panel!.getContent(),
+			childs: [
+				this.#htmTime = createElement('div'),
+			],
+		});
+
 		createElement('div', {
 			class: 'canvas-container',
 			parent: this.panel!.getContent(),
 			childs: [
-				this.#htmlCanvas = createElement('canvas', { parent: this.panel!.getContent() }) as HTMLCanvasElement,
+				this.#htmlCanvas = createElement('canvas') as HTMLCanvasElement,
 				//this.#orbitGizmo.getHtmlElement(),
 			],
-		}) as HTMLCanvasElement;
+		});
 
 		this.#cameraControl.canvas = this.#htmlCanvas;
 
@@ -161,6 +172,14 @@ export class ViewportPanel extends Panel {
 		}
 	}
 
+	#setCurrentTime(time: number): void {
+		if (!this.#htmTime) {
+			return;
+		}
+
+		this.#htmTime.innerText = formatTime(time);
+	}
+
 	#setActiveFilmClip(clip: SfmFilmClip): void {
 		this.#activeFilmClip = clip;
 
@@ -244,4 +263,19 @@ export class ViewportPanel extends Panel {
 			view.camera = camera;
 		}
 	}
+}
+
+function formatTime(time: number): string {
+	const sign = Math.sign(time);
+	time = Math.abs(time);
+	const hours = Math.floor(time / 3600);
+	const minutes = Math.floor((time % 3600) / 60);
+	const seconds = Math.floor(time % 60);
+	//const milli = Math.floor((time - Math.floor(time )) * 1000);
+	const milli = Math.floor((time % 1) * 1000);
+
+
+	return `${sign < 0 ? '-' : ''}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milli).padStart(3, '0')}`;
+
+
 }

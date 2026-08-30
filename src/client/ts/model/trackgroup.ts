@@ -15,6 +15,10 @@ export class SfmTrackGroup extends Serializable {
 		this.#tracks.delete(track);
 	}
 
+	getTracks(): SfmTrack[] {
+		return [...this.#tracks];
+	}
+
 	static override getTypeName(): string {
 		return 'TrackGroup';
 	}

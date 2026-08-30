@@ -20,6 +20,7 @@ export class TimelinePanel extends Panel {
 	#timeOffset = 2;
 	// Pixels per second;
 	#timeUnit = 10;
+	#frameRate = 24;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -114,7 +115,8 @@ export class TimelinePanel extends Panel {
 	}
 
 	#setPlayPos(playPos: number): void {
-		this.#playHeadPos = playPos;
+		this.#playHeadPos = Math.round(playPos * this.#frameRate) / this.#frameRate;
+		Controller.dispatchEvent('usersetcurrenttime', { detail: this.#playHeadPos, });
 		this.#setCssVars();
 	}
 
@@ -126,4 +128,9 @@ export class TimelinePanel extends Panel {
 			this.panel.getContent().style.setProperty('--ruler-unit', `${this.#timeUnit}px`);
 		}
 	}
+
+	setFrameRate(frameRate: number): void {
+		this.#frameRate = Math.max(Math.round(frameRate), 1);
+	}
+
 }

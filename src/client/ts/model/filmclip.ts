@@ -3,6 +3,7 @@ import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
 import { ClipParameters, SfmClip } from './clip';
 import { SfmScene } from './scene';
+import { SfmTrack } from './track';
 import { SfmTrackGroup } from './trackgroup';
 
 export interface FilmClipParameters extends ClipParameters {
@@ -17,6 +18,7 @@ export class SfmFilmClip extends SfmClip {
 	readonly #cameras = new Set<SfmCamera>();
 	activeCamera?: SfmCamera;
 	readonly #trackGroups = new Set<SfmTrackGroup>();
+	#activeFilmTrack?: SfmTrack;
 
 	constructor(params: FilmClipParameters = {}) {
 		super(params);
@@ -62,6 +64,24 @@ export class SfmFilmClip extends SfmClip {
 		return this.#cameras.has(camera);
 	}
 
+	getActiveFilmTrack(): SfmTrack | null {
+		if (this.#activeFilmTrack) {
+			// TODO: check if the track is still part of the clip
+			return this.#activeFilmTrack;
+		}
+
+		for (const trackGroup of this.#trackGroups) {
+			for (const track of trackGroup.getTracks()) {
+				if (track.getTrackType() === 'film') {
+					this.#activeFilmTrack = track;
+					return track;
+				}
+			}
+		}
+
+		return null;
+	}
+
 	static override getTypeName(): string {
 		return 'FilmClip';
 	}
@@ -81,6 +101,10 @@ export class SfmFilmClip extends SfmClip {
 
 		if (this.#trackGroups.size) {
 			json.track_groups = [...this.#trackGroups];
+		}
+
+		if (this.#activeFilmTrack) {
+			json.active_film_track = this.#activeFilmTrack;
 		}
 
 		return json;
@@ -125,6 +149,11 @@ export class SfmFilmClip extends SfmClip {
 					this.#trackGroups.add(trackGroup);
 				}
 			}
+		}
+
+		if (json.active_film_track) {
+			this.#activeFilmTrack = elements.get(json.active_film_track as string) as SfmTrack | undefined; // TODO: check if it's actually a track
+			// TODO: check if it's actually a track
 		}
 	}
 

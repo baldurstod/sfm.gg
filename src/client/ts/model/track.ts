@@ -8,7 +8,7 @@ export type SfmTrackType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
 
 export interface TrackParameters extends SerializableParameters {
 	/** Track type. Default to 'film' */
-	trackType: SfmTrackType;
+	trackType?: SfmTrackType;
 }
 
 export class SfmTrack extends Serializable {
@@ -20,7 +20,7 @@ export class SfmTrack extends Serializable {
 
 	constructor(params: TrackParameters) {
 		super(params);
-		this.#trackType = params.trackType;
+		this.#trackType = params.trackType ?? 'film';
 	}
 
 	addClip(clip: SfmClip): SfmClip {
@@ -39,6 +39,14 @@ export class SfmTrack extends Serializable {
 
 	deleteClip(clip: SfmClip): void {
 		this.#clips.delete(clip);
+	}
+
+	getClips(): SfmClip[] {
+		return [...this.#clips];
+	}
+
+	getTrackType(): SfmTrackType {
+		return this.#trackType;
 	}
 
 	static override getTypeName(): string {

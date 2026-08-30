@@ -24,6 +24,10 @@ export class SfmTimeFrame extends Serializable {
 		this.#offset = params.offset ?? 0;
 	}
 
+	inTimeFrame(time: number): boolean {
+		return time >= this.#start && time < this.#start + this.#duration;
+	}
+
 	static override getTypeName(): string {
 		return 'TimeFrame';
 	}
@@ -45,6 +49,7 @@ export class SfmTimeFrame extends Serializable {
 	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
 
+		// TODO: check json values
 		this.#start = json.start as number ?? 0;
 		this.#duration = json.duration as number ?? 0;
 		this.#offset = json.offset as number ?? 0;
