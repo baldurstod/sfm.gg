@@ -31,12 +31,7 @@ export class SfmClip extends Serializable {
 		super.unserialize(json, context);
 
 		if (json.time_frame) {
-			const timeFrame = context.elements.get(json.time_frame as string) as SfmTimeFrame | undefined; // TODO: check if it's actually a timeframe
-			if (timeFrame) {
-				this.#timeFrame = timeFrame;
-			} else {
-				this.#timeFrame.reset();
-			}
+			this.#timeFrame = (context.elements.get(json.time_frame as string) as SfmTimeFrame | undefined) ?? new SfmTimeFrame(); // TODO: check if it's actually a timeframe
 		}
 	}
 }

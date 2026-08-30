@@ -24,14 +24,12 @@ export class SfmTimeFrame extends Serializable {
 		this.#offset = params.offset ?? 0;
 	}
 
-	reset() {
-		this.#start = 0;
-		this.#duration = 0;
-		this.#offset = 0;
-	}
-
 	static override getTypeName(): string {
 		return 'TimeFrame';
+	}
+
+	override getDefaultName(): string {
+		return 'Time frame';
 	}
 
 	override serialize(): JSONSerializable {

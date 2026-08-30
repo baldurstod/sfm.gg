@@ -10,6 +10,10 @@ export class SfmNode extends Serializable {
 		return 'Node';
 	}
 
+	override getDefaultName(): string {
+		return 'Node';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

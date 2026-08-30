@@ -34,6 +34,10 @@ export class SfmScene extends Serializable {
 		return 'Scene';
 	}
 
+	override getDefaultName(): string {
+		return 'Scene';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

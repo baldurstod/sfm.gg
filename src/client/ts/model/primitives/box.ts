@@ -18,6 +18,10 @@ export class SfmPrimitiveBox extends SfmEntity {
 		return 'PrimitiveBox';
 	}
 
+	override getDefaultName(): string {
+		return 'Box';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

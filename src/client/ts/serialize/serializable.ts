@@ -39,7 +39,7 @@ export class Serializable {
 
 	constructor(params: SerializableParameters = {}) {
 		this.#id = params.id ?? generateRandomUUID();
-		this.#name = params.name ?? '';
+		this.#name = params.name ?? this.getDefaultName();
 	}
 
 	getId(): string {
@@ -56,6 +56,11 @@ export class Serializable {
 
 	static getTypeName(): string {
 		throw new Error('override me');
+	}
+
+	getDefaultName(): string {
+		console.error('providing an empty default name for', this);
+		return '';
 	}
 
 	serialize(): JSONSerializable {
