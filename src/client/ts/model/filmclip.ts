@@ -42,6 +42,10 @@ export class SfmFilmClip extends SfmClip {
 		this.#trackGroups.delete(group);
 	}
 
+	getTrackGroup(): SfmTrackGroup[] {
+		return [...this.#trackGroups];
+	}
+
 	setScene(scene: SfmScene): void {
 		this.scene = scene;
 	}

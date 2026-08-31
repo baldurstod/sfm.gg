@@ -11,6 +11,10 @@ export class SfmTrackGroup extends Serializable {
 		return track;
 	}
 
+	addTracks(tracks: SfmTrack[]): void {
+		tracks.forEach((track) => this.#tracks.add(track));
+	}
+
 	deleteTrack(track: SfmTrack): void {
 		this.#tracks.delete(track);
 	}

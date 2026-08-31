@@ -58,6 +58,10 @@ export class Serializable {
 		throw new Error('override me');
 	}
 
+	getTypeName(): string {
+		return (this.constructor as typeof Serializable).getTypeName();
+	}
+
 	getDefaultName(): string {
 		console.error('providing an empty default name for', this);
 		return '';

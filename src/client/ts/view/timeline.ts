@@ -4,13 +4,15 @@ import { Controller } from '../controller';
 import { SfmClip } from '../model/clip';
 import { SfmFilmClip } from '../model/filmclip';
 import { SfmTrack } from '../model/track';
+import { SfmTrackGroup } from '../model/trackgroup';
+import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
 
 export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
 	#currentClip: SfmClip | null = null;
 	// Selected sub clip
-	#activeClip: SfmClip | null = null;
+	#activeFilmClip: SfmFilmClip | null = null;
 	#playHeadPos = 0;
 	#htmlTracks = new WeakMap<SfmTrack, HTMLElement>();
 	#htmlContent?: HTMLElement;
@@ -23,6 +25,7 @@ export class TimelinePanel extends Panel {
 	#timeUnit = 10;
 	#frameRate = 24;
 	#dragTime = false;
+	#elements = new Map<Serializable, HTMLElement>();
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -47,7 +50,6 @@ export class TimelinePanel extends Panel {
 		this.#htmlContent = createElement('div', {
 			after: this.#htmlTimeTracks[0],
 			class: 'content',
-			innerText: 'content',
 			$mousemove: (event: MouseEvent) => this.#timeMouseMove(event),
 		});
 
@@ -67,7 +69,7 @@ export class TimelinePanel extends Panel {
 	}
 
 	#setActiveFilmClip(clip: SfmFilmClip): void {
-		this.#activeClip = clip;
+		this.#activeFilmClip = clip;
 		this.refreshHTML();
 	}
 
@@ -77,7 +79,53 @@ export class TimelinePanel extends Panel {
 	}
 
 	protected refreshHTML(): void {
+		console.info('timeline current clip', this.#activeFilmClip);
+		this.#htmlContent?.replaceChildren();
+		const activeFilmClip = this.#activeFilmClip;
+		if (!activeFilmClip) {
+			return;
+		}
 
+		for (const trackGroup of activeFilmClip.getTrackGroup()) {
+			const tracks = trackGroup.getTracks();
+			const htmlTrackGroup = this.#getSerializableElement(trackGroup);
+			htmlTrackGroup.style.cssText = `--tracks:${tracks.length};`;
+			this.#htmlContent?.append(htmlTrackGroup);
+
+			for (const [id, track] of tracks.entries()) {
+				const htmlTrack = this.#getSerializableElement(track);
+				htmlTrack.style.cssText = `--start:${activeFilmClip.getStart()};--duration:${activeFilmClip.getDuration()};--track:${id};`;
+				htmlTrackGroup.append(htmlTrack);
+
+				for (const clip of track.getClips()) {
+					const htmlClip = this.#getSerializableElement(clip);
+					htmlClip.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--track:${id};`;
+					htmlTrack.append(htmlClip);
+				}
+			}
+		}
+	}
+
+	#getSerializableElement(element: Serializable): HTMLElement {
+		let html = this.#elements.get(element);
+		if (html) {
+			return html;
+		}
+
+		switch (true) {
+			case (element as SfmTrackGroup).isSfmTrackGroup:
+				html = createElement('div', { class: 'trackgroup', });
+				break;
+			case (element as SfmTrack).isSfmTrack:
+				html = createElement('div', { class: 'track', });
+				break;
+			case (element as SfmClip).isSfmClip:
+				html = createElement('div', { class: `clip ${(element as SfmClip).getClipType()}-clip`, });
+				break;
+			default:
+				throw new Error('code me ' + element.getTypeName());
+		}
+		return html;
 	}
 
 	#mouseWheel(event: WheelEvent): void {

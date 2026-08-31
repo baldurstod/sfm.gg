@@ -24,6 +24,14 @@ export class SfmTimeFrame extends Serializable {
 		this.#offset = params.offset ?? 0;
 	}
 
+	getStart():number {
+		return this.#start;
+	}
+
+	getDuration():number {
+		return this.#duration;
+	}
+
 	inTimeFrame(time: number): boolean {
 		return time >= this.#start && time < this.#start + this.#duration;
 	}

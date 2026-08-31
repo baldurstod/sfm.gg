@@ -6,6 +6,7 @@
 	--head-width: 1rem;
 	--ruler-unit: 10px;
 	--counter-scale: 1;
+	--track-height: 1rem;
 	user-select: none;
 }
 
@@ -111,4 +112,45 @@
 	background-color: black;
 	opacity: 50%;
 	pointer-events: none;
+}
+
+.trackgroup {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+	/*height: calc(var(--tracks)* var(--track-height));*/
+
+	background-color: red;
+	padding: 0.5rem 0;
+	margin: 0.1rem;
+}
+
+.track {
+	--track-padding-h: 1rem;
+	/*
+	position: absolute;
+	display: inline-block;
+	*/
+	padding: 0.5rem var(--track-padding-h);
+	margin: 0.1rem;
+	min-height: 1rem;
+	background-color: blue;
+	margin-left: calc(var(--ruler-unit)* (var(--time-offset) + var(--start)) * var(--time-scale) - var(--track-padding-h));
+	width: calc(var(--ruler-unit)* var(--duration) * var(--time-scale));
+	top: calc(var(--track)* var(--track-height));
+}
+
+.clip {
+	background-color: yellow;
+	padding: 1rem 0;
+	margin-left: calc(var(--ruler-unit)* var(--start) * var(--time-scale));
+	width: calc(var(--ruler-unit)* var(--duration) * var(--time-scale));
+}
+
+.film-clip{
+	background-color: aqua;
+}
+
+.sound-clip{
+	background-color: blueviolet;
 }

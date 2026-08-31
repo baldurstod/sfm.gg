@@ -26,6 +26,7 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
+import { SfmSoundClip } from './model/soundclip';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -149,9 +150,19 @@ class Application {
 		//this.#session.addClip(clip);
 		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
 
+		let dialog: SfmTrack, music: SfmTrack;
+		film.addTrackGroup(new SfmTrackGroup({ name: 'Sounds' })).addTracks([
+			dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' }),
+			music = new SfmTrack({ name: 'Music', trackType: 'sound' }),
+		]);
+
+		dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, duration: 1 } }));
+
+
+
 		this.#player.setFilmClip(film);
 
-		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
+		Controller.dispatchEvent('setactivefilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
 	}
 
