@@ -1,5 +1,5 @@
 import { Controller } from './controller';
-import { SfmFilmClip } from './model/filmclip';
+import { SfmFilmClip } from './model/clips/filmclip';
 
 export class Player {
 	#frame = 0;

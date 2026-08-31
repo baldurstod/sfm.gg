@@ -1,7 +1,7 @@
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { ClipParameters, SfmClip, SfmClipType } from '../clip';
 import { SfmOperator } from '../operators/operator';
+import { ClipParameters, SfmClip, SfmClipType } from './clip';
 
 export interface OperatorClipParameters extends ClipParameters {
 }

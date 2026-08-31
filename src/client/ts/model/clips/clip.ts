@@ -1,6 +1,6 @@
-import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
-import { JSONSerializable } from '../serialize/serializer';
-import { SfmTimeFrame, TimeFrameParameters } from './timeframe';
+import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
+import { JSONSerializable } from '../../serialize/serializer';
+import { SfmTimeFrame, TimeFrameParameters } from '../timeframe';
 
 export type SfmClipType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
 

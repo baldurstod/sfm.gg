@@ -1,6 +1,6 @@
-import { UnserializationContext } from '../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmClip, SfmClipType } from './clip';
+import { UnserializationContext } from '../../serialize/serializable';
+import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { SfmClip, SfmClipType } from '../clips/clip';
 
 export class SfmSoundClip extends SfmClip {
 	readonly isSfmSoundClip = true as const;

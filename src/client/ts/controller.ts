@@ -1,7 +1,7 @@
 import { Character } from './misc/character';
 import { SfmCamera } from './model/camera';
-import { SfmClip } from './model/clip';
-import { SfmFilmClip } from './model/filmclip';
+import { SfmClip } from './model/clips/clip';
+import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSession } from './model/session';
 import { Serializable } from './serialize/serializable';
 

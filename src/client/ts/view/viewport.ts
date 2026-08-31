@@ -5,7 +5,7 @@ import viewportCSS from '../../css/viewport.css';
 import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
 import { SfmCamera } from '../model/camera';
-import { SfmFilmClip } from '../model/filmclip';
+import { SfmFilmClip } from '../model/clips/filmclip';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {

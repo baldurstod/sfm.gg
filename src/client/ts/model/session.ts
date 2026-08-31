@@ -1,6 +1,6 @@
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmFilmClip } from './filmclip';
+import { SfmFilmClip } from './clips/filmclip';
 import { SessionSettingsParameters, SfmSessionSettings } from './settings/sessionsettings';
 
 

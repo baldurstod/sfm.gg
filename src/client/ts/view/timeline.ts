@@ -1,8 +1,8 @@
 import { createElement } from 'harmony-ui';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
-import { SfmClip } from '../model/clip';
-import { SfmFilmClip } from '../model/filmclip';
+import { SfmClip } from '../model/clips/clip';
+import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';

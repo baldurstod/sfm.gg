@@ -12,8 +12,9 @@ import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Character, characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
+import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
-import { SfmFilmClip } from './model/filmclip';
+import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
 import { SfmModuloOperator } from './model/operators/math/modulo';
 import { SfmPrimitiveBox } from './model/primitives/box';
@@ -26,7 +27,6 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
-import { SfmSoundClip } from './model/soundclip';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);

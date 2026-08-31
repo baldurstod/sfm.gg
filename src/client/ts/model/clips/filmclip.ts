@@ -1,10 +1,10 @@
-import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmCamera } from './camera';
+import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { SfmCamera } from '../camera';
+import { SfmScene } from '../scene';
+import { SfmTrack } from '../track';
+import { SfmTrackGroup } from '../trackgroup';
 import { ClipParameters, SfmClip, SfmClipType } from './clip';
-import { SfmScene } from './scene';
-import { SfmTrack } from './track';
-import { SfmTrackGroup } from './trackgroup';
 
 export interface FilmClipParameters extends ClipParameters {
 	scene?: SfmScene;

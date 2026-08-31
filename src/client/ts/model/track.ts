@@ -1,8 +1,8 @@
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmClip, SfmClipType } from './clip';
-import { SfmFilmClip } from './filmclip';
-import { SfmSoundClip } from './soundclip';
+import { SfmClip, SfmClipType } from './clips/clip';
+import { SfmFilmClip } from './clips/filmclip';
+import { SfmSoundClip } from './clips/soundclip';
 
 export interface TrackParameters extends SerializableParameters {
 	/** Track type. Default to 'film' */
