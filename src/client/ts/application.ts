@@ -83,6 +83,7 @@ class Application {
 		Controller.addEventListener('usergotopreviousframe', () => this.#userPreviousFrame());
 		Controller.addEventListener('usergotonextframe', () => this.#userNextFrame());
 		Controller.addEventListener('usersetcurrenttime', (event) => this.#userSetTime(event.detail));
+		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -251,17 +252,19 @@ class Application {
 	}
 
 	static #userPreviousFrame(): void {
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.previousFrame();
 		this.#updateCurrentTime();
 	}
 
 	static #userNextFrame(): void {
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.nextFrame();
 		this.#updateCurrentTime();
 	}
 
 	static #userSetTime(time: number): void {
-		Controller.dispatchEvent('userpause');
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(time);
 		this.#updateCurrentTime();
 		/*
@@ -273,6 +276,11 @@ class Application {
 	static #updateCurrentTime(): void {
 		Controller.dispatchEvent('setcurrenttime', { detail: this.#player.getCurrentTime() });
 	}
+
+	static #setPlaying(playing: boolean): void {
+		this.#player.setPlaying(playing);
+	}
+
 }
 
 async function load(file: JSONFile) {

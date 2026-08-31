@@ -31,8 +31,8 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
-		Controller.addEventListener('userpause', () => this.#setPlaying(false));
-		Controller.addEventListener('userplay', () => this.#setPlaying(true));
+		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
+		//Controller.addEventListener('userplay', () => this.#setPlaying(true));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 
 		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
@@ -156,11 +156,13 @@ export class ViewportPanel extends Panel {
 
 	#togglePlayPause(): void {
 		// Dispatch an event so all viewports toggle in sync
+		Controller.dispatchEvent('usersetplaying', { detail: !this.#playing });
+		/*
 		if (this.#playing) {
-			Controller.dispatchEvent('userpause');
 		} else {
 			Controller.dispatchEvent('userplay');
 		}
+		*/
 	}
 
 	#setPlaying(playing: boolean): void {

@@ -21,8 +21,8 @@ export type ControllerEvent = 'setsession'
 	| 'useraddcharacter'
 	| 'viewelement'
 	// Playback controls
-	| 'userplay'
-	| 'userpause'
+	| 'usersetplaying'
+	//| 'userpause'
 	| 'usergotopreviousframe'
 	| 'usergotonextframe'
 	| 'usergotopreviousclip'
@@ -55,8 +55,8 @@ export class Controller {
 	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<Character>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'userplay', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'userpause', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'usersetplaying', callback: (evt: CustomEvent<boolean>) => void, options?: AddEventListenerOptions | boolean): void;
+	//static addEventListener(type: 'userpause', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotopreviousframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotonextframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotopreviousclip', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -82,8 +82,8 @@ export class Controller {
 	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<Character>): boolean;
 	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
-	static dispatchEvent(type: 'userplay', options?: EventInit): boolean;
-	static dispatchEvent(type: 'userpause', options?: EventInit): boolean;
+	static dispatchEvent(type: 'usersetplaying', options: ControllerEventInit<boolean>): boolean;
+	//static dispatchEvent(type: 'userpause', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotopreviousframe', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotonextframe', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotopreviousclip', options?: EventInit): boolean;

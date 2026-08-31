@@ -1,9 +1,46 @@
+import { Controller } from './controller';
 import { SfmFilmClip } from './model/filmclip';
 
 export class Player {
 	#frame = 0;
 	#frameRate = 24;
 	#clip?: SfmFilmClip;
+	#animationFrame = -1;
+	#previousTick = performance.now();
+	#playing = false;
+	// Used for autoplay
+	#playTime = 0;
+
+	constructor() {
+		this.#tick(0);
+	}
+
+	#tick(timestamp: number): void {
+		cancelAnimationFrame(this.#animationFrame);
+		this.#animationFrame = requestAnimationFrame((timestamp: number) => this.#tick(timestamp));
+
+
+		//this.#time = (tick - this.#timeOrigin) * 0.001;
+		const delta = (timestamp - this.#previousTick);
+		this.#previousTick = timestamp;
+
+		if (this.#playing) {
+			this.#playTime += delta * 0.001;
+			this.setCurrentTime(this.#playTime);
+			Controller.dispatchEvent('setcurrenttime', { detail: this.#playTime });
+		}
+	}
+
+	setPlaying(playing: boolean): void {
+		if (this.#playing === playing) {
+			return;
+		}
+		this.#playing = playing;
+		if (playing) {
+			// Start playing, init current time
+			this.#playTime = this.getCurrentTime();
+		}
+	}
 
 	setFilmClip(clip: SfmFilmClip): void {
 		this.#clip = clip;

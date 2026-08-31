@@ -3,8 +3,10 @@
 	--time-scale: 1;
 	--time-offset: 0;
 	--play-head: 0;
+	--head-width: 1rem;
 	--ruler-unit: 10px;
 	--counter-scale: 1;
+	user-select: none;
 }
 
 @container style(--time-scale > 5) {
@@ -14,21 +16,21 @@
 }
 
 .time-track {
-	flex: 0 0 1rem;
+	flex: 0 0 2rem;
 	background-color: cadetblue;
 }
 
 .time-track {
 	/* Low ticks */
-	--ruler1-bdw: 1px;
+	--ruler1-bdw: 0.1rem;
 	--ruler1-c: #FFF;
-	--ruler1-h: 8px;
+	--ruler1-h: 0.8rem;
 	--ruler1-space: 1;
 
 	/* Tall ticks */
-	--ruler2-bdw: 1px;
+	--ruler2-bdw: 0.1rem;
 	--ruler2-c: #FFF;
-	--ruler2-h: 20px;
+	--ruler2-h: 2rem;
 	--ruler2-space: 10;
 
 	background-repeat: repeat-x;
@@ -98,4 +100,15 @@
 	content: counter(d);
 	line-height: 1;
 	padding-inline-start: var(--ruler-num-pi);
+}
+
+.head {
+	position: absolute;
+	top: 0;
+	left: calc(var(--ruler-unit)* (var(--time-offset) + var(--play-head)) * var(--time-scale) - var(--head-width) * 0.5);
+	height: 100%;
+	width: var(--head-width);
+	background-color: black;
+	opacity: 50%;
+	pointer-events: none;
 }

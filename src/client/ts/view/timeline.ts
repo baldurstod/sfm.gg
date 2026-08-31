@@ -15,12 +15,14 @@ export class TimelinePanel extends Panel {
 	#htmlTracks = new WeakMap<SfmTrack, HTMLElement>();
 	#htmlContent?: HTMLElement;
 	#htmlTimeTracks: HTMLElement[] = [];
+	#htmlPlayHead?: HTMLElement;
 	#timeScale = 1;
 	// Time offset, in second
 	#timeOffset = 2;
 	// Pixels per second;
 	#timeUnit = 10;
 	#frameRate = 24;
+	#dragTime = false;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -31,24 +33,29 @@ export class TimelinePanel extends Panel {
 
 		this.panel!.getContent().addEventListener('wheel', (event: WheelEvent) => this.#mouseWheel(event));
 
-		this.#htmlTimeTracks[0] = createElement('div', {
-			parent: this.panel!.getContent(),
-			class: 'time-track top',
-			innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
-			$click: (event: PointerEvent) => this.#timeClick(event),
-		});
+		for (let i = 0; i < 2; i++) {
+			this.#htmlTimeTracks[i] = createElement('div', {
+				parent: this.panel!.getContent(),
+				class: `time-track ${i === 0 ? 'top' : 'bottom'}`,
+				innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
+				$click: (event: PointerEvent) => this.#timeClick(event),
+				$mousemove: (event: MouseEvent) => this.#timeMouseMove(event),
+				$mousedown: (event: MouseEvent) => this.#dragTime = true,
+			});
+		}
 
 		this.#htmlContent = createElement('div', {
-			parent: this.panel!.getContent(),
+			after: this.#htmlTimeTracks[0],
 			class: 'content',
 			innerText: 'content',
+			$mousemove: (event: MouseEvent) => this.#timeMouseMove(event),
 		});
 
-		this.#htmlTimeTracks[1] = createElement('div', {
+		this.#htmlPlayHead = createElement('div', {
 			parent: this.panel!.getContent(),
-			class: 'time-track bottom',
-			innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
+			class: 'head',
 		});
+
 		this.#setCssVars();
 	}
 
@@ -56,6 +63,7 @@ export class TimelinePanel extends Panel {
 		super();
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setcurrentclip', (event) => this.#setCurrentClip(event.detail));
+		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 	}
 
 	#setActiveFilmClip(clip: SfmFilmClip): void {
@@ -96,7 +104,19 @@ export class TimelinePanel extends Panel {
 
 	#timeClick(event: PointerEvent): void {
 		const time = (event.offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
-		console.info(event.offsetX, time);
+		this.#setPlayPos(time);
+	}
+
+	#timeMouseMove(event: MouseEvent): void {
+		if (!this.#dragTime) {
+			return;
+		}
+		if ((event.buttons & 1) === 0) {// Primary button is not pressed
+			this.#dragTime = false;
+			return;
+		}
+
+		const time = (event.offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
 		this.#setPlayPos(time);
 	}
 
@@ -115,9 +135,9 @@ export class TimelinePanel extends Panel {
 	}
 
 	#setPlayPos(playPos: number): void {
-		this.#playHeadPos = Math.round(playPos * this.#frameRate) / this.#frameRate;
-		Controller.dispatchEvent('usersetcurrenttime', { detail: this.#playHeadPos, });
-		this.#setCssVars();
+		//this.#playHeadPos = Math.round(playPos * this.#frameRate) / this.#frameRate;
+		Controller.dispatchEvent('usersetcurrenttime', { detail: playPos, });
+		//this.#setCssVars();
 	}
 
 	#setCssVars(): void {
@@ -131,6 +151,18 @@ export class TimelinePanel extends Panel {
 
 	setFrameRate(frameRate: number): void {
 		this.#frameRate = Math.max(Math.round(frameRate), 1);
+	}
+
+	#setCurrentTime(time: number): void {
+		this.#playHeadPos = time;//Math.round(time * this.#frameRate) / this.#frameRate;
+		this.#setCssVars();
+		/*
+		if (!this.#htmTime) {
+			return;
+		}
+
+		this.#htmTime.innerText = formatTime(time);
+		*/
 	}
 
 }
