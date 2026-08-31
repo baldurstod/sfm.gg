@@ -1,7 +1,7 @@
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmCamera } from './camera';
-import { ClipParameters, SfmClip } from './clip';
+import { ClipParameters, SfmClip, SfmClipType } from './clip';
 import { SfmScene } from './scene';
 import { SfmTrack } from './track';
 import { SfmTrackGroup } from './trackgroup';
@@ -80,6 +80,10 @@ export class SfmFilmClip extends SfmClip {
 		}
 
 		return null;
+	}
+
+	getClipType(): SfmClipType {
+		return 'film';
 	}
 
 	static override getTypeName(): string {

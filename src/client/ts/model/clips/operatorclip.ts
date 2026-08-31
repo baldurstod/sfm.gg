@@ -1,6 +1,6 @@
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { ClipParameters, SfmClip } from '../clip';
+import { ClipParameters, SfmClip, SfmClipType } from '../clip';
 import { SfmOperator } from '../operators/operator';
 
 export interface OperatorClipParameters extends ClipParameters {
@@ -17,6 +17,10 @@ export class SfmOperatorClip extends SfmClip {
 
 	deleteOperator(operator: SfmOperator): void {
 		this.#operators.delete(operator);
+	}
+
+	getClipType(): SfmClipType {
+		return 'operator';
 	}
 
 	static override getTypeName(): string {

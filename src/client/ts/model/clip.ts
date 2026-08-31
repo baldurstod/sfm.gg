@@ -2,11 +2,13 @@ import { Serializable, SerializableParameters, UnserializationContext } from '..
 import { JSONSerializable } from '../serialize/serializer';
 import { SfmTimeFrame, TimeFrameParameters } from './timeframe';
 
+export type SfmClipType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
+
 export interface ClipParameters extends SerializableParameters {
 	timeFrame?: TimeFrameParameters;
 }
 
-export class SfmClip extends Serializable {
+export abstract class SfmClip extends Serializable {
 	readonly isSfmClip = true as const;
 	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
 
@@ -18,6 +20,8 @@ export class SfmClip extends Serializable {
 	inTimeFrame(time: number): boolean {
 		return this.#timeFrame.inTimeFrame(time);
 	}
+
+	abstract getClipType(): SfmClipType;
 
 	static override getTypeName(): string {
 		return 'Clip';

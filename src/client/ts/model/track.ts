@@ -1,20 +1,18 @@
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmClip } from './clip';
+import { SfmClip, SfmClipType } from './clip';
 import { SfmFilmClip } from './filmclip';
 import { SfmSoundClip } from './soundclip';
 
-export type SfmTrackType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
-
 export interface TrackParameters extends SerializableParameters {
 	/** Track type. Default to 'film' */
-	trackType?: SfmTrackType;
+	trackType?: SfmClipType;
 }
 
 export class SfmTrack extends Serializable {
 	readonly isSfmTrack = true as const;
 	#clips = new Set<SfmClip>();
-	#trackType: SfmTrackType;
+	#trackType: SfmClipType;
 	mute = false;
 	volume = 1;
 
@@ -45,7 +43,7 @@ export class SfmTrack extends Serializable {
 		return [...this.#clips];
 	}
 
-	getTrackType(): SfmTrackType {
+	getTrackType(): SfmClipType {
 		return this.#trackType;
 	}
 
@@ -83,7 +81,7 @@ export class SfmTrack extends Serializable {
 		this.mute = json.mute as boolean ?? false;
 		this.volume = json.volume as number ?? 1;
 
-		this.#trackType = json.track_type as SfmTrackType | undefined ?? 'film';// TODO: check value
+		this.#trackType = json.track_type as SfmClipType | undefined ?? 'film';// TODO: check value
 	}
 
 	override getProperties(): SerializableProperty[] {

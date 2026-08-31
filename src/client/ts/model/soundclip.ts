@@ -1,14 +1,18 @@
 import { UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
-import { SfmClip } from './clip';
+import { SfmClip, SfmClipType } from './clip';
 
 export class SfmSoundClip extends SfmClip {
 	readonly isSfmSoundClip = true as const;
 	volume = 1;
 	mute = false;
 
+	getClipType(): SfmClipType {
+		return 'sound';
+	}
+
 	static override getTypeName(): string {
-		return 'FilmClip';
+		return 'SoundClip';
 	}
 
 	override serialize(): JSONSerializable {
