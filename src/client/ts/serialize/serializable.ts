@@ -32,7 +32,7 @@ export type SerializableProperty = {
 	settable: boolean;
 }
 
-export class Serializable {
+export abstract class Serializable {
 	readonly isSerializable = true as const;
 	#id: string;
 	#name: string;
@@ -62,10 +62,7 @@ export class Serializable {
 		return (this.constructor as typeof Serializable).getTypeName();
 	}
 
-	getDefaultName(): string {
-		console.error('providing an empty default name for', this);
-		return '';
-	}
+	abstract getDefaultName(): string;
 
 	serialize(): JSONSerializable {
 		return {
@@ -93,3 +90,6 @@ export class Serializable {
 		return true;
 	}
 }
+
+/** Concrete subclasses of Serializable */
+export type ConcreteSerializable = typeof Serializable & (new (...args: any[]) => Serializable);

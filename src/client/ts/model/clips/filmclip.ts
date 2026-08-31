@@ -94,6 +94,10 @@ export class SfmFilmClip extends SfmClip {
 		return 'FilmClip';
 	}
 
+	override getDefaultName(): string {
+		return 'Film clip';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

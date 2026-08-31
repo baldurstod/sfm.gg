@@ -27,6 +27,10 @@ export class SfmOperatorClip extends SfmClip {
 		return 'OperatorClip';
 	}
 
+	override getDefaultName(): string {
+		return 'Operator clip';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

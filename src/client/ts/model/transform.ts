@@ -39,6 +39,10 @@ export class SfmTransform extends Serializable {
 		return 'Transform';
 	}
 
+	override getDefaultName(): string {
+		return 'Transform';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

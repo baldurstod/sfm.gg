@@ -1,6 +1,6 @@
 import { JSONObject, JSONValue } from 'harmony-types';
 import { SfmSession } from '../model/session';
-import { Serializable } from './serializable';
+import { ConcreteSerializable, Serializable } from './serializable';
 
 //export type SerializableValueSingle = string | number | Serializable;
 //export type SerializableValueArray = SerializableValueSingle[];
@@ -38,7 +38,7 @@ export type JSONFile = {
 
 export class SfmSerializer {
 
-	static readonly #entities = new Map<string, typeof Serializable>();
+	static readonly #entities = new Map<string, ConcreteSerializable>();
 
 	static async unserializeJSON(file: JSONFile): Promise<SfmSession | null> {
 		let loadedResolve: Function = () => { };// Note: typescript falsely complains about loadedResolve not being assigned without this.
@@ -185,10 +185,15 @@ export class SfmSerializer {
 			return null;
 		}
 
-		return new serializableType({ name: json.name as string, id: json.id as string });
+		// We cast the type cause Serializable is abstract. However the actual class is guaranteed to be concrete: registerSerializable enforce this
+		return new (serializableType as any)({ name: json.name as string, id: json.id as string });
 	}
 
-	static registerSerializable(type: typeof Serializable): void {
+	/**
+	 * Register concrete subclasses of Serializable
+	 * @param type Subclass to register
+	 */
+	static registerSerializable(type: ConcreteSerializable): void {
 		const name = type.getTypeName().toLowerCase();
 		if (this.#entities.has(name)) {
 			throw new Error(`${name} is already registered`);
@@ -196,7 +201,7 @@ export class SfmSerializer {
 		this.#entities.set(name, type);
 	}
 
-	static #getSerializableClass(name: string) {
+	static #getSerializableClass(name: string): ConcreteSerializable | undefined {
 		return this.#entities.get(name.toLowerCase());
 	}
 }

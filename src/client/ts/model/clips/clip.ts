@@ -51,5 +51,3 @@ export abstract class SfmClip extends Serializable {
 		}
 	}
 }
-
-//SfmSerializer.registerSerializable(SfmClip);

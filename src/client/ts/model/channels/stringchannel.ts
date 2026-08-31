@@ -7,6 +7,11 @@ export class SfmStringChannel extends Serializable {
 	static override getTypeName(): string {
 		return 'StringChannel';
 	}
+
+	override getDefaultName(): string {
+		return 'String channel';
+	}
+
 }
 
 SfmSerializer.registerSerializable(SfmStringChannel);

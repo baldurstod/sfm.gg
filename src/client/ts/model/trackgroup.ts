@@ -27,6 +27,10 @@ export class SfmTrackGroup extends Serializable {
 		return 'TrackGroup';
 	}
 
+	override getDefaultName(): string {
+		return 'Track group';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

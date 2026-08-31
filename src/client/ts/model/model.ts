@@ -7,6 +7,10 @@ export class SfmModel extends SfmEntity {
 	static override getTypeName(): string {
 		return 'Model';
 	}
+
+	override getDefaultName(): string {
+		return 'Model';
+	}
 }
 
 SfmSerializer.registerSerializable(SfmModel);

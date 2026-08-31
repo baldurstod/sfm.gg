@@ -1,5 +1,5 @@
 import { Serializable, UnserializationContext } from '../../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { JSONSerializable } from '../../serialize/serializer';
 import { CurveKey, CurveKeyType } from './curvekey';
 
 export type SfmDataCurveType =
@@ -11,7 +11,7 @@ export type SfmDataCurveType =
 	| 'cubic-bezier'
 	;
 
-export class SfmDataCurve extends Serializable {
+export abstract class SfmDataCurve extends Serializable {
 	readonly isSfmDataCurve = true as const;
 	//readonly controlPoints = new Set();
 	readonly keys: Set<CurveKey<any>>[] = [];
@@ -47,5 +47,3 @@ export class SfmDataCurve extends Serializable {
 		this.curveType = json.curve_type as SfmDataCurveType;//TODO: check the actual value
 	}
 }
-
-SfmSerializer.registerSerializable(SfmDataCurve);

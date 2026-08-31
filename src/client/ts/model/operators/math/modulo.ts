@@ -30,6 +30,10 @@ export class SfmModuloOperator extends Serializable implements SfmOperator {
 	static override getTypeName(): string {
 		return 'ModuloOperator';
 	}
+
+	override getDefaultName(): string {
+		return 'Modulo operator';
+	}
 }
 
 SfmSerializer.registerSerializable(SfmModuloOperator);

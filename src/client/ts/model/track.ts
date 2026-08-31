@@ -51,6 +51,10 @@ export class SfmTrack extends Serializable {
 		return 'Track';
 	}
 
+	override getDefaultName(): string {
+		return 'Track';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

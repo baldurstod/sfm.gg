@@ -1,5 +1,5 @@
 import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { JSONSerializable } from '../../serialize/serializer';
 
 export interface PrimitiveParameters extends SerializableParameters {
 	/** Start time. Default to 0 */
@@ -10,7 +10,7 @@ export interface PrimitiveParameters extends SerializableParameters {
 	offset?: number;
 }
 
-export class SfmPrimitive extends Serializable {
+export abstract class SfmPrimitive extends Serializable {
 	readonly isSfmPrimitive = true as const;
 
 	constructor(params: PrimitiveParameters = {}) {
@@ -33,5 +33,3 @@ export class SfmPrimitive extends Serializable {
 
 	}
 }
-
-SfmSerializer.registerSerializable(SfmPrimitive);

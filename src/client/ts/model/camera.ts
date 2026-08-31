@@ -40,6 +40,10 @@ export class SfmCamera extends Serializable {
 	static override getTypeName(): string {
 		return 'Camera';
 	}
+
+	override getDefaultName(): string {
+		return 'Camera';
+	}
 }
 
 SfmSerializer.registerSerializable(SfmCamera);

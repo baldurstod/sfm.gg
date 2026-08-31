@@ -7,6 +7,10 @@ export class SfmBooleanAttribute extends Serializable {
 	static override getTypeName(): string {
 		return 'BooleanAttribute';
 	}
+
+	override getDefaultName(): string {
+		return 'Boolean attribute';
+	}
 }
 
 SfmSerializer.registerSerializable(SfmBooleanAttribute);

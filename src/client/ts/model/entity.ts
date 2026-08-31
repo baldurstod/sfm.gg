@@ -4,7 +4,7 @@ import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 
 export type SfmEntityPropertyValue = string | number | Serializable | Serializable[];
 
-export class SfmEntity extends Serializable {
+export abstract class SfmEntity extends Serializable {
 	readonly isSfmEntity = true as const;
 	readonly properties = new Map<string, SfmEntityPropertyValue>();
 
@@ -35,5 +35,3 @@ export class SfmEntity extends Serializable {
 		}
 	}
 }
-
-SfmSerializer.registerSerializable(SfmEntity);

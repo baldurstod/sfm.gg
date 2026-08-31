@@ -7,6 +7,11 @@ export class SfmStringAttribute extends Serializable {
 	static override getTypeName(): string {
 		return 'StringAttribute';
 	}
+
+	override getDefaultName(): string {
+		return 'String attribute';
+	}
+
 }
 
 SfmSerializer.registerSerializable(SfmStringAttribute);

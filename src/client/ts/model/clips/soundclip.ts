@@ -15,6 +15,10 @@ export class SfmSoundClip extends SfmClip {
 		return 'SoundClip';
 	}
 
+	override getDefaultName(): string {
+		return 'Sound clip';
+	}
+
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 

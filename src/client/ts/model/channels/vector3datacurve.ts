@@ -14,6 +14,10 @@ export class SfmDataCurveVector3 extends SfmDataCurve {
 		return 'DataCurveVector3';
 	}
 
+	override getDefaultName(): string {
+		return 'Data curve vector3';
+	}
+
 	getValueAtTime(time: number): vec3 {
 		return vec3.create();
 	}
