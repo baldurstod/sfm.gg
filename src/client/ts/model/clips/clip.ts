@@ -1,6 +1,7 @@
 import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
 import { SfmTimeFrame, TimeFrameParameters } from '../timeframe';
+import { SfmTrack } from '../track';
 
 export type SfmClipType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
 
@@ -11,6 +12,7 @@ export interface ClipParameters extends SerializableParameters {
 export abstract class SfmClip extends Serializable {
 	readonly isSfmClip = true as const;
 	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
+	track: SfmTrack | null = null;
 
 	constructor(params: ClipParameters = {}) {
 		super(params);
@@ -42,6 +44,7 @@ export abstract class SfmClip extends Serializable {
 	}
 
 	abstract getClipType(): SfmClipType;
+	abstract createClip(): SfmClip;
 
 	static override getTypeName(): string {
 		return 'Clip';

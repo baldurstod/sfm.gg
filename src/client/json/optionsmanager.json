@@ -29,6 +29,11 @@
 				"english",
 				"french"
 			]
+		},
+		{
+			"name": "app.shortcuts.timeline.blade",
+			"type": "shortcut",
+			"default": "B"
 		}
 	]
 }

@@ -1,5 +1,5 @@
 import { Box, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
-import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents } from 'harmony-browser-utils';
+import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import htmlCSS from '../css/html.css';
@@ -93,8 +93,8 @@ class Application {
 	static #initOptions(): void {
 		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#setLang((event as CustomEvent<OptionsManagerEvent<string>>).detail.value as string));
 
-
 		OptionsManager.init({ json: optionsmanager });
+		(async () => ShortcutHandler.setShortcuts('timeline', await OptionsManager.getOptionsPerType('shortcut') as Map<string, string>))()
 	}
 
 	static #initHTML() {
@@ -142,7 +142,7 @@ class Application {
 		this.#session.setActiveFilmClip(film);
 
 
-		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { end: 0.5 } });
+		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), });
 		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
 		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 		clip.scene!.getScene().addChild(workCamera.getCamera());
@@ -153,10 +153,12 @@ class Application {
 		let dialog: SfmTrack, music: SfmTrack;
 		film.addTrackGroup(new SfmTrackGroup({ name: 'Sounds' })).addTracks([
 			dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' }),
-			music = new SfmTrack({ name: 'Music', trackType: 'sound' }),
+			music = new SfmTrack({ name: 'Music', trackType: 'sound', }),
 		]);
 
 		dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
+		dialog.addClip(new SfmSoundClip({ timeFrame: { end: 0.5 } }));
+		music.addClip(new SfmSoundClip({ name: 'music1' }));
 
 
 

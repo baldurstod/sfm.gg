@@ -8,6 +8,7 @@ import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
+import { ShortcutHandler } from 'harmony-browser-utils';
 
 type DragOperation = 'time' | 'clipstart' | 'clipend';
 
@@ -55,6 +56,9 @@ export class TimelinePanel extends Panel {
 		this.#htmlContent = createElement('div', {
 			after: this.#htmlTimeTracks[0],
 			class: 'content',
+			attributes: {
+				tabindex: '1',
+			},
 			$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
 		});
 
@@ -62,6 +66,10 @@ export class TimelinePanel extends Panel {
 			parent: this.panel!.getContent(),
 			class: 'head',
 		});
+
+		ShortcutHandler.addContext('timeline', this.#htmlContent);
+
+		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeCurrentClip());
 
 		this.#setCssVars();
 	}
@@ -80,6 +88,7 @@ export class TimelinePanel extends Panel {
 
 	#setCurrentClip(clip: SfmClip): void {
 		this.#currentClip = clip;
+		console.info(clip);
 		this.refreshHTML();
 	}
 
@@ -121,7 +130,12 @@ export class TimelinePanel extends Panel {
 				html = createElement('div', { class: 'trackgroup', });
 				break;
 			case (element as SfmTrack).isSfmTrack:
-				html = createElement('div', { class: 'track', });
+				html = createElement('div', {
+					class: 'track',
+					child: createElement('div', {
+						innerText: element.getName(),
+					}),
+				});
 				break;
 			case (element as SfmClip).isSfmClip:
 				html = createElement('div', {
@@ -141,7 +155,8 @@ export class TimelinePanel extends Panel {
 							//style: `cursor: url('data:image/svg+xml,${encodeURIComponent(arrowMenuOpenSVG)}')12 12, col-resize;`,
 							$mousedown: () => this.#startDragClipEnd(element),
 						}),
-					]
+					],
+					$click: () => this.#setCurrentClip(element as SfmClip),
 				});
 				break;
 			default:
@@ -279,4 +294,22 @@ export class TimelinePanel extends Panel {
 		*/
 	}
 
+	#bladeCurrentClip(): void {
+		if (!this.#currentClip || !this.#currentClip.track) {
+			return;
+		}
+
+		if (!this.#currentClip.inTimeFrame(this.#playHeadPos)) {
+			return;
+		}
+
+		const end = this.#currentClip.getend();
+		this.#currentClip.setEnd(this.#playHeadPos);
+		const newCLip = this.#currentClip.createClip();
+		newCLip.setStart(this.#playHeadPos);
+		newCLip.setEnd(end);
+		this.#currentClip.track.addClip(newCLip);
+
+		this.refreshHTML();
+	}
 }

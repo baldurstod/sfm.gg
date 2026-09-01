@@ -31,12 +31,22 @@ export class SfmTrack extends Serializable {
 			throw new Error('trying to add a clip of the wrong track type');
 		}
 
-		this.#clips.add(clip);
+		this.#addClip(clip);
+
 		return clip;
+	}
+
+	#addClip(clip: SfmClip): void {
+		// Remove the clip from the previous track
+		clip.track?.deleteClip(clip);
+		clip.track = this;
+
+		this.#clips.add(clip);
 	}
 
 	deleteClip(clip: SfmClip): void {
 		this.#clips.delete(clip);
+		clip.track = null;
 	}
 
 	getClips(): SfmClip[] {
@@ -77,7 +87,7 @@ export class SfmTrack extends Serializable {
 				const clip = context.elements.get(clipId) as SfmClip | undefined; // TODO: check if it's actually a clip
 
 				if (clip) {
-					this.#clips.add(clip);
+					this.#addClip(clip);
 				}
 			}
 		}

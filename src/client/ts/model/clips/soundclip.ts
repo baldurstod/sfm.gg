@@ -11,6 +11,10 @@ export class SfmSoundClip extends SfmClip {
 		return 'sound';
 	}
 
+	createClip(): SfmClip {
+		return new SfmSoundClip();
+	}
+
 	static override getTypeName(): string {
 		return 'SoundClip';
 	}

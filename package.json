@@ -27,6 +27,7 @@
     "gl-matrix": "^3.4.4",
     "harmony-3d": "github:baldurstod/harmony-3d",
     "harmony-3d-utils": "github:baldurstod/harmony-3d-utils",
+    "harmony-browser-utils": "github:baldurstod/harmony-browser-utils",
     "harmony-types": "github:baldurstod/harmony-types",
     "harmony-ui": "github:baldurstod/harmony-ui",
     "harmony-utils": "github:baldurstod/harmony-utils"

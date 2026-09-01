@@ -168,12 +168,10 @@
 
 .resize-clip-start {
 	left: 0;
-	background-color: chartreuse;
 }
 
 .resize-clip-end {
 	right: 0;
-	background-color: coral;
 }
 
 .clip-name{

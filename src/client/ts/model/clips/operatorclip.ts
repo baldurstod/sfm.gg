@@ -23,6 +23,10 @@ export class SfmOperatorClip extends SfmClip {
 		return 'operator';
 	}
 
+	createClip(): SfmClip {
+		return new SfmOperatorClip();
+	}
+
 	static override getTypeName(): string {
 		return 'OperatorClip';
 	}
