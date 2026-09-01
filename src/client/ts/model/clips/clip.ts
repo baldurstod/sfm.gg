@@ -21,8 +21,20 @@ export abstract class SfmClip extends Serializable {
 		return this.#timeFrame.getStart();
 	}
 
+	getend(): number {
+		return this.#timeFrame.getEnd();
+	}
+
 	getDuration(): number {
 		return this.#timeFrame.getDuration();
+	}
+
+	setStart(start: number): void {
+		return this.#timeFrame.setStart(start);
+	}
+
+	setEnd(end: number): void {
+		return this.#timeFrame.setEnd(end);
 	}
 
 	inTimeFrame(time: number): boolean {

@@ -142,7 +142,7 @@ class Application {
 		this.#session.setActiveFilmClip(film);
 
 
-		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { duration: 0.5 } });
+		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { end: 0.5 } });
 		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
 		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 		clip.scene!.getScene().addChild(workCamera.getCamera());
@@ -156,7 +156,7 @@ class Application {
 			music = new SfmTrack({ name: 'Music', trackType: 'sound' }),
 		]);
 
-		dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, duration: 1 } }));
+		dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
 
 
 

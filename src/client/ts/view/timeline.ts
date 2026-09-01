@@ -1,3 +1,4 @@
+import { arrowMenuCloseSVG, arrowMenuOpenSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
@@ -7,6 +8,8 @@ import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
+
+type DragOperation = 'time' | 'clipstart' | 'clipend';
 
 export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
@@ -24,8 +27,10 @@ export class TimelinePanel extends Panel {
 	// Pixels per second;
 	#timeUnit = 10;
 	#frameRate = 24;
-	#dragTime = false;
+	//#dragTime = false;
 	#elements = new Map<Serializable, HTMLElement>();
+	#dragOperation: DragOperation | null = null;
+	#dragElement: Serializable | null = null;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -42,15 +47,15 @@ export class TimelinePanel extends Panel {
 				class: `time-track ${i === 0 ? 'top' : 'bottom'}`,
 				innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
 				$click: (event: PointerEvent) => this.#timeClick(event),
-				$mousemove: (event: MouseEvent) => this.#timeMouseMove(event),
-				$mousedown: (event: MouseEvent) => this.#dragTime = true,
+				$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
+				$mousedown: (event: MouseEvent) => this.#dragOperation = 'time',
 			});
 		}
 
 		this.#htmlContent = createElement('div', {
 			after: this.#htmlTimeTracks[0],
 			class: 'content',
-			$mousemove: (event: MouseEvent) => this.#timeMouseMove(event),
+			$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
 		});
 
 		this.#htmlPlayHead = createElement('div', {
@@ -79,7 +84,6 @@ export class TimelinePanel extends Panel {
 	}
 
 	protected refreshHTML(): void {
-		console.info('timeline current clip', this.#activeFilmClip);
 		this.#htmlContent?.replaceChildren();
 		const activeFilmClip = this.#activeFilmClip;
 		if (!activeFilmClip) {
@@ -120,12 +124,40 @@ export class TimelinePanel extends Panel {
 				html = createElement('div', { class: 'track', });
 				break;
 			case (element as SfmClip).isSfmClip:
-				html = createElement('div', { class: `clip ${(element as SfmClip).getClipType()}-clip`, });
+				html = createElement('div', {
+					class: `clip ${(element as SfmClip).getClipType()}-clip`,
+					childs: [
+						createElement('div', {
+							class: 'clip-name',
+							innerText: element.getName(),
+						}),
+						createElement('div', {
+							class: 'resize-clip resize-clip-start',
+							//style: `cursor: url('data:image/svg+xml,${encodeURIComponent(arrowMenuCloseSVG)}')12 12, col-resize;`,
+							$mousedown: () => this.#startDragClipStart(element),
+						}),
+						createElement('div', {
+							class: 'resize-clip resize-clip-end',
+							//style: `cursor: url('data:image/svg+xml,${encodeURIComponent(arrowMenuOpenSVG)}')12 12, col-resize;`,
+							$mousedown: () => this.#startDragClipEnd(element),
+						}),
+					]
+				});
 				break;
 			default:
 				throw new Error('code me ' + element.getTypeName());
 		}
 		return html;
+	}
+
+	#startDragClipStart(element: Serializable): void {
+		this.#dragOperation = 'clipstart';
+		this.#dragElement = element;
+	}
+
+	#startDragClipEnd(element: Serializable): void {
+		this.#dragOperation = 'clipend';
+		this.#dragElement = element;
 	}
 
 	#mouseWheel(event: WheelEvent): void {
@@ -155,17 +187,34 @@ export class TimelinePanel extends Panel {
 		this.#setPlayPos(time);
 	}
 
-	#timeMouseMove(event: MouseEvent): void {
-		if (!this.#dragTime) {
+	#handleMouseMove(event: MouseEvent): void {
+		if (!this.#dragOperation) {
 			return;
 		}
 		if ((event.buttons & 1) === 0) {// Primary button is not pressed
-			this.#dragTime = false;
+			this.#dragOperation = null;
 			return;
 		}
 
-		const time = (event.offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
-		this.#setPlayPos(time);
+		// Compute mouse position relative to content
+		const rect = this.#htmlContent!.getBoundingClientRect();
+		const offsetX = event.clientX - rect.left;
+
+		const time = (offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
+		switch (this.#dragOperation) {
+			case 'time':
+				this.#setPlayPos(time);
+				break;
+			case 'clipstart':
+				this.#setClipStart(time);
+				break;
+			case 'clipend':
+				this.#setClipEnd(time);
+				break;
+			default:
+				console.info('unsupported opertaion ' + this.#dragOperation);
+				break;
+		}
 	}
 
 	#setTimeScale(timeScale: number): void {
@@ -183,9 +232,26 @@ export class TimelinePanel extends Panel {
 	}
 
 	#setPlayPos(playPos: number): void {
-		//this.#playHeadPos = Math.round(playPos * this.#frameRate) / this.#frameRate;
 		Controller.dispatchEvent('usersetcurrenttime', { detail: playPos, });
-		//this.#setCssVars();
+	}
+
+	#setClipStart(time: number): void {
+		if (!this.#dragElement || !(this.#dragElement as SfmClip).isSfmClip) {
+			return;
+		}
+
+		(this.#dragElement as SfmClip).setStart(time);
+		this.refreshHTML();
+	}
+
+	#setClipEnd(time: number): void {
+		//Controller.dispatchEvent('usersetcurrenttime', { detail: time, });
+		if (!this.#dragElement || !(this.#dragElement as SfmClip).isSfmClip) {
+			return;
+		}
+
+		(this.#dragElement as SfmClip).setEnd(time);
+		this.refreshHTML();
 	}
 
 	#setCssVars(): void {
