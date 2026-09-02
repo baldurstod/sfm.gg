@@ -10,7 +10,7 @@ import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
 
-type DragOperation = 'time' | 'clipstart' | 'clipend';
+type DragOperation = 'time' | 'clipstart' | 'clipend' | 'moveclip';
 
 export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
@@ -33,6 +33,9 @@ export class TimelinePanel extends Panel {
 	#elementsInner = new Map<Serializable, HTMLElement>();
 	#dragOperation: DragOperation | null = null;
 	#dragElement: Serializable | null = null;
+	#dragTime = 0;
+	#dragStart = 0;
+	#dragEnd = 0;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -202,6 +205,14 @@ export class TimelinePanel extends Panel {
 						createElement('div', {
 							class: 'clip-header',
 							innerText: element.getName(),
+							$mousedown: (event: MouseEvent) => {
+								this.#dragOperation = 'moveclip';
+								this.#dragElement = element;
+								this.#dragTime = this.#getTimeFromMouseEvent(event);
+								this.#dragStart = (element as SfmClip).getStart();
+								this.#dragEnd = (element as SfmClip).getEnd();
+								console.info(this.#dragTime);
+							}
 						}),
 						createElement('div', {
 							class: 'resize-clip resize-clip-start',
@@ -214,13 +225,8 @@ export class TimelinePanel extends Panel {
 							$mousedown: () => this.#startDragClipEnd(element),
 						}),
 					],
-					$click: (event: MouseEvent) => {
-						if (event.ctrlKey) {
-							this.#addSelectedClip(element as SfmClip);
-						} else {
-							this.#setSelectedClip(element as SfmClip);
-						}
-					},
+					$click: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
+					$mousedown: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
 				});
 				break;
 			default:
@@ -231,6 +237,15 @@ export class TimelinePanel extends Panel {
 		this.#elementsOuter.set(element, outer);
 		this.#elementsInner.set(element, inner);
 		return [outer, inner];
+	}
+
+	#clipMouseDownOrClick(event: MouseEvent, element: Serializable): void {
+		if (event.ctrlKey) {
+			this.#addSelectedClip(element as SfmClip);
+		} else {
+			this.#setSelectedClip(element as SfmClip);
+		}
+
 	}
 
 	#startDragClipStart(element: Serializable): void {
@@ -279,11 +294,7 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		// Compute mouse position relative to content
-		const rect = this.#htmlContent!.getBoundingClientRect();
-		const offsetX = event.clientX - rect.left;
-
-		const time = (offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
+		const time = this.#getTimeFromMouseEvent(event);//(offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
 		switch (this.#dragOperation) {
 			case 'time':
 				this.#setPlayPos(time);
@@ -294,10 +305,27 @@ export class TimelinePanel extends Panel {
 			case 'clipend':
 				this.#setClipEnd(time);
 				break;
+			case 'moveclip':
+				//this.#setClipEnd(time);
+				if (this.#dragElement) {
+					const delta = time - this.#dragTime;
+					(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
+					(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+					this.refreshHTML();
+				}
+				break;
 			default:
 				console.info('unsupported opertaion ' + this.#dragOperation);
 				break;
 		}
+	}
+
+	#getTimeFromMouseEvent(event: MouseEvent): number {
+		// Compute mouse position relative to content
+		const rect = this.#htmlContent!.getBoundingClientRect();
+		const offsetX = event.clientX - rect.left;
+
+		return (offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
 	}
 
 	#setTimeScale(timeScale: number): void {
