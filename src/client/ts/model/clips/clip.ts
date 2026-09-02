@@ -23,7 +23,7 @@ export abstract class SfmClip extends Serializable {
 		return this.#timeFrame.getStart();
 	}
 
-	getend(): number {
+	getEnd(): number {
 		return this.#timeFrame.getEnd();
 	}
 

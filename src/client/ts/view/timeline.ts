@@ -37,14 +37,16 @@ export class TimelinePanel extends Panel {
 		if (this.panel) {
 			return;
 		}
-		super.initPanel({ size: 1, layout: 'column', adoptStyle: timelineCSS, titleI18n: '#timeline', });
+		super.initPanel({ size: 1, layout: 'column', adoptStyle: timelineCSS, titleI18n: '#timeline', tabIndex: '1', });
 		//this.panel!.append('TimelinePanel');
 
-		this.panel!.getContent().addEventListener('wheel', (event: WheelEvent) => this.#mouseWheel(event));
+		const panelContent = this.panel!.getContent();
+
+		panelContent.addEventListener('wheel', (event: WheelEvent) => this.#mouseWheel(event));
 
 		for (let i = 0; i < 2; i++) {
 			this.#htmlTimeTracks[i] = createElement('div', {
-				parent: this.panel!.getContent(),
+				parent: panelContent,
 				class: `time-track ${i === 0 ? 'top' : 'bottom'}`,
 				innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
 				$click: (event: PointerEvent) => this.#timeClick(event),
@@ -56,18 +58,15 @@ export class TimelinePanel extends Panel {
 		this.#htmlContent = createElement('div', {
 			after: this.#htmlTimeTracks[0],
 			class: 'content',
-			attributes: {
-				tabindex: '1',
-			},
 			$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
 		});
 
 		this.#htmlPlayHead = createElement('div', {
-			parent: this.panel!.getContent(),
+			parent: panelContent,
 			class: 'head',
 		});
 
-		ShortcutHandler.addContext('timeline', this.#htmlContent);
+		ShortcutHandler.addContext('timeline', this.panel!.getContent());
 
 		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeCurrentClip());
 
@@ -295,6 +294,7 @@ export class TimelinePanel extends Panel {
 	}
 
 	#bladeCurrentClip(): void {
+		const time = this.#playHeadPos;
 		if (!this.#currentClip || !this.#currentClip.track) {
 			return;
 		}
@@ -303,7 +303,12 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		const end = this.#currentClip.getend();
+		// Prevents blading at the very start or very end
+		if (this.#currentClip.getStart() === time || this.#currentClip.getEnd() === time) {
+			return;
+		}
+
+		const end = this.#currentClip.getEnd();
 		this.#currentClip.setEnd(this.#playHeadPos);
 		const newCLip = this.#currentClip.createClip();
 		newCLip.setStart(this.#playHeadPos);
