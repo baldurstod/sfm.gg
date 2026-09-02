@@ -136,7 +136,7 @@ export class TimelinePanel extends Panel {
 
 			let lastRow = 0;
 			for (const [row, endTime] of a) {
-				if (clipEnd >= endTime) {
+				if (clip.getStart() >= endTime) {
 					a.set(row, clipEnd);
 					return row;
 				}
