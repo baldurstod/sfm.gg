@@ -1,5 +1,6 @@
-import { arrowMenuCloseSVG, arrowMenuOpenSVG } from 'harmony-svg';
+import { ShortcutHandler } from 'harmony-browser-utils';
 import { createElement } from 'harmony-ui';
+import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
 import { SfmClip } from '../model/clips/clip';
@@ -8,13 +9,12 @@ import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
-import { ShortcutHandler } from 'harmony-browser-utils';
 
 type DragOperation = 'time' | 'clipstart' | 'clipend';
 
 export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
-	#currentClip: SfmClip | null = null;
+	#selectedClips = new Set<SfmClip>;
 	// Selected sub clip
 	#activeFilmClip: SfmFilmClip | null = null;
 	#playHeadPos = 0;
@@ -29,7 +29,8 @@ export class TimelinePanel extends Panel {
 	#timeUnit = 10;
 	#frameRate = 24;
 	//#dragTime = false;
-	#elements = new Map<Serializable, HTMLElement>();
+	#elementsOuter = new Map<Serializable, HTMLElement>();
+	#elementsInner = new Map<Serializable, HTMLElement>();
 	#dragOperation: DragOperation | null = null;
 	#dragElement: Serializable | null = null;
 
@@ -68,7 +69,7 @@ export class TimelinePanel extends Panel {
 
 		ShortcutHandler.addContext('timeline', this.panel!.getContent());
 
-		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeCurrentClip());
+		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeClip());
 
 		this.#setCssVars();
 	}
@@ -76,7 +77,7 @@ export class TimelinePanel extends Panel {
 	constructor() {
 		super();
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
-		Controller.addEventListener('setcurrentclip', (event) => this.#setCurrentClip(event.detail));
+		Controller.addEventListener('setcurrentclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 	}
 
@@ -85,9 +86,26 @@ export class TimelinePanel extends Panel {
 		this.refreshHTML();
 	}
 
-	#setCurrentClip(clip: SfmClip): void {
-		this.#currentClip = clip;
+	#addSelectedClip(clip: SfmClip): void {
+		this.#selectedClips.add(clip);
 		console.info(clip);
+		const [outer] = this.#getSerializableElement(clip);
+		outer.classList.add('active');
+		this.refreshHTML();
+	}
+
+	#setSelectedClip(clip: SfmClip): void {
+		for (const selected of this.#selectedClips) {
+			const [outer] = this.#getSerializableElement(selected);
+			outer.classList.remove('active');
+
+		}
+		this.#selectedClips.clear();
+
+		this.#selectedClips.add(clip);
+		console.info(clip);
+		const [outer] = this.#getSerializableElement(clip);
+		outer.classList.add('active');
 		this.refreshHTML();
 	}
 
@@ -98,50 +116,91 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
+		const posPerTrack = new Map2<SfmTrack, number, number>();
+
+		function getClipRow(clip: SfmClip): number {
+			const track = clip.track;
+			if (!track) {
+				return 0;
+			}
+
+			const clipEnd = clip.getEnd();
+			const a = posPerTrack.getSubMap(track);
+			if (a === undefined) {
+				posPerTrack.set(track, 0, clipEnd);
+				return 0;
+			}
+
+			let lastRow = 0;
+			for (const [row, endTime] of a) {
+				if (clipEnd >= endTime) {
+					a.set(row, clipEnd);
+					return row;
+				}
+				lastRow = row;
+			}
+
+			++lastRow;
+
+			posPerTrack.set(track, lastRow, clipEnd);
+			return lastRow;
+		}
+
 		for (const trackGroup of activeFilmClip.getTrackGroup()) {
 			const tracks = trackGroup.getTracks();
-			const htmlTrackGroup = this.#getSerializableElement(trackGroup);
+			const [htmlTrackGroup] = this.#getSerializableElement(trackGroup);
 			htmlTrackGroup.style.cssText = `--tracks:${tracks.length};`;
 			this.#htmlContent?.append(htmlTrackGroup);
 
 			for (const [id, track] of tracks.entries()) {
-				const htmlTrack = this.#getSerializableElement(track);
-				htmlTrack.style.cssText = `--start:${activeFilmClip.getStart()};--duration:${activeFilmClip.getDuration()};--track:${id};`;
-				htmlTrackGroup.append(htmlTrack);
+				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
+				htmlTrackOuter.style.cssText = `--start:${activeFilmClip.getStart()};--duration:${activeFilmClip.getDuration()};--track:${id};`;
+				htmlTrackGroup.append(htmlTrackOuter);
 
+				let maxRow = -1;
 				for (const clip of track.getClips()) {
-					const htmlClip = this.#getSerializableElement(clip);
-					htmlClip.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--track:${id};`;
-					htmlTrack.append(htmlClip);
+					const [htmlClip] = this.#getSerializableElement(clip);
+					const row = getClipRow(clip);
+					maxRow = Math.max(row, maxRow);
+					htmlClip.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--row:${row}`;
+					htmlTrackInner.append(htmlClip);
 				}
+
+				htmlTrackInner.style.cssText = `--rows:${maxRow + 1};`;
 			}
 		}
 	}
 
-	#getSerializableElement(element: Serializable): HTMLElement {
-		let html = this.#elements.get(element);
-		if (html) {
-			return html;
+	#getSerializableElement(element: Serializable): [HTMLElement, HTMLElement] {
+		let outer = this.#elementsOuter.get(element);
+		let inner = this.#elementsInner.get(element);
+		if (outer && inner) {
+			return [outer, inner];
 		}
 
 		switch (true) {
 			case (element as SfmTrackGroup).isSfmTrackGroup:
-				html = createElement('div', { class: 'trackgroup', });
+				inner = outer = createElement('div', { class: 'trackgroup', });
 				break;
 			case (element as SfmTrack).isSfmTrack:
-				html = createElement('div', {
+				outer = createElement('div', {
 					class: 'track',
-					child: createElement('div', {
-						innerText: element.getName(),
-					}),
+					childs: [
+						createElement('div', {
+							innerText: element.getName(),
+						}),
+						inner = createElement('div', {
+							class: 'clip-container',
+						}),
+					],
 				});
 				break;
 			case (element as SfmClip).isSfmClip:
-				html = createElement('div', {
+				inner = outer = createElement('div', {
 					class: `clip ${(element as SfmClip).getClipType()}-clip`,
 					childs: [
 						createElement('div', {
-							class: 'clip-name',
+							class: 'clip-header',
 							innerText: element.getName(),
 						}),
 						createElement('div', {
@@ -155,13 +214,23 @@ export class TimelinePanel extends Panel {
 							$mousedown: () => this.#startDragClipEnd(element),
 						}),
 					],
-					$click: () => this.#setCurrentClip(element as SfmClip),
+					$click: (event: MouseEvent) => {
+						if (event.ctrlKey) {
+							this.#addSelectedClip(element as SfmClip);
+						} else {
+							this.#setSelectedClip(element as SfmClip);
+						}
+					},
 				});
 				break;
 			default:
 				throw new Error('code me ' + element.getTypeName());
 		}
-		return html;
+
+
+		this.#elementsOuter.set(element, outer);
+		this.#elementsInner.set(element, inner);
+		return [outer, inner];
 	}
 
 	#startDragClipStart(element: Serializable): void {
@@ -293,28 +362,31 @@ export class TimelinePanel extends Panel {
 		*/
 	}
 
-	#bladeCurrentClip(): void {
+	#bladeClip(): void {
 		const time = this.#playHeadPos;
-		if (!this.#currentClip || !this.#currentClip.track) {
-			return;
+		for (const selected of this.#selectedClips) {
+			if (!selected.track) {
+				continue;
+			}
+
+			if (!selected.inTimeFrame(this.#playHeadPos)) {
+				return;
+			}
+
+			const end = selected.getEnd();
+
+			// Prevents blading at the very start or very end
+			if (selected.getStart() === time || end === time) {
+				return;
+			}
+
+			selected.setEnd(this.#playHeadPos);
+			const newCLip = selected.createClip();
+			newCLip.setStart(this.#playHeadPos);
+			newCLip.setEnd(end);
+			selected.track.addClip(newCLip);
+			this.#addSelectedClip(newCLip);
 		}
-
-		if (!this.#currentClip.inTimeFrame(this.#playHeadPos)) {
-			return;
-		}
-
-		// Prevents blading at the very start or very end
-		if (this.#currentClip.getStart() === time || this.#currentClip.getEnd() === time) {
-			return;
-		}
-
-		const end = this.#currentClip.getEnd();
-		this.#currentClip.setEnd(this.#playHeadPos);
-		const newCLip = this.#currentClip.createClip();
-		newCLip.setStart(this.#playHeadPos);
-		newCLip.setEnd(end);
-		this.#currentClip.track.addClip(newCLip);
-
 		this.refreshHTML();
 	}
 }

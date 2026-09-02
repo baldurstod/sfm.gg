@@ -8,6 +8,7 @@
 	--counter-scale: 1;
 	--track-height: 1rem;
 	user-select: none;
+	--clip-height: 3rem;
 }
 
 @container style(--time-scale > 5) {
@@ -140,17 +141,26 @@
 	top: calc(var(--track)* var(--track-height));
 }
 
-.clip {
-	background-color: yellow;
-	padding: 1rem 0;
-	margin-left: calc(var(--ruler-unit)* var(--start) * var(--time-scale));
-	width: calc(var(--ruler-unit)* var(--duration) * var(--time-scale));
-	overflow: hidden;
+.clip-container {
+	height: calc(var(--rows) * var(--clip-height));
 	position: relative;
 }
 
+.clip {
+	background-color: yellow;
+	/*padding: 1rem 0;*/
+	margin-left: calc(var(--ruler-unit)* var(--start) * var(--time-scale));
+	width: calc(var(--ruler-unit)* var(--duration) * var(--time-scale));
+	height: var(--clip-height);
+	overflow: hidden;
+	position: absolute;
+	top: calc(var(--clip-height) * var(--row));
+	box-sizing: border-box;
+	border: solid 1px black;
+}
+
 .film-clip {
-	background-color: aqua;
+	background-color: #314f4f;
 }
 
 .sound-clip {
@@ -174,6 +184,12 @@
 	right: 0;
 }
 
-.clip-name{
+.clip-header {
 	text-wrap: nowrap;
+	padding: 0.2em;
+}
+
+.clip.active .clip-header {
+	background-color: yellow;
+	color: black;
 }

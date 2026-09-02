@@ -19,6 +19,14 @@ export class SfmTrack extends Serializable {
 	constructor(params: TrackParameters) {
 		super(params);
 		this.#trackType = params.trackType ?? 'film';
+
+		this.#clips[Symbol.iterator] = function* (): SetIterator<SfmClip> {
+			yield* [...this.keys()].sort(
+				(a, b) => {
+					return a.getStart() < b.getStart() ? -1 : 1;
+				}
+			);
+		};
 	}
 
 	addClip(clip: SfmClip): SfmClip {
