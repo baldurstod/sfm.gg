@@ -96,7 +96,6 @@ export class TimelinePanel extends Panel {
 
 	#addSelectedClip(clip: SfmClip): void {
 		this.#selectedClips.add(clip);
-		console.info(clip);
 		const [outer] = this.#getSerializableElement(clip);
 		outer.classList.add('active');
 		this.refreshHTML();
@@ -111,7 +110,6 @@ export class TimelinePanel extends Panel {
 		this.#selectedClips.clear();
 
 		this.#selectedClips.add(clip);
-		console.info(clip);
 		const [outer] = this.#getSerializableElement(clip);
 		outer.classList.add('active');
 		this.refreshHTML();

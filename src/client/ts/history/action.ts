@@ -22,6 +22,10 @@ export class Command {
 	undo(): boolean {
 		return this.element.undo(this);
 	}
+
+	redo(): boolean {
+		return this.element.do(this);
+	}
 }
 
 /**
@@ -43,9 +47,22 @@ export class Action {
 	}
 
 	undo(): boolean {
-		let operation: Command | undefined;
-		while (operation = this.#operations.pop()) {
+		let operation: Command;
+
+		for (let i = this.#operations.length - 1; i >= 0; --i) {
+			operation = this.#operations[i]!
 			if (!operation.undo()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	redo(): boolean {
+		let operation: Command;
+
+		for (const operation of this.#operations) {
+			if (!operation.redo()) {
 				return false;
 			}
 		}

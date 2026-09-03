@@ -1,4 +1,5 @@
 import { generateRandomUUID } from 'harmony-3d';
+import { Command, Undoable } from '../history/action';
 import { JSONSerializable } from './serializer';
 
 /*
@@ -32,7 +33,7 @@ export type SerializableProperty = {
 	settable: boolean;
 }
 
-export abstract class Serializable {
+export abstract class Serializable implements Undoable {
 	readonly isSerializable = true as const;
 	#id: string;
 	#name: string;
@@ -53,6 +54,33 @@ export abstract class Serializable {
 	setName(name: string): void {
 		this.#name = name;
 	}
+
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'set-name':
+				const name = this.#name;
+				this.#name = command.params as string;
+				command.undoParams = name;
+				return true;
+			default:
+				throw new Error('unknow command: ' + command.command);
+		}
+
+		return false;
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'set-name':
+				this.#name = command.undoParams as string;
+				return true;
+			default:
+				throw new Error('unknow command: ' + command.command);
+		}
+
+		return false;
+	}
+
 
 	static getTypeName(): string {
 		throw new Error('override me');

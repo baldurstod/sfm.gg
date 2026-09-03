@@ -1,4 +1,5 @@
-import { Action, Undoable } from './action';
+import { Controller } from '../controller';
+import { Action } from './action';
 
 export class History {
 	static #undo: Action[] = [];
@@ -17,13 +18,9 @@ export class History {
 		}
 
 		console.info(this.#undo);
+		Controller.dispatchEvent('refreshtoolbar');
 
 		return action;
-	}
-
-	static do(element: Undoable, command: string, params: any): boolean {
-		const action = this.startAction();
-		return action.do(element, command, params);
 	}
 
 	static undo(): boolean {
@@ -32,7 +29,40 @@ export class History {
 			if (!action || !action.hasOperations()) {
 				continue;
 			}
+			this.#redo.push(action);
+			Controller.dispatchEvent('refreshtoolbar');
 			return action.undo();
+		}
+		return false;
+	}
+
+	static redo(): boolean {
+		let action: Action | undefined;
+		while (action = this.#redo.pop()) {
+			if (!action || !action.hasOperations()) {
+				continue;
+			}
+			this.#undo.push(action);
+			Controller.dispatchEvent('refreshtoolbar');
+			return action.redo();
+		}
+		return false;
+	}
+
+	static hasUndo(): boolean {
+		for (const undo of this.#undo) {
+			if (undo.hasOperations()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static hasRedo(): boolean {
+		for (const redo of this.#redo) {
+			if (redo.hasOperations()) {
+				return true;
+			}
 		}
 		return false;
 	}

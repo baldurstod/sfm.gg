@@ -88,6 +88,7 @@ class Application {
 		Controller.addEventListener('usersetcurrenttime', (event) => this.#userSetTime(event.detail));
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		Controller.addEventListener('userundolastaction', () => this.#undo());
+		Controller.addEventListener('userredolastaction', () => this.#redo());
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -299,8 +300,14 @@ class Application {
 
 	static #undo(): void {
 		History.undo();
-
 		Controller.dispatchEvent('refreshtimeline');
+		//Controller.dispatchEvent('refreshtoolbar');
+	}
+
+	static #redo(): void {
+		History.redo();
+		Controller.dispatchEvent('refreshtimeline');
+		//Controller.dispatchEvent('refreshtoolbar');
 	}
 
 }

@@ -38,7 +38,7 @@ export abstract class SfmClip extends Serializable implements Undoable {
 		return this.#timeFrame.inTimeFrame(time);
 	}
 
-	do(command: Command): boolean{
+	do(command: Command): boolean {
 		switch (command.command) {
 			case 'set-start':
 				const start = this.#timeFrame.getStart();
@@ -50,22 +50,22 @@ export abstract class SfmClip extends Serializable implements Undoable {
 				this.#timeFrame.setEnd(command.params as number);
 				command.undoParams = end;
 				return true;
+			default:
+				return super.do(command);
 		}
-
-		return false;
 	}
 
-	undo(operation: Command): boolean {
-		switch (operation.command) {
+	undo(command: Command): boolean {
+		switch (command.command) {
 			case 'set-start':
-				this.#timeFrame.setStart(operation.undoParams as number);
+				this.#timeFrame.setStart(command.undoParams as number);
 				return true;
 			case 'set-end':
-				this.#timeFrame.setEnd(operation.undoParams as number);
+				this.#timeFrame.setEnd(command.undoParams as number);
 				return true;
+			default:
+				return super.undo(command);
 		}
-
-		return false;
 	}
 
 	abstract getClipType(): SfmClipType;

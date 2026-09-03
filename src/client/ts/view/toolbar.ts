@@ -1,10 +1,19 @@
-import { addSVG, fileOpenSVG, manufacturingSVG, saveSVG, settingsSVG, undoSVG } from 'harmony-svg';
+import { addSVG, fileOpenSVG, manufacturingSVG, redoSVG, saveSVG, settingsSVG, undoSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import toolbarCSS from '../../css/toolbar.css';
 import { Controller } from '../controller';
 import { Panel } from './panel';
+import { History } from '../history/history';
 
 export class Toolbar extends Panel {
+	#htmlUndoButton?: HTMLButtonElement;
+	#htmlRedoButton?: HTMLButtonElement;
+
+	constructor() {
+		super();
+		Controller.addEventListener('refreshtoolbar', () => this.refreshHTML());
+	}
+
 	protected initPanel(): void {
 		if (this.panel) {
 			return;
@@ -52,13 +61,28 @@ export class Toolbar extends Panel {
 						Controller.dispatchEvent('userselectcharacter');
 					},
 				}) as HTMLButtonElement,
-				createElement('button', {
+				this.#htmlUndoButton = createElement('button', {
 					innerHTML: undoSVG,
 					$click: () => {
 						Controller.dispatchEvent('userundolastaction');
 					},
 				}) as HTMLButtonElement,
+				this.#htmlRedoButton = createElement('button', {
+					innerHTML: redoSVG,
+					$click: () => {
+						Controller.dispatchEvent('userredolastaction');
+					},
+				}) as HTMLButtonElement,
 			],
 		});
+
+		this.refreshHTML();
 	}
+
+	protected refreshHTML(): void {
+		this.initPanel();
+		this.#htmlUndoButton!.disabled = !History.hasUndo();
+		this.#htmlRedoButton!.disabled = !History.hasRedo();
+	}
+
 }
