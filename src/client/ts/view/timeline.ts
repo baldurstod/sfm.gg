@@ -3,6 +3,8 @@ import { createElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
+import { Action } from '../history/action';
+import { History } from '../history/history';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmTrack } from '../model/track';
@@ -33,6 +35,7 @@ export class TimelinePanel extends Panel {
 	#elementsInner = new Map<Serializable, HTMLElement>();
 	#dragOperation: DragOperation | null = null;
 	#dragElement: Serializable | null = null;
+	#dragAction: Action | null = null;
 	#dragTime = 0;
 	#dragStart = 0;
 	#dragEnd = 0;
@@ -47,6 +50,7 @@ export class TimelinePanel extends Panel {
 		const panelContent = this.panel!.getContent();
 
 		panelContent.addEventListener('wheel', (event: WheelEvent) => this.#mouseWheel(event));
+		panelContent.addEventListener('mouseup', () => this.#commitDragOperation());
 
 		for (let i = 0; i < 2; i++) {
 			this.#htmlTimeTracks[i] = createElement('div', {
@@ -82,6 +86,7 @@ export class TimelinePanel extends Panel {
 		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
 		Controller.addEventListener('setcurrentclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
+		Controller.addEventListener('refreshtimeline', () => this.refreshHTML());
 	}
 
 	#setActiveFilmClip(clip: SfmFilmClip): void {
@@ -154,11 +159,13 @@ export class TimelinePanel extends Panel {
 			const [htmlTrackGroup] = this.#getSerializableElement(trackGroup);
 			htmlTrackGroup.style.cssText = `--tracks:${tracks.length};`;
 			this.#htmlContent?.append(htmlTrackGroup);
+			htmlTrackGroup.replaceChildren();
 
 			for (const [id, track] of tracks.entries()) {
 				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
 				htmlTrackOuter.style.cssText = `--start:${activeFilmClip.getStart()};--duration:${activeFilmClip.getDuration()};--track:${id};`;
 				htmlTrackGroup.append(htmlTrackOuter);
+				htmlTrackInner.replaceChildren();
 
 				let maxRow = -1;
 				for (const clip of track.getClips()) {
@@ -206,8 +213,7 @@ export class TimelinePanel extends Panel {
 							class: 'clip-header',
 							innerText: element.getName(),
 							$mousedown: (event: MouseEvent) => {
-								this.#dragOperation = 'moveclip';
-								this.#dragElement = element;
+								this.#startDragOperation('moveclip', element);
 								this.#dragTime = this.#getTimeFromMouseEvent(event);
 								this.#dragStart = (element as SfmClip).getStart();
 								this.#dragEnd = (element as SfmClip).getEnd();
@@ -249,13 +255,11 @@ export class TimelinePanel extends Panel {
 	}
 
 	#startDragClipStart(element: Serializable): void {
-		this.#dragOperation = 'clipstart';
-		this.#dragElement = element;
+		this.#startDragOperation('clipstart', element);
 	}
 
 	#startDragClipEnd(element: Serializable): void {
-		this.#dragOperation = 'clipend';
-		this.#dragElement = element;
+		this.#startDragOperation('clipend', element);
 	}
 
 	#mouseWheel(event: WheelEvent): void {
@@ -309,8 +313,10 @@ export class TimelinePanel extends Panel {
 				//this.#setClipEnd(time);
 				if (this.#dragElement) {
 					const delta = time - this.#dragTime;
-					(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
-					(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+					if (this.#dragAction) {
+						this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', delta + this.#dragStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
+						this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', delta + this.#dragEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+					}
 					this.refreshHTML();
 				}
 				break;
@@ -351,7 +357,8 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		(this.#dragElement as SfmClip).setStart(time);
+		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-start', time);//(this.#dragElement as SfmClip).setStart(time);
+
 		this.refreshHTML();
 	}
 
@@ -361,7 +368,7 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		(this.#dragElement as SfmClip).setEnd(time);
+		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-end', time);//(this.#dragElement as SfmClip).setEnd(time);
 		this.refreshHTML();
 	}
 
@@ -391,13 +398,14 @@ export class TimelinePanel extends Panel {
 	}
 
 	#bladeClip(): void {
+		const action = History.startAction();
 		const time = this.#playHeadPos;
 		for (const selected of this.#selectedClips) {
 			if (!selected.track) {
 				continue;
 			}
 
-			if (!selected.inTimeFrame(this.#playHeadPos)) {
+			if (!selected.inTimeFrame(time)) {
 				return;
 			}
 
@@ -408,13 +416,32 @@ export class TimelinePanel extends Panel {
 				return;
 			}
 
-			selected.setEnd(this.#playHeadPos);
+			action.do(selected, 'set-end', time);//selected.setEnd(time);
+
 			const newCLip = selected.createClip();
-			newCLip.setStart(this.#playHeadPos);
-			newCLip.setEnd(end);
-			selected.track.addClip(newCLip);
+			action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
+			action.do(newCLip, 'set-end', end);//newCLip.setEnd(end);
+			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);
 			this.#addSelectedClip(newCLip);
 		}
+		action.commit();
 		this.refreshHTML();
+	}
+
+	#startDragOperation(operation: DragOperation, element: Serializable): void {
+		this.#dragOperation = operation;
+		this.#dragElement = element;
+
+		if (operation === 'clipstart' || operation === 'clipend' || operation === 'moveclip') {
+			this.#dragAction = History.startAction();
+		}
+	}
+
+	#commitDragOperation(): void {
+		if (!this.#dragAction) {
+			return;
+		}
+		this.#dragAction.commit();
+		this.#dragAction = null;
 	}
 }

@@ -10,6 +10,8 @@ import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { Controller } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
+import { Command } from './history/action';
+import { History } from './history/history';
 import { Character, characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmFilmClip } from './model/clips/filmclip';
@@ -85,6 +87,7 @@ class Application {
 		Controller.addEventListener('usergotonextframe', () => this.#userNextFrame());
 		Controller.addEventListener('usersetcurrenttime', (event) => this.#userSetTime(event.detail));
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
+		Controller.addEventListener('userundolastaction', () => this.#undo());
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -148,7 +151,9 @@ class Application {
 		clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		//this.#session.addClip(clip);
-		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
+		//film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
+		const filmTrack = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' }));
+		filmTrack.do(new Command(filmTrack, 'add-clip', clip));
 
 		let dialog: SfmTrack, music: SfmTrack;
 		film.addTrackGroup(new SfmTrackGroup({ name: 'Sounds' })).addTracks([
@@ -156,11 +161,9 @@ class Application {
 			music = new SfmTrack({ name: 'Music', trackType: 'sound', }),
 		]);
 
-		dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
-		dialog.addClip(new SfmSoundClip({ timeFrame: { end: 0.5 } }));
-		music.addClip(new SfmSoundClip({ name: 'music1' }));
-
-
+		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { start: 10, end: 1 } })));//dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
+		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { end: 0.5 } })));//dialog.addClip(new SfmSoundClip({ timeFrame: { end: 0.5 } }));
+		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ name: 'music1' })));//music.addClip(new SfmSoundClip({ name: 'music1' }));
 
 		this.#player.setFilmClip(film);
 
@@ -294,6 +297,12 @@ class Application {
 		this.#player.setPlaying(playing);
 	}
 
+	static #undo(): void {
+		History.undo();
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
 }
 
 async function load(file: JSONFile) {
@@ -338,11 +347,13 @@ async function save(session: SfmSession) {
 
 	const operatorsTrackGroup = clip.addTrackGroup(new SfmTrackGroup({ name: 'Operators' }))
 	const operatorsTrack = operatorsTrackGroup.addTrack(new SfmTrack({ name: 'Operators', trackType: 'operator', }));
-	const operatorClip = operatorsTrack.addClip(new SfmOperatorClip({ name: 'Operators' })) as SfmOperatorClip;
+	const operatorClip = new SfmOperatorClip({ name: 'Operators' });//operatorsTrack.addClip(new SfmOperatorClip({ name: 'Operators' })) as SfmOperatorClip;
+	operatorsTrack.do(new Command(operatorsTrack, 'add-clip', operatorClip));
 	operatorClip.addOperator(new SfmModuloOperator({ name: 'Modulo' }));
 
 	//this.#session.addClip(clip);
-	film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
+	const filmTrack = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' }))//.addClip(clip);
+	filmTrack.do(new Command(filmTrack, 'add-clip', clip));
 
 	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);

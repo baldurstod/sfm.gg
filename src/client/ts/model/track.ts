@@ -1,3 +1,4 @@
+import { Command, Undoable } from '../history/action';
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip, SfmClipType } from './clips/clip';
@@ -9,7 +10,7 @@ export interface TrackParameters extends SerializableParameters {
 	trackType?: SfmClipType;
 }
 
-export class SfmTrack extends Serializable {
+export class SfmTrack extends Serializable implements Undoable {
 	readonly isSfmTrack = true as const;
 	#clips = new Set<SfmClip>();
 	#trackType: SfmClipType;
@@ -29,7 +30,7 @@ export class SfmTrack extends Serializable {
 		};
 	}
 
-	addClip(clip: SfmClip): SfmClip {
+	#addClip(clip: SfmClip): SfmClip {
 		if (
 			this.#trackType === 'film' && !(clip as SfmFilmClip).isSfmFilmClip
 			|| this.#trackType === 'sound' && !(clip as SfmSoundClip).isSfmSoundClip
@@ -39,20 +40,22 @@ export class SfmTrack extends Serializable {
 			throw new Error('trying to add a clip of the wrong track type');
 		}
 
-		this.#addClip(clip);
+		this.#addClip2(clip);
 
 		return clip;
 	}
 
-	#addClip(clip: SfmClip): void {
+	#addClip2(clip: SfmClip): void {
 		// Remove the clip from the previous track
-		clip.track?.deleteClip(clip);
+		if (clip.track) {
+			clip.track.#deleteClip(clip);
+		}
 		clip.track = this;
 
 		this.#clips.add(clip);
 	}
 
-	deleteClip(clip: SfmClip): void {
+	#deleteClip(clip: SfmClip): void {
 		this.#clips.delete(clip);
 		clip.track = null;
 	}
@@ -63,6 +66,34 @@ export class SfmTrack extends Serializable {
 
 	getTrackType(): SfmClipType {
 		return this.#trackType;
+	}
+
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'add-clip':
+				command.undoParams = command.params.track;
+				this.#addClip(command.params);
+				return true;
+		}
+
+		return false;
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'add-clip':
+				// Delete the clip from this track
+				this.#deleteClip(command.params);
+
+				// Reattach the clip to the previous track, if any
+				const previousTrack = command.undoParams as SfmTrack;
+				if (previousTrack) {
+					previousTrack.#addClip(command.params);
+				}
+				return true;
+		}
+
+		return false;
 	}
 
 	static override getTypeName(): string {
@@ -95,7 +126,7 @@ export class SfmTrack extends Serializable {
 				const clip = context.elements.get(clipId) as SfmClip | undefined; // TODO: check if it's actually a clip
 
 				if (clip) {
-					this.#addClip(clip);
+					this.#addClip2(clip);
 				}
 			}
 		}

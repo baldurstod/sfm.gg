@@ -31,6 +31,8 @@ export type ControllerEvent = 'setsession'
 	| 'usergotolastframe'
 	| 'setcurrenttime'
 	| 'usersetcurrenttime'
+	| 'userundolastaction'
+	| 'refreshtimeline'
 	;
 
 // Same as CustomEventInit with required detail
@@ -63,6 +65,7 @@ export class Controller {
 	static addEventListener(type: 'usergotonextclip', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotofirstframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotolastframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userundolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -90,6 +93,7 @@ export class Controller {
 	static dispatchEvent(type: 'usergotonextclip', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotofirstframe', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotolastframe', options?: EventInit): boolean;
+	static dispatchEvent(type: 'userundolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
