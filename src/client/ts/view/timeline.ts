@@ -76,7 +76,7 @@ export class TimelinePanel extends Panel {
 
 		ShortcutHandler.addContext('timeline', this.panel!.getContent());
 
-		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeClip());
+		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeClips());
 
 		this.#setCssVars();
 	}
@@ -395,28 +395,28 @@ export class TimelinePanel extends Panel {
 		*/
 	}
 
-	#bladeClip(): void {
+	#bladeClips(): void {
 		const action = History.startAction();
 		const time = this.#playHeadPos;
-		for (const selected of this.#selectedClips) {
+		for (const selected of new Set(this.#selectedClips)) {// We create a copy as we update the original set
 			if (!selected.track) {
 				continue;
 			}
 
 			if (!selected.inTimeFrame(time)) {
-				return;
+				continue;
 			}
 
 			const end = selected.getEnd();
 
 			// Prevents blading at the very start or very end
 			if (selected.getStart() === time || end === time) {
-				return;
+				continue;
 			}
 
 			action.do(selected, 'set-end', time);//selected.setEnd(time);
 
-			const newCLip = selected.createClip();
+			const newCLip = selected.createClip(selected.getNextName());
 			action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
 			action.do(newCLip, 'set-end', end);//newCLip.setEnd(end);
 			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);

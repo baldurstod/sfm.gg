@@ -68,8 +68,20 @@ export abstract class SfmClip extends Serializable implements Undoable {
 		}
 	}
 
+	getNextName(): string {
+		let base: string = this.getName();
+		const result = /^([^\d]*)(\d*)?$/.exec(base);
+		let n: number = 0;
+		if (result && result.length > 2) {
+			base = result[1]!;
+			n = Number(result[2] ?? 0);
+		}
+
+		return `${base}${++n}`;
+	}
+
 	abstract getClipType(): SfmClipType;
-	abstract createClip(): SfmClip;
+	abstract createClip(name: string): SfmClip;
 
 	static override getTypeName(): string {
 		return 'Clip';

@@ -90,8 +90,8 @@ export class SfmFilmClip extends SfmClip {
 		return 'film';
 	}
 
-	createClip(): SfmClip {
-		return new SfmFilmClip();
+	override createClip(name: string): SfmClip {
+		return new SfmFilmClip({ name });
 	}
 
 	static override getTypeName(): string {
