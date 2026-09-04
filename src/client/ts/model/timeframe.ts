@@ -148,30 +148,28 @@ export class SfmTimeFrame extends Serializable {
 		 * other     -----------
 		 * result ---           --
 		 * 4.
+		 * this   ----------------
+		 * other  -------------------
+		 * result
+		 * 5.
+		 * this   ----------------
+		 * other  --------------
+		 * result               --
+		 * 6.
 		 * this                    ----------------
 		 * other  ----------------
 		 * result                  ----------------
-		 * 5.
+		 * 7.
 		 * this      ----------------
 		 * other  -----------
 		 * result            --------
-		 * 6.
+		 * 8.
 		 * this      ----------------
 		 * other  ----------------------
 		 * result
-		 * 7.
-		 * this   ----------------
-		 * other  ----------------
-		 * result
 		 */
 
-
-		if (this.#start === other.#start && this.#end === other.#end) {
-			// Case 7: return an empty set
-			return result;
-		}
-
-		if (this.#start <= other.#start) {
+		if (this.#start < other.#start) {
 			if (this.#end <= other.#start) {
 				// Case 1
 				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
@@ -185,16 +183,25 @@ export class SfmTimeFrame extends Serializable {
 					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
 				}
 			}
+		} else if (this.#start === other.#start) {
+			if (this.#end <= other.#end) {
+				// Case 4: return an empty set
+				return result;
+			} else {
+				// Case 5
+				result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+			}
 		} else {
+			// case where this.#start > other.#start
 			if (this.#start >= other.#end) {
-				// Case 4
+				// Case 6
 				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
 			} else {
-				if (this.#end >= other.#end) {
-					// Case 5
+				if (this.#end > other.#end) {
+					// Case 7
 					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
 				} else {
-					// Case 6
+					// Case 8
 				}
 			}
 		}

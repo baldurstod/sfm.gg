@@ -154,7 +154,8 @@ class Application {
 
 		//this.#session.addClip(clip);
 		//film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
-		const filmTrackGroup = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' }));
+		const filmTrackGroup = new SfmTrackGroup({ name: 'Film' });
+		film.do(new Command(film, 'add-track-group', filmTrackGroup));//const filmTrackGroup = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' }));
 		const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film' });
 		//const filmTrack = .addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' }));
 		filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
@@ -164,10 +165,10 @@ class Application {
 		const dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' })
 		const music = new SfmTrack({ name: 'Music', trackType: 'sound', });
 		const soundTrackGroup = new SfmTrackGroup({ name: 'Sounds' });
-		film.addTrackGroup(soundTrackGroup/*new SfmTrackGroup({ name: 'Sounds' })).addTracks([
+		film.do(new Command(film, 'add-track-group', soundTrackGroup));/*film.addTrackGroup(soundTrackGroup/*new SfmTrackGroup({ name: 'Sounds' })).addTracks([
 			dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' }),
 			music = new SfmTrack({ name: 'Music', trackType: 'sound', }),
-		]*/);
+		]* /);*/
 		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', dialog));
 		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', music));
 
@@ -359,7 +360,8 @@ async function save(session: SfmSession) {
 	clip.scene!.getScene().addChild(workCamera.getCamera());
 	clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 
-	const operatorsTrackGroup = clip.addTrackGroup(new SfmTrackGroup({ name: 'Operators' }));
+	const operatorsTrackGroup = new SfmTrackGroup({ name: 'Operators' });
+	clip.do(new Command(clip, 'add-track-group', operatorsTrackGroup));//const operatorsTrackGroup = clip.addTrackGroup(new SfmTrackGroup({ name: 'Operators' }));
 	const operatorsTrack = new SfmTrack({ name: 'Operators', trackType: 'operator', });
 	//const operatorsTrack = operatorsTrackGroup.addTrack(new SfmTrack({ name: 'Operators', trackType: 'operator', }));
 	operatorsTrackGroup.do(new Command(operatorsTrackGroup, 'add-Track', operatorsTrack));
@@ -370,7 +372,7 @@ async function save(session: SfmSession) {
 	//this.#session.addClip(clip);
 	const filmTrackGroup = new SfmTrackGroup({ name: 'Film' });
 	const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film' });
-	film.addTrackGroup(filmTrackGroup/*new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })*/)//.addClip(clip);
+	film.do(new Command(film, 'add-track-group', filmTrackGroup));//film.addTrackGroup(filmTrackGroup/*new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })*/)//.addClip(clip);
 	filmTrackGroup
 	filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
 	filmTrack.do(new Command(filmTrack, 'add-clip', clip));

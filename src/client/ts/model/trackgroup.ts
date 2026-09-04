@@ -1,23 +1,29 @@
 import { Command, Undoable } from '../history/action';
 import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
+import { SfmFilmClip } from './clips/filmclip';
 import { SfmTrack } from './track';
 
 export class SfmTrackGroup extends Serializable implements Undoable {
 	readonly isSfmTrackGroup = true as const;
+	parentClip: SfmFilmClip | null = null;
 	readonly #tracks = new Set<SfmTrack>();
 
 	#addTrack(track: SfmTrack): SfmTrack {
 		this.#tracks.add(track);
+		track.trackGroup = this;
 		return track;
 	}
 
+	/*
 	#addTracks(tracks: SfmTrack[]): void {
 		tracks.forEach((track) => this.#tracks.add(track));
 	}
+	*/
 
 	#deleteTrack(track: SfmTrack): void {
 		this.#tracks.delete(track);
+		track.trackGroup = null;
 	}
 
 	getTracks(): SfmTrack[] {
@@ -67,6 +73,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			json.tracks = [...this.#tracks];
 		}
 
+		if (this.parentClip) {
+			json.parent_clip = this.parentClip;
+		}
+
 		return json;
 	}
 
@@ -81,6 +91,11 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 					this.#tracks.add(track);
 				}
 			}
+		}
+
+		this.parentClip = null;
+		if (json.parent_clip) {
+			this.parentClip = context.elements.get(json.parent_clip as string) as SfmFilmClip | null; // TODO: check if it's actually a film clip
 		}
 	}
 

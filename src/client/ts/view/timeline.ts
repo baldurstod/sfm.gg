@@ -493,7 +493,10 @@ export class TimelinePanel extends Panel {
 	#fillGaps(track: SfmTrack): void {
 		const action = History.startAction();
 
-		const gaps = track.getGaps();
+
+		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
+
+		const gaps = track.getGaps(timeFrame?.getStart() ?? -Infinity, timeFrame?.getEnd() ?? Infinity);
 		console.info(gaps);
 		for (const gap of gaps) {
 			console.info(gap.getStart(), gap.getEnd());

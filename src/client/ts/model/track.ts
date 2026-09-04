@@ -99,8 +99,8 @@ export class SfmTrack extends Serializable implements Undoable {
 		return false;
 	}
 
-	getGaps(): Set<SfmTimeFrame> {
-		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start: -Infinity, end: Infinity })]);
+	getGaps(start: number, end: number): Set<SfmTimeFrame> {
+		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
 
 		for (const clip of this.#clips) {
 			for (const gap of gaps) {
@@ -134,6 +134,9 @@ export class SfmTrack extends Serializable implements Undoable {
 			json.clips = [...this.#clips];
 		}
 
+		if (this.trackGroup) {
+			json.track_group = this.trackGroup;
+		}
 		json.track_type = this.#trackType;
 		json.mute = this.mute;
 		json.volume = this.volume;
@@ -152,6 +155,11 @@ export class SfmTrack extends Serializable implements Undoable {
 					this.#addClip2(clip);
 				}
 			}
+		}
+
+		this.trackGroup = null;
+		if (json.track_group) {
+			this.trackGroup = context.elements.get(json.track_group as string) as SfmTrackGroup | null; // TODO: check if it's actually a track group
 		}
 
 		this.mute = json.mute as boolean ?? false;

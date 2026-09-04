@@ -1,3 +1,4 @@
+import { Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
@@ -9,10 +10,10 @@ import { ClipParameters, SfmClip, SfmClipType } from './clip';
 export interface FilmClipParameters extends ClipParameters {
 	scene?: SfmScene;
 	camera?: SfmCamera;
-	trackGroups?: SfmTrackGroup[];
+	//trackGroups?: SfmTrackGroup[];
 }
 
-export class SfmFilmClip extends SfmClip {
+export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly isSfmFilmClip = true as const;
 	scene?: SfmScene;
 	readonly #cameras = new Set<SfmCamera>();
@@ -26,20 +27,24 @@ export class SfmFilmClip extends SfmClip {
 		this.scene = params.scene;
 		this.activeCamera = params.camera;
 
+		/*
 		if (params.trackGroups) {
 			for (const trackGroup of params.trackGroups) {
-				this.addTrackGroup(trackGroup);
+				this.#addTrackGroup(trackGroup);
 			}
 		}
+		*/
 	}
 
-	addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
+	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
 		this.#trackGroups.add(group);
+		group.parentClip = this;
 		return group;
 	}
 
-	deleteTrackGroup(group: SfmTrackGroup): void {
+	#deleteTrackGroup(group: SfmTrackGroup): void {
 		this.#trackGroups.delete(group);
+		group.parentClip = null;
 	}
 
 	getTrackGroup(): SfmTrackGroup[] {
@@ -92,6 +97,38 @@ export class SfmFilmClip extends SfmClip {
 
 	override createClip(name: string): SfmClip {
 		return new SfmFilmClip({ name });
+	}
+
+	override do(command: Command): boolean {
+		switch (command.command) {
+			case 'add-track-group':
+				command.undoParams = (command.params as SfmTrackGroup).parentClip;
+				this.#addTrackGroup(command.params as SfmTrackGroup);
+				return true;
+			default:
+				return super.do(command);
+		}
+
+		return false;
+	}
+
+	override undo(command: Command): boolean {
+		switch (command.command) {
+			case 'add-track-group':
+				// Delete the track from this group
+				this.#deleteTrackGroup(command.params);
+
+				// Reattach the clip to the previous track, if any
+				const previousClip = command.undoParams as SfmFilmClip;
+				if (previousClip) {
+					previousClip.#addTrackGroup(command.params);
+				}
+				return true;
+			default:
+				return super.do(command);
+		}
+
+		return false;
 	}
 
 	static override getTypeName(): string {
