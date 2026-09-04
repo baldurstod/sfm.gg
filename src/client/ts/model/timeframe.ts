@@ -99,6 +99,119 @@ export class SfmTimeFrame extends Serializable {
 		return time >= this.#start && time < this.#start + this.#end;
 	}
 
+	/**
+	 * Test if 2 timeframes overlap
+	 * @param other The other timeframe
+	 * @returns A timeframe containing the overlaping part of both timeframes, or null if there is no overlap
+	 */
+	overlap(other: SfmTimeFrame): SfmTimeFrame | null {
+		let a: SfmTimeFrame = this;
+		let b: SfmTimeFrame = other;
+
+		if (a.#start > b.#start) {
+			let tmp = a;
+			a = b;
+			b = tmp;
+		}
+
+		// At this point, a start before or at the same time b
+		if (a.#end >= b.#end) {
+			// The timeframes overlap for the full duration of b
+			return new SfmTimeFrame({ start: b.#start, end: b.#end });
+		} else if (a.#end > b.#start) {
+			// The timeframes overlap from the start of b to the end of a
+			return new SfmTimeFrame({ start: b.#start, end: a.#end });
+		}
+
+		// No overlap
+		return null;
+	}
+
+	/**
+	 * Subtract other timeframe from this one
+	 * @param other Timeframe to subtract from this
+	 * @returns A set containing 0, 1 or 2 timeframes depending on the configuration
+	 */
+	subtract(other: SfmTimeFrame): Set<SfmTimeFrame> {
+		const result = new Set<SfmTimeFrame>();
+		/**
+		 * 1.
+		 * this   ----------------
+		 * other                        ----------------
+		 * result ----------------
+		 * 2.
+		 * this   ----------------
+		 * other     ----------------
+		 * result ---
+		 * 3.
+		 * this   ----------------
+		 * other     -----------
+		 * result ---           --
+		 * 4.
+		 * this                    ----------------
+		 * other  ----------------
+		 * result                  ----------------
+		 * 5.
+		 * this      ----------------
+		 * other  -----------
+		 * result            --------
+		 * 6.
+		 * this      ----------------
+		 * other  ----------------------
+		 * result
+		 * 7.
+		 * this   ----------------
+		 * other  ----------------
+		 * result
+		 */
+
+
+		if (this.#start === other.#start && this.#end === other.#end) {
+			// Case 7: return an empty set
+			return result;
+		}
+
+		if (this.#start <= other.#start) {
+			if (this.#end <= other.#start) {
+				// Case 1
+				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
+			} else {
+				if (this.#end <= other.#end) {
+					// Case 2
+					result.add(new SfmTimeFrame({ start: this.#start, end: other.#start, }));
+				} else {
+					// Case 3
+					result.add(new SfmTimeFrame({ start: this.#start, end: other.#start, }));
+					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+				}
+			}
+		} else {
+			if (this.#start >= other.#end) {
+				// Case 4
+				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
+			} else {
+				if (this.#end >= other.#end) {
+					// Case 5
+					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+				} else {
+					// Case 6
+				}
+			}
+		}
+
+		return result;
+	}
+
+	clone(): SfmTimeFrame {
+		const time = new SfmTimeFrame();
+
+		time.#start = this.#start;
+		time.#end = this.#end;
+		time.#offset = this.#offset;
+
+		return time;
+	}
+
 	static override getTypeName(): string {
 		return 'TimeFrame';
 	}

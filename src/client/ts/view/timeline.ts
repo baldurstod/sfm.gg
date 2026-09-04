@@ -1,5 +1,5 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { createElement } from 'harmony-ui';
+import { createElement, defineHarmonyMenu, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller } from '../controller';
@@ -7,6 +7,8 @@ import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmSoundClip } from '../model/clips/soundclip';
+import { SfmTimeFrame } from '../model/timeframe';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
@@ -24,6 +26,8 @@ export class TimelinePanel extends Panel {
 	#htmlContent?: HTMLElement;
 	#htmlTimeTracks: HTMLElement[] = [];
 	#htmlPlayHead?: HTMLElement;
+	#htmlContextMenu?: HTMLHarmonyMenuElement;
+
 	#timeScale = 1;
 	// Time offset, in second
 	#timeOffset = 2;
@@ -73,6 +77,9 @@ export class TimelinePanel extends Panel {
 			parent: panelContent,
 			class: 'head',
 		});
+
+		defineHarmonyMenu();
+		this.#htmlContextMenu = createElement('harmony-menu') as HTMLHarmonyMenuElement;
 
 		ShortcutHandler.addContext('timeline', this.panel!.getContent());
 
@@ -201,6 +208,7 @@ export class TimelinePanel extends Panel {
 							class: 'clip-container',
 						}),
 					],
+					$contextmenu: (event: MouseEvent) => this.#displayTrackContextMenu(event, element as SfmTrack),
 				});
 				break;
 			case (element as SfmClip).isSfmClip:
@@ -422,7 +430,7 @@ export class TimelinePanel extends Panel {
 			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);
 			this.#addSelectedClip(newCLip);
 		}
-		action.commit();
+		History.commit(action);
 		this.refreshHTML();
 	}
 
@@ -439,7 +447,78 @@ export class TimelinePanel extends Panel {
 		if (!this.#dragAction) {
 			return;
 		}
-		this.#dragAction.commit();
+		History.commit(this.#dragAction);
 		this.#dragAction = null;
 	}
+
+	#displayTrackContextMenu(event: MouseEvent, track: SfmTrack): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			add_clip: { i18n: '#add_clip', f: (): void => this.#addClipToTrack(track) },
+			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => this.#fillGaps(track) } },
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
+
+		//SceneExplorerEntity.#explorer?.showContextMenu(event.clientX, event.clientY, this.#entity);
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	#addClipToTrack(track: SfmTrack): void {
+		const action = History.startAction();
+
+		let newCLip: SfmClip;
+		switch (track.getTrackType()) {
+			case 'film':
+				newCLip = new SfmFilmClip();
+				break;
+			case 'sound':
+				// TODO: add sound selection
+				newCLip = new SfmSoundClip();
+				break;
+			default:
+				throw new Error('code me ' + track.getTrackType());
+		}
+
+		action.do(track, 'add-clip', newCLip);
+		//action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
+		History.commit(action);
+		this.#setSelectedClip(newCLip);
+		this.refreshHTML();
+	}
+
+	#fillGaps(track: SfmTrack): void {
+		const action = History.startAction();
+
+		const gaps = track.getGaps();
+		console.info(gaps);
+		for (const gap of gaps) {
+			console.info(gap.getStart(), gap.getEnd());
+			const clip = createClip(track, gap);
+			action.do(clip, 'set-name', 'slug');
+			action.do(track, 'add-clip', clip);
+		}
+
+		History.commit(action);
+		this.refreshHTML();
+	}
+}
+
+function createClip(track: SfmTrack, timeFrame: SfmTimeFrame): SfmClip {
+	const start = timeFrame.getStart();
+	const end = timeFrame.getEnd();
+	switch (track.getTrackType()) {
+		case 'film':
+			return new SfmFilmClip({ timeFrame: { start, end } });
+		case 'sound':
+			// TODO: add sound selection
+			return new SfmSoundClip({ timeFrame: { start, end } });
+			break;
+		default:
+			throw new Error('code me ' + track.getTrackType());
+	}
+
 }

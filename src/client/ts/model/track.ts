@@ -4,6 +4,8 @@ import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip, SfmClipType } from './clips/clip';
 import { SfmFilmClip } from './clips/filmclip';
 import { SfmSoundClip } from './clips/soundclip';
+import { SfmTimeFrame } from './timeframe';
+import { SfmTrackGroup } from './trackgroup';
 
 export interface TrackParameters extends SerializableParameters {
 	/** Track type. Default to 'film' */
@@ -12,6 +14,7 @@ export interface TrackParameters extends SerializableParameters {
 
 export class SfmTrack extends Serializable implements Undoable {
 	readonly isSfmTrack = true as const;
+	trackGroup: SfmTrackGroup | null = null;
 	#clips = new Set<SfmClip>();
 	#trackType: SfmClipType;
 	mute = false;
@@ -94,6 +97,26 @@ export class SfmTrack extends Serializable implements Undoable {
 		}
 
 		return false;
+	}
+
+	getGaps(): Set<SfmTimeFrame> {
+		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start: -Infinity, end: Infinity })]);
+
+		for (const clip of this.#clips) {
+			for (const gap of gaps) {
+				const overlap = clip.overlapTimeFrame(gap);
+				if (!overlap) {
+					continue;
+				}
+
+				const result = gap.subtract(clip.getTimeFrame());
+				gaps.delete(gap);
+
+				result.forEach(gap => gaps.add(gap));
+			}
+		}
+
+		return gaps;
 	}
 
 	static override getTypeName(): string {

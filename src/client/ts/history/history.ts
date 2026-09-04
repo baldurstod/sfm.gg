@@ -17,10 +17,15 @@ export class History {
 			this.#redo = [];
 		}
 
-		console.info(this.#undo);
+		//console.info(this.#undo);
 		Controller.dispatchEvent('refreshtoolbar');
 
 		return action;
+	}
+
+	static commit(action: Action): void {
+		action.commit();
+		Controller.dispatchEvent('refreshtoolbar')
 	}
 
 	static undo(): boolean {

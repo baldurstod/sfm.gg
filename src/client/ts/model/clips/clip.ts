@@ -34,8 +34,20 @@ export abstract class SfmClip extends Serializable implements Undoable {
 		return this.#timeFrame.getDuration();
 	}
 
+	getTimeFrame(): SfmTimeFrame {
+		return this.#timeFrame.clone();
+	}
+
 	inTimeFrame(time: number): boolean {
 		return this.#timeFrame.inTimeFrame(time);
+	}
+
+	overlap(other: SfmClip): SfmTimeFrame | null {
+		return this.#timeFrame.overlap(other.#timeFrame);
+	}
+
+	overlapTimeFrame(other: SfmTimeFrame): SfmTimeFrame | null {
+		return this.#timeFrame.overlap(other);
 	}
 
 	do(command: Command): boolean {
