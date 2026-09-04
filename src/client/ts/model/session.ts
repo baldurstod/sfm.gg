@@ -11,7 +11,7 @@ export interface SessionParameters extends SerializableParameters {
 
 export class SfmSession extends Serializable {
 	readonly isSfmSession = true as const;
-	#activeClip?: SfmFilmClip;
+	#topClip?: SfmFilmClip;
 	#settings: SfmSessionSettings;
 
 	constructor(params: SessionParameters = {}) {
@@ -19,12 +19,12 @@ export class SfmSession extends Serializable {
 		this.#settings = new SfmSessionSettings(params.settings);
 	}
 
-	setActiveFilmClip(clip: SfmFilmClip): void {
-		this.#activeClip = clip;
+	setTopFilmClip(clip: SfmFilmClip): void {
+		this.#topClip = clip;
 	}
 
-	getActiveFilmClip(): SfmFilmClip | undefined {
-		return this.#activeClip;
+	getTopFilmClip(): SfmFilmClip | undefined {
+		return this.#topClip;
 	}
 
 	static override getTypeName(): string {
@@ -38,8 +38,8 @@ export class SfmSession extends Serializable {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
-		if (this.#activeClip) {
-			json.active_clip = this.#activeClip;
+		if (this.#topClip) {
+			json.top_clip = this.#topClip;
 		}
 
 		if (this.#settings) {
@@ -66,14 +66,14 @@ export class SfmSession extends Serializable {
 
 		const elements = context.elements;
 
-		this.#activeClip = undefined;
 		//this.#film = new SfmFilm();
 		/*
 		this.#clips.clear();
 		*/
 
-		if (json.active_clip) {
-			this.#activeClip = elements.get(json.active_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
+		this.#topClip = undefined;
+		if (json.top_clip) {
+			this.#topClip = elements.get(json.top_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
 		}
 
 		if (json.settings) {
@@ -124,7 +124,7 @@ export class SfmSession extends Serializable {
 	override getProperty(name: string): SerializablePropertyType {
 		switch (name) {
 			case 'activeClip':
-				return this.#activeClip;
+				return this.#topClip;
 			/*
 		case 'film':
 			return this.#film;

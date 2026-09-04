@@ -20,7 +20,7 @@ export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
 	#selectedClips = new Set<SfmClip>;
 	// Selected sub clip
-	#activeFilmClip: SfmFilmClip | null = null;
+	#topFilmClip: SfmFilmClip | null = null;
 	#playHeadPos = 0;
 	#htmlTracks = new WeakMap<SfmTrack, HTMLElement>();
 	#htmlContent?: HTMLElement;
@@ -90,14 +90,14 @@ export class TimelinePanel extends Panel {
 
 	constructor() {
 		super();
-		Controller.addEventListener('setactivefilmclip', (event) => this.#setActiveFilmClip(event.detail));
+		Controller.addEventListener('settopfilmclip', (event) => this.#setTopFilmClip(event.detail));
 		Controller.addEventListener('setcurrentclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 		Controller.addEventListener('refreshtimeline', () => this.refreshHTML());
 	}
 
-	#setActiveFilmClip(clip: SfmFilmClip): void {
-		this.#activeFilmClip = clip;
+	#setTopFilmClip(clip: SfmFilmClip): void {
+		this.#topFilmClip = clip;
 		this.refreshHTML();
 	}
 
@@ -124,8 +124,8 @@ export class TimelinePanel extends Panel {
 
 	protected refreshHTML(): void {
 		this.#htmlContent?.replaceChildren();
-		const activeFilmClip = this.#activeFilmClip;
-		if (!activeFilmClip) {
+		const topFilmClip = this.#topFilmClip;
+		if (!topFilmClip) {
 			return;
 		}
 
@@ -159,7 +159,7 @@ export class TimelinePanel extends Panel {
 			return lastRow;
 		}
 
-		for (const trackGroup of activeFilmClip.getTrackGroup()) {
+		for (const trackGroup of topFilmClip.getTrackGroup()) {
 			const tracks = trackGroup.getTracks();
 			const [htmlTrackGroup] = this.#getSerializableElement(trackGroup);
 			htmlTrackGroup.style.cssText = `--tracks:${tracks.length};`;
@@ -168,7 +168,7 @@ export class TimelinePanel extends Panel {
 
 			for (const [id, track] of tracks.entries()) {
 				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
-				htmlTrackOuter.style.cssText = `--start:${activeFilmClip.getStart()};--duration:${activeFilmClip.getDuration()};--track:${id};`;
+				htmlTrackOuter.style.cssText = `--start:${topFilmClip.getStart()};--duration:${topFilmClip.getDuration()};--track:${id};`;
 				htmlTrackGroup.append(htmlTrackOuter);
 				htmlTrackInner.replaceChildren();
 

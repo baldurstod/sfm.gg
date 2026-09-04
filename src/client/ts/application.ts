@@ -59,7 +59,7 @@ class Application {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
 		Controller.addEventListener('usersavesession', () => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
-			const clip = this.#session.getActiveFilmClip();
+			const clip = this.#session.getTopFilmClip();
 			if (!clip) {
 				return;
 			}
@@ -106,7 +106,7 @@ class Application {
 	}
 
 	static #addCamera(source: SfmCamera | null): void {
-		const clip = this.#session.getActiveFilmClip();
+		const clip = this.#session.getTopFilmClip();
 		if (!clip) {
 			return;
 		}
@@ -143,11 +143,11 @@ class Application {
 		this.#session = new SfmSession({ name: 'session' });
 
 		const film = new SfmFilmClip({ name: 'Film' });
-		this.#session.setActiveFilmClip(film);
+		this.#session.setTopFilmClip(film);
 
 
 		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { start: 0, end: 15 }, });
-		const clip2 = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { start: 25, end: 35 }, });
+		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmScene(), timeFrame: { start: 25, end: 35 }, });
 		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
 		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 		clip.scene!.getScene().addChild(workCamera.getCamera());
@@ -178,7 +178,7 @@ class Application {
 
 		this.#player.setFilmClip(film);
 
-		Controller.dispatchEvent('setactivefilmclip', { detail: film });
+		Controller.dispatchEvent('settopfilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
 	}
 
@@ -267,7 +267,7 @@ class Application {
 	}
 
 	static async #userAddCharacter(character: Character): Promise<void> {
-		const clip = this.#session.getActiveFilmClip();
+		const clip = this.#session.getTopFilmClip();
 		if (!clip) {
 			return;
 		}
@@ -345,15 +345,15 @@ async function load(file: JSONFile) {
 
 async function save(session: SfmSession) {
 	session = new SfmSession({ name: 'session' });
-	const activeFilmClip = session.getActiveFilmClip();
-	if (activeFilmClip?.scene) {
-		activeFilmClip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
+	const topFilmClip = session.getTopFilmClip();
+	if (topFilmClip?.scene) {
+		topFilmClip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 	}
 
 	session = new SfmSession({ name: 'session' });
 
 	const film = new SfmFilmClip({ name: 'Film' });
-	session.setActiveFilmClip(film);
+	session.setTopFilmClip(film);
 
 	const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), });
 	clip.scene!.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
@@ -383,24 +383,3 @@ async function save(session: SfmSession) {
 	load(result);
 
 }
-
-
-/*
-
-		this.#session = new SfmSession({ name: 'session' });
-
-		const film = new SfmFilmClip({ name: 'Film' });
-		this.#session.setActiveFilmClip(film);
-
-
-		const clip = new SfmFilmClip({ name: 'shot1' });
-		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16 * / }));
-		clip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
-		clip.scene.getScene().addChild(workCamera.getCamera());
-
-		//this.#session.addClip(clip);
-		film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1' })).addClip(clip);
-
-		Controller.dispatchEvent('setactivefilmclip', { detail: clip });
-		Controller.dispatchEvent('viewelement', { detail: this.#session });
-		*/
