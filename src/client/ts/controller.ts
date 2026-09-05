@@ -9,6 +9,7 @@ export type ControllerEvent = 'setsession'
 	| 'cameraadded'
 	| 'settopfilmclip'
 	| 'setcurrentclip'
+	| 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip'
 	| 'setactivecamera'
 	| 'useraddcamera'
 	| 'userselectcamera'
@@ -38,7 +39,7 @@ export type ControllerEvent = 'setsession'
 	;
 
 // Same as CustomEventInit with required detail
-interface ControllerEventInit<T = any> extends EventInit {
+export interface ControllerEventInit<T = any> extends EventInit {
 	detail: T;
 }
 
@@ -49,6 +50,7 @@ export class Controller {
 	static addEventListener(type: 'cameraadded', callback: (evt: CustomEvent<CameraAdded>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'settopfilmclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setcurrentclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setactivecamera', callback: (evt: CustomEvent<SetActiveCamera>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcamera', callback: (evt: CustomEvent<SfmCamera | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcamera', callback: (evt: CustomEvent<SfmCamera>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -67,7 +69,8 @@ export class Controller {
 	static addEventListener(type: 'usergotonextclip', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotofirstframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotolastframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline' | 'refreshtoolbar', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'refreshtoolbar', callback: (evt: CustomEvent<RefreshToolbar>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -79,6 +82,7 @@ export class Controller {
 	static dispatchEvent(type: 'setactivecamera', options: ControllerEventInit<SetActiveCamera>): boolean;
 	static dispatchEvent(type: 'settopfilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'setcurrentclip', options: ControllerEventInit<SfmClip>): boolean;
+	static dispatchEvent(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
 	static dispatchEvent(type: 'userselectcamera', options: ControllerEventInit<SfmCamera>): boolean;
 	static dispatchEvent(type: 'usersavesession', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenoptions', options?: EventInit): boolean;
@@ -95,7 +99,8 @@ export class Controller {
 	static dispatchEvent(type: 'usergotonextclip', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotofirstframe', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotolastframe', options?: EventInit): boolean;
-	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline' | 'refreshtoolbar', options?: EventInit): boolean;
+	static dispatchEvent(type: 'refreshtoolbar', options: ControllerEventInit<RefreshToolbar>): boolean;
+	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
@@ -114,4 +119,15 @@ export type CameraAdded = {
 export type SetActiveCamera = {
 	clip: SfmClip;
 	camera: SfmCamera;
+}
+
+export type SetSelectedClip = {
+	topClip: SfmFilmClip;
+	selected: SfmClip;
+}
+
+export type RefreshToolbar = {
+	addCharacter?: boolean;
+	undoButton?: boolean;
+	redoButton?: boolean;
 }

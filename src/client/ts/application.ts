@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { Controller } from './controller';
+import { Controller, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Command } from './history/action';
 import { History } from './history/history';
@@ -89,6 +89,8 @@ class Application {
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		Controller.addEventListener('userundolastaction', () => this.#undo());
 		Controller.addEventListener('userredolastaction', () => this.#redo());
+		Controller.addEventListener('useraddselectedclip', (event) => this.#addSelectedClip(event.detail));
+		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -318,6 +320,22 @@ class Application {
 		Controller.dispatchEvent('refreshtimeline');
 	}
 
+	static #addSelectedClip(detail: SetSelectedClip): void {
+		const action = History.startAction();
+		action.do(detail.topClip, 'add-selected-clip', detail.selected);
+		History.commit(action);
+		Controller.dispatchEvent('refreshtimeline');
+		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
+	}
+
+	static #setSelectedClip(detail: SetSelectedClip): void {
+		const action = History.startAction();
+		action.do(detail.topClip, 'set-selected-clip', detail.selected);
+		History.commit(action);
+		Controller.dispatchEvent('refreshtimeline');
+		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
+	}
+
 }
 
 async function load(file: JSONFile) {
@@ -344,6 +362,15 @@ async function load(file: JSONFile) {
 }
 
 async function save(session: SfmSession) {
+
+	const result = SfmSerializer.serializeJSON(session);
+	console.info('save', result);
+
+	load(result);
+
+	/*
+
+
 	session = new SfmSession({ name: 'session' });
 	const topFilmClip = session.getTopFilmClip();
 	if (topFilmClip?.scene) {
@@ -356,7 +383,7 @@ async function save(session: SfmSession) {
 	session.setTopFilmClip(film);
 
 	const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), });
-	clip.scene!.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
+	clip.scene!.getScene().addChild(new Box({ /*segments: 16, rings: 16* / }));
 	clip.scene!.getScene().addChild(workCamera.getCamera());
 	clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 
@@ -372,7 +399,7 @@ async function save(session: SfmSession) {
 	//this.#session.addClip(clip);
 	const filmTrackGroup = new SfmTrackGroup({ name: 'Film' });
 	const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film' });
-	film.do(new Command(film, 'add-track-group', filmTrackGroup));//film.addTrackGroup(filmTrackGroup/*new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })*/)//.addClip(clip);
+	film.do(new Command(film, 'add-track-group', filmTrackGroup));//film.addTrackGroup(filmTrackGroup/*new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })* /)//.addClip(clip);
 	filmTrackGroup
 	filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
 	filmTrack.do(new Command(filmTrack, 'add-clip', clip));
@@ -381,5 +408,6 @@ async function save(session: SfmSession) {
 	console.info('save', result);
 
 	load(result);
+	*/
 
 }

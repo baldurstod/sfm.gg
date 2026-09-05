@@ -1,8 +1,8 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { createElement, defineHarmonyMenu, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { Controller } from '../controller';
+import { Controller, ControllerEventInit, SetSelectedClip } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip } from '../model/clips/clip';
@@ -18,9 +18,9 @@ type DragOperation = 'time' | 'clipstart' | 'clipend' | 'moveclip';
 
 export class TimelinePanel extends Panel {
 	// Current clip displayed in the timeline
-	#selectedClips = new Set<SfmClip>;
-	// Selected sub clip
 	#topFilmClip: SfmFilmClip | null = null;
+	// Selected sub clip
+	//#selectedClips = new Set<SfmClip>;
 	#playHeadPos = 0;
 	#htmlTracks = new WeakMap<SfmTrack, HTMLElement>();
 	#htmlContent?: HTMLElement;
@@ -102,24 +102,31 @@ export class TimelinePanel extends Panel {
 	}
 
 	#addSelectedClip(clip: SfmClip): void {
-		this.#selectedClips.add(clip);
+		Controller.dispatchEvent('useraddselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
+		/*
+		this.#topFilmClip?.addSelectedClip(clip);
 		const [outer] = this.#getSerializableElement(clip);
 		outer.classList.add('active');
 		this.refreshHTML();
+		*/
 	}
 
 	#setSelectedClip(clip: SfmClip): void {
-		for (const selected of this.#selectedClips) {
-			const [outer] = this.#getSerializableElement(selected);
+		Controller.dispatchEvent('usersetselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
+		/*
+		for (const [,outer] of this.#elementsOuter) {
+			//const [outer] = this.#getSerializableElement(selected);
 			outer.classList.remove('active');
 
 		}
-		this.#selectedClips.clear();
+		//this.#selectedClips.clear();
+		this.#topFilmClip?.setSelectedClip(clip);
 
-		this.#selectedClips.add(clip);
+		//this.#selectedClips.add(clip);
 		const [outer] = this.#getSerializableElement(clip);
 		outer.classList.add('active');
 		this.refreshHTML();
+		*/
 	}
 
 	protected refreshHTML(): void {
@@ -179,6 +186,10 @@ export class TimelinePanel extends Panel {
 					maxRow = Math.max(row, maxRow);
 					htmlClip.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--row:${row}`;
 					htmlTrackInner.append(htmlClip);
+
+
+					addRemoveClass(htmlClip, 'active', this.#topFilmClip?.isSelectedClip(clip) ?? false);
+
 				}
 
 				htmlTrackInner.style.cssText = `--rows:${maxRow + 1};`;
@@ -404,9 +415,14 @@ export class TimelinePanel extends Panel {
 	}
 
 	#bladeClips(): void {
+		if (!this.#topFilmClip) {
+			return;
+		}
+
 		const action = History.startAction();
 		const time = this.#playHeadPos;
-		for (const selected of new Set(this.#selectedClips)) {// We create a copy as we update the original set
+
+		for (const selected of this.#topFilmClip.getSelectedClips()) {// We create a copy as we update the original set
 			if (!selected.track) {
 				continue;
 			}

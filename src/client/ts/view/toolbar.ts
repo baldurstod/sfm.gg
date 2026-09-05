@@ -1,17 +1,17 @@
 import { addSVG, fileOpenSVG, manufacturingSVG, redoSVG, saveSVG, settingsSVG, undoSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import toolbarCSS from '../../css/toolbar.css';
-import { Controller } from '../controller';
+import { Controller, RefreshToolbar } from '../controller';
 import { Panel } from './panel';
-import { History } from '../history/history';
 
 export class Toolbar extends Panel {
+	#htmlAddCharacterButton?: HTMLButtonElement;
 	#htmlUndoButton?: HTMLButtonElement;
 	#htmlRedoButton?: HTMLButtonElement;
 
 	constructor() {
 		super();
-		Controller.addEventListener('refreshtoolbar', () => this.refreshHTML());
+		Controller.addEventListener('refreshtoolbar', (event) => this.#refresh(event.detail));
 	}
 
 	protected initPanel(): void {
@@ -55,20 +55,23 @@ export class Toolbar extends Panel {
 						Controller.dispatchEvent('useraddmodel');
 					},
 				}) as HTMLButtonElement,
-				createElement('button', {
+				this.#htmlAddCharacterButton = createElement('button', {
 					innerHTML: addSVG,
+					disabled: true,
 					$click: () => {
 						Controller.dispatchEvent('userselectcharacter');
 					},
 				}) as HTMLButtonElement,
 				this.#htmlUndoButton = createElement('button', {
 					innerHTML: undoSVG,
+					disabled: true,
 					$click: () => {
 						Controller.dispatchEvent('userundolastaction');
 					},
 				}) as HTMLButtonElement,
 				this.#htmlRedoButton = createElement('button', {
 					innerHTML: redoSVG,
+					disabled: true,
 					$click: () => {
 						Controller.dispatchEvent('userredolastaction');
 					},
@@ -76,13 +79,20 @@ export class Toolbar extends Panel {
 			],
 		});
 
-		this.refreshHTML();
+		//this.#refresh();
 	}
 
-	protected refreshHTML(): void {
+	#refresh(params: RefreshToolbar): void {
 		this.initPanel();
-		this.#htmlUndoButton!.disabled = !History.hasUndo();
-		this.#htmlRedoButton!.disabled = !History.hasRedo();
+		if (params.addCharacter !== undefined) {
+			this.#htmlAddCharacterButton!.disabled = !params.addCharacter;
+		}
+		if (params.undoButton !== undefined) {
+			this.#htmlUndoButton!.disabled = !params.undoButton;
+		}
+		if (params.redoButton !== undefined) {
+			this.#htmlRedoButton!.disabled = !params.redoButton;
+		}
 	}
 
 }

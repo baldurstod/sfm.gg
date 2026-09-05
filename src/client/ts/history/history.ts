@@ -18,14 +18,24 @@ export class History {
 		}
 
 		//console.info(this.#undo);
-		Controller.dispatchEvent('refreshtoolbar');
+		Controller.dispatchEvent('refreshtoolbar', {
+			detail: {
+				undoButton: this.#hasUndo(),
+				redoButton: this.#hasRedo(),
+			}
+		});
 
 		return action;
 	}
 
 	static commit(action: Action): void {
 		action.commit();
-		Controller.dispatchEvent('refreshtoolbar')
+		Controller.dispatchEvent('refreshtoolbar', {
+			detail: {
+				undoButton: this.#hasUndo(),
+				redoButton: this.#hasRedo(),
+			}
+		});
 	}
 
 	static undo(): boolean {
@@ -35,7 +45,12 @@ export class History {
 				continue;
 			}
 			this.#redo.push(action);
-			Controller.dispatchEvent('refreshtoolbar');
+			Controller.dispatchEvent('refreshtoolbar', {
+				detail: {
+					undoButton: this.#hasUndo(),
+					redoButton: this.#hasRedo(),
+				}
+			});
 			return action.undo();
 		}
 		return false;
@@ -48,13 +63,18 @@ export class History {
 				continue;
 			}
 			this.#undo.push(action);
-			Controller.dispatchEvent('refreshtoolbar');
+			Controller.dispatchEvent('refreshtoolbar', {
+				detail: {
+					undoButton: this.#hasUndo(),
+					redoButton: this.#hasRedo(),
+				}
+			});
 			return action.redo();
 		}
 		return false;
 	}
 
-	static hasUndo(): boolean {
+	static #hasUndo(): boolean {
 		for (const undo of this.#undo) {
 			if (undo.hasOperations()) {
 				return true;
@@ -63,7 +83,7 @@ export class History {
 		return false;
 	}
 
-	static hasRedo(): boolean {
+	static #hasRedo(): boolean {
 		for (const redo of this.#redo) {
 			if (redo.hasOperations()) {
 				return true;
