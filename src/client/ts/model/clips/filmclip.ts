@@ -20,7 +20,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	activeCamera?: SfmCamera;
 	readonly #trackGroups = new Set<SfmTrackGroup>();
 	#activeFilmTrack?: SfmTrack;
-	#mainSelectedClip?: SfmClip;
+	#primarySelectedClip?: SfmClip;
 	readonly #selectedClips = new Set<SfmClip>();
 
 	constructor(params: FilmClipParameters = {}) {
@@ -93,13 +93,8 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return null;
 	}
 
-	#addSelectedClip(clip: SfmClip): void {
-		this.#selectedClips.add(clip);
-	}
-
-	#setSelectedClip(clip: SfmClip): void {
-		this.#selectedClips.clear();
-		this.#selectedClips.add(clip);
+	getPrimarySelectedClip(): SfmClip | undefined {
+		return this.#primarySelectedClip;
 	}
 
 	getSelectedClips(): Set<SfmClip> {
@@ -125,13 +120,17 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#addTrackGroup(command.params as SfmTrackGroup);
 				return true;
 			case 'add-selected-clip':
-				command.undoParams = new Set<SfmClip>(this.#selectedClips);
+				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
 				this.#selectedClips.add(command.params);
+				if (!this.#primarySelectedClip) {
+					this.#primarySelectedClip = command.params;
+				}
 				return true;
 			case 'set-selected-clip':
-				command.undoParams = new Set<SfmClip>(this.#selectedClips);
+				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
 				this.#selectedClips.clear();
 				this.#selectedClips.add(command.params);
+				this.#primarySelectedClip = command.params;
 				return true;
 			default:
 				return super.do(command);
@@ -153,7 +152,8 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			case 'add-selected-clip':
 			case 'set-selected-clip':
 				this.#selectedClips.clear();
-				(command.undoParams as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
+				this.#primarySelectedClip = command.undoParams[0];
+				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
 				return true;
 			default:
 				return super.do(command);
@@ -187,6 +187,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 		if (this.#activeFilmTrack) {
 			json.active_film_track = this.#activeFilmTrack;
+		}
+
+		if (this.#primarySelectedClip !== undefined) {
+			json.primary_selected_clip = this.#primarySelectedClip;
 		}
 
 		if (this.#selectedClips.size) {
@@ -240,6 +244,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		if (json.active_film_track) {
 			this.#activeFilmTrack = elements.get(json.active_film_track as string) as SfmTrack | undefined; // TODO: check if it's actually a track
 			// TODO: check if it's actually a track
+		}
+
+		if (json.primary_selected_clip) {
+			this.#primarySelectedClip = elements.get(json.primary_selected_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
 		}
 
 		this.#selectedClips.clear();

@@ -1,4 +1,4 @@
-import { Box, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
+import { Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
 import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
@@ -8,17 +8,15 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { Controller, SetSelectedClip } from './controller';
+import { AddCharacter, Controller, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Command } from './history/action';
 import { History } from './history/history';
-import { Character, characterToModel, getTf2Characters } from './misc/character';
+import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmFilmClip } from './model/clips/filmclip';
-import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
-import { SfmModuloOperator } from './model/operators/math/modulo';
 import { SfmPrimitiveBox } from './model/primitives/box';
 import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
@@ -247,7 +245,18 @@ class Application {
 	}
 
 	static #userselectCharacter(): void {
-		this.#getCharacterSelectorPanel().open();
+		const topClip = this.#session.getTopFilmClip();
+		if (!topClip) {
+			return;
+		}
+
+		const primary = topClip.getPrimarySelectedClip();
+		const selected = topClip.getSelectedClips();
+		if (!primary) {
+			return;
+		}
+
+		this.#getCharacterSelectorPanel().selectCharacter(primary, selected);
 	}
 
 	static #getCharacterSelectorPanel(): CharacterSelectorPanel {
@@ -268,16 +277,18 @@ class Application {
 		}
 	}
 
-	static async #userAddCharacter(character: Character): Promise<void> {
-		const clip = this.#session.getTopFilmClip();
-		if (!clip) {
-			return;
+	static async #userAddCharacter(detail: AddCharacter): Promise<void> {
+		const scenes = new Set<SfmScene>();
+		for (const clip of detail.clips) {
+			const sfmScene = clip.scene;
+			if (sfmScene) {
+				scenes.add(sfmScene);
+			}
 		}
 
-		const sfmScene = clip.scene;
-
-		//const node = new SfmNode();
-		sfmScene?.getScene().addChild(await characterToModel(character))
+		for (const scene of scenes) {
+			scene.getScene().addChild(await characterToModel(detail.character));
+		}
 	}
 
 	static #userPreviousFrame(): void {

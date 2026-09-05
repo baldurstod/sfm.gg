@@ -5,6 +5,8 @@ import characterSelectorCSS from '../../css/characterselector.css';
 import icon440 from '../../img/icons/steam_icon_440.png';
 import { Controller } from '../controller';
 import { Character, CharacterSlot, characterToModel, getItems, Item, itemToModel } from '../misc/character';
+import { SfmClip } from '../model/clips/clip';
+import { SfmFilmClip } from '../model/clips/filmclip';
 import { Panel } from './panel';
 
 export class CharacterSelectorPanel extends Panel {
@@ -14,6 +16,8 @@ export class CharacterSelectorPanel extends Panel {
 	#htmlItemsContainerSpacer?: HTMLElement;
 	#htmlItems = new Map<Item, HTMLElement>();
 	#htmlCanvas?: HTMLCanvasElement;
+	#htmlAddPrimaryClip?: HTMLButtonElement;
+	#htmlAddSelectedClips?: HTMLButtonElement;
 	#canvasAttributes: CanvasAttributes | null = null;
 	#camera?: Camera;
 	#cameraControl?: OrbitControl;
@@ -25,6 +29,8 @@ export class CharacterSelectorPanel extends Panel {
 	#items: Item[] = [];
 	#characterModels = new Map<Character, Source1ModelInstance>();
 	#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
+	#primarySelectedClip?: SfmClip;
+	#selectedClips?: Set<SfmClip>;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -80,10 +86,14 @@ export class CharacterSelectorPanel extends Panel {
 					]
 				}),
 				// Create add button
-				createElement('button', {
+				this.#htmlAddPrimaryClip = createElement('button', {
 					i18n: '#add_character',
-					$click: () => this.#addCurrentCharacter(),
-				}),
+					$click: () => this.#addCurrentCharacter(true),
+				}) as HTMLButtonElement,
+				this.#htmlAddSelectedClips = createElement('button', {
+					i18n: '#add_character',
+					$click: () => this.#addCurrentCharacter(false),
+				}) as HTMLButtonElement,
 			],
 		});
 
@@ -294,20 +304,45 @@ export class CharacterSelectorPanel extends Panel {
 		console.info(items);
 	}
 
-	open() {
+	override open(): void {
+		throw new Error('use selectCharacter instead');
+	}
+
+	selectCharacter(primarySelectedClip: SfmClip, selectedClips: Set<SfmClip>): void {
+		this.#primarySelectedClip = primarySelectedClip;
+		this.#selectedClips = selectedClips;
 		this.initPanel();
 		this.panel!.open();
 	}
 
-	#addCurrentCharacter(): void {
-		if (!this.#selectedCharacter) {
+	#addCurrentCharacter(primaryClipOnly: boolean): void {
+		if (!this.#selectedCharacter || !this.#primarySelectedClip || !this.#selectedClips) {
 			return;
 		}
 
 		this.panel?.close();
 
-		Controller.dispatchEvent('useraddcharacter', { detail: this.#selectedCharacter });
-		//equipedItems
+		let clips: Set<SfmFilmClip>;
+		if (primaryClipOnly) {
+			if (!(this.#primarySelectedClip as SfmFilmClip).isSfmFilmClip) {
+				return;
+			}
+			clips = new Set<SfmFilmClip>([this.#primarySelectedClip as SfmFilmClip]);
+		} else {
+			clips = new Set<SfmFilmClip>();
+			for (const selectedClip of this.#selectedClips) {
+				if ((selectedClip as SfmFilmClip).isSfmFilmClip) {
+					clips.add(selectedClip as SfmFilmClip);
+				}
+			}
+		}
+
+		Controller.dispatchEvent('useraddcharacter', {
+			detail: {
+				character: this.#selectedCharacter,
+				clips,
+			}
+		});
 	}
 
 	async #itemClick(item: Item): Promise<void> {
