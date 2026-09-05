@@ -89,6 +89,7 @@ class Application {
 		Controller.addEventListener('userredolastaction', () => this.#redo());
 		Controller.addEventListener('useraddselectedclip', (event) => this.#addSelectedClip(event.detail));
 		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
+		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -307,14 +308,17 @@ class Application {
 		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(time);
 		this.#updateCurrentTime();
-		/*
-		this.#player.nextFrame();
-		this.#setCurrentTime();
-		*/
 	}
 
 	static #updateCurrentTime(): void {
-		Controller.dispatchEvent('setcurrenttime', { detail: this.#player.getCurrentTime() });
+		const time = this.#player.getCurrentTime();
+		Controller.dispatchEvent('setcurrenttime', { detail: time });
+
+		const top = this.#session.getTopFilmClip();
+		if (top) {
+			const clips = top.getSubFilmClipsAtTime(time);
+			Controller.dispatchEvent('setactivefilmclips', { detail: clips });
+		}
 	}
 
 	static #setPlaying(playing: boolean): void {

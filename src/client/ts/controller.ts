@@ -10,6 +10,7 @@ export type ControllerEvent = 'setsession'
 	| 'settopfilmclip'
 	| 'setcurrentclip'
 	| 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip'
+	| 'setactivefilmclips'
 	| 'setactivecamera'
 	| 'useraddcamera'
 	| 'userselectcamera'
@@ -32,6 +33,7 @@ export type ControllerEvent = 'setsession'
 	| 'usergotolastframe'
 	| 'setcurrenttime'
 	| 'usersetcurrenttime'
+	| 'playersetcurrenttime'
 	| 'userundolastaction'
 	| 'userredolastaction'
 	| 'refreshtimeline'
@@ -51,6 +53,7 @@ export class Controller {
 	static addEventListener(type: 'settopfilmclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setcurrentclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'setactivefilmclips', callback: (evt: CustomEvent<Set<SfmFilmClip>>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setactivecamera', callback: (evt: CustomEvent<SetActiveCamera>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcamera', callback: (evt: CustomEvent<SfmCamera | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcamera', callback: (evt: CustomEvent<SfmCamera>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -58,7 +61,7 @@ export class Controller {
 	static addEventListener(type: 'useropenoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddmodel' | 'userselectcharacter', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<AddCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersetplaying', callback: (evt: CustomEvent<boolean>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -83,12 +86,13 @@ export class Controller {
 	static dispatchEvent(type: 'settopfilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'setcurrentclip', options: ControllerEventInit<SfmClip>): boolean;
 	static dispatchEvent(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
+	static dispatchEvent(type: 'setactivefilmclips', options: ControllerEventInit<Set<SfmFilmClip>>): boolean;
 	static dispatchEvent(type: 'userselectcamera', options: ControllerEventInit<SfmCamera>): boolean;
 	static dispatchEvent(type: 'usersavesession', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenadvancedoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useraddmodel' | 'userselectcharacter', options?: EventInit): boolean;
-	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime', options: ControllerEventInit<number>): boolean;
+	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<AddCharacter>): boolean;
 	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
 	static dispatchEvent(type: 'usersetplaying', options: ControllerEventInit<boolean>): boolean;

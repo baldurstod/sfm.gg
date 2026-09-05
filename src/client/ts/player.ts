@@ -27,7 +27,7 @@ export class Player {
 		if (this.#playing) {
 			this.#playTime += delta * 0.001;
 			this.setCurrentTime(this.#playTime);
-			Controller.dispatchEvent('setcurrenttime', { detail: this.#playTime });
+			Controller.dispatchEvent('playersetcurrenttime', { detail: this.#playTime });
 		}
 	}
 

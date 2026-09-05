@@ -1,4 +1,4 @@
-import { Camera, CanvasAttributes, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, SceneExplorer } from 'harmony-3d';
+import { Camera, CanvasAttributes, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
 import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
@@ -25,6 +25,7 @@ export class ViewportPanel extends Panel {
 	static nextId = 0;
 	#id = ++ViewportPanel.nextId;
 	#titleI18n?: string;
+	static #scene = new Scene();
 
 	constructor(titleI18n?: string) {
 		super();
@@ -34,6 +35,7 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		//Controller.addEventListener('userplay', () => this.#setPlaying(true));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
+		Controller.addEventListener('setactivefilmclips', (event) => this.#setActiveFilmClips(event.detail));
 
 		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
 
@@ -138,12 +140,9 @@ export class ViewportPanel extends Panel {
 			],
 		});
 
-		//const scene = new Scene();
-		//scene.addChild(new Box({ /*segments: 16, rings: 16*/ }));
-
 		this.#canvasAttributes = Graphics.addCanvas({
 			name: `viewport${this.#id}`,
-			//scene,
+			scene: ViewportPanel.#scene,
 			autoResize: true,
 			canvas: this.#htmlCanvas,
 		});
@@ -182,8 +181,15 @@ export class ViewportPanel extends Panel {
 		this.#htmTime.innerText = formatTime(time);
 	}
 
+	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
+		ViewportPanel.#scene.removeChildren();
+
+		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getScene()));
+	}
+
 	#setTopFilmClip(clip: SfmFilmClip): void {
 		this.#topFilmClip = clip;
+		/*
 
 		const scene = clip.scene?.getScene();
 		if (scene) {
@@ -196,6 +202,7 @@ export class ViewportPanel extends Panel {
 		}
 
 		this.#refreshCameras();
+		*/
 	}
 
 	#setActiveCamera(detail: SetActiveCamera): void {
