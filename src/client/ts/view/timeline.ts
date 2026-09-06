@@ -415,39 +415,9 @@ export class TimelinePanel extends Panel {
 	}
 
 	#bladeClips(): void {
-		if (!this.#topFilmClip) {
-			return;
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('userbladeclip', { detail: this.#topFilmClip, });
 		}
-
-		const action = History.startAction();
-		const time = this.#playHeadPos;
-
-		for (const selected of this.#topFilmClip.getSelectedClips()) {// We create a copy as we update the original set
-			if (!selected.track) {
-				continue;
-			}
-
-			if (!selected.inTimeFrame(time)) {
-				continue;
-			}
-
-			const end = selected.getEnd();
-
-			// Prevents blading at the very start or very end
-			if (selected.getStart() === time || end === time) {
-				continue;
-			}
-
-			action.do(selected, 'set-end', time);//selected.setEnd(time);
-
-			const newCLip = selected.createClip(selected.getNextName());
-			action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
-			action.do(newCLip, 'set-end', end);//newCLip.setEnd(end);
-			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);
-			this.#addSelectedClip(newCLip);
-		}
-		History.commit(action);
-		this.refreshHTML();
 	}
 
 	#startDragOperation(operation: DragOperation, element: Serializable): void {

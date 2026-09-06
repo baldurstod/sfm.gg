@@ -38,6 +38,7 @@ export type ControllerEvent = 'setsession'
 	| 'userredolastaction'
 	| 'refreshtimeline'
 	| 'refreshtoolbar'
+	| 'userbladeclip'
 	;
 
 // Same as CustomEventInit with required detail
@@ -74,6 +75,7 @@ export class Controller {
 	static addEventListener(type: 'usergotolastframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'refreshtoolbar', callback: (evt: CustomEvent<RefreshToolbar>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userbladeclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -105,6 +107,7 @@ export class Controller {
 	static dispatchEvent(type: 'usergotolastframe', options?: EventInit): boolean;
 	static dispatchEvent(type: 'refreshtoolbar', options: ControllerEventInit<RefreshToolbar>): boolean;
 	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
+	static dispatchEvent(type: 'userbladeclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
