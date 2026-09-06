@@ -21,6 +21,7 @@ import { SfmNode } from './model/node';
 import { SfmPrimitiveBox } from './model/primitives/box';
 import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
+import { SfmTimeFrame } from './model/timeframe';
 import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
 import { Player } from './player';
@@ -28,7 +29,6 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
-import { SfmTimeFrame } from './model/timeframe';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -85,6 +85,10 @@ class Application {
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
 		Controller.addEventListener('usergotopreviousframe', () => this.#userPreviousFrame());
 		Controller.addEventListener('usergotonextframe', () => this.#userNextFrame());
+		Controller.addEventListener('usergotopreviousclip', () => this.#userPreviousClip());
+		Controller.addEventListener('usergotonextclip', () => this.#userNextClip());
+		Controller.addEventListener('usergotofirstframe', () => this.#userFirstFrame());
+		Controller.addEventListener('usergotolastframe', () => this.#userLastFrame());
 		Controller.addEventListener('usersetcurrenttime', (event) => this.#userSetTime(event.detail));
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		Controller.addEventListener('userundolastaction', () => this.#undo());
@@ -309,6 +313,88 @@ class Application {
 		this.#updateCurrentTime();
 	}
 
+	static #getClipBounds(): Set<number> {
+		const frameRate = this.#player.getFrameRate();
+		const topClip = this.#session.getTopFilmClip();
+		const result = new Set<number>();
+
+		if (topClip) {
+			const clips = topClip.getSubFilmClips();
+			clips.add(topClip);
+			for (const clip of clips) {
+				// Note: with round start / end times to match the frame rate, to match the player time
+				result.add(Math.round(clip.getStart() * frameRate) / frameRate);
+				result.add(Math.round(clip.getEnd() * frameRate) / frameRate);
+			}
+		}
+
+		result[Symbol.iterator] = function* (): SetIterator<number> {
+			yield* [...this.keys()].sort(
+				(a, b) => {
+					return a < b ? -1 : 1;
+				}
+			);
+		};
+
+		return result;
+	}
+
+	static #userPreviousClip(): void {
+		this.#userPreviousOrNextClip(-1);
+	}
+
+	static #userNextClip(): void {
+		this.#userPreviousOrNextClip(1);
+	}
+
+	static #userPreviousOrNextClip(delta: number): void {
+		Controller.dispatchEvent('usersetplaying', { detail: false });
+		const bounds = this.#getClipBounds();
+
+		const currentTime = this.#player.getCurrentTime();
+		bounds.add(currentTime);
+
+		const boundsArray = [...bounds];
+		const i = boundsArray.indexOf(currentTime);
+		if (i === -1) {
+			return;
+		}
+
+		const newTime = boundsArray[i + delta];
+		if (newTime === undefined) {
+			return;
+		}
+
+		console.info(...bounds);
+
+		this.#player.setCurrentTime(newTime);
+		this.#updateCurrentTime();
+	}
+
+	static #userFirstFrame(): void {
+		const topClip = this.#session.getTopFilmClip();
+		if (!topClip) {
+			return;
+		}
+
+		const frameRate = this.#player.getFrameRate();
+
+		this.#player.setCurrentTime(Math.round(topClip.getStart() * frameRate) / frameRate);
+		this.#updateCurrentTime();
+	}
+
+	static #userLastFrame(): void {
+		const topClip = this.#session.getTopFilmClip();
+		if (!topClip) {
+			return;
+		}
+
+		const frameRate = this.#player.getFrameRate();
+
+		this.#player.setCurrentTime(Math.round(topClip.getEnd() * frameRate) / frameRate);
+		this.#updateCurrentTime();
+	}
+
 	static #userSetTime(time: number): void {
 		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(time);
@@ -397,7 +483,6 @@ class Application {
 
 	static #fillGaps(track: SfmTrack): void {
 		const action = History.startAction();
-
 
 		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
 

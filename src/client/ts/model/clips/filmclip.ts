@@ -132,6 +132,27 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return clips;
 	}
 
+	getSubFilmClips(): Set<SfmFilmClip> {
+		const clips = new Set<SfmFilmClip>();
+
+		for (const trackGroup of this.#trackGroups) {
+			for (const track of trackGroup.getTracks()) {
+				if (track.getTrackType() !== 'film') {
+					continue;
+				}
+				for (const clip of track.getClips()) {
+					// At this point, it should be a film clip, be we check just to be sure
+					if (!(clip as SfmFilmClip).isSfmFilmClip) {
+						continue;
+					}
+					clips.add(clip as SfmFilmClip);
+				}
+			}
+		}
+
+		return clips;
+	}
+
 	override createClip(name: string): SfmClip {
 		return new SfmFilmClip({ name });
 	}

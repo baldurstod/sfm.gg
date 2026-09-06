@@ -63,7 +63,7 @@ export class Player {
 	}
 
 	setCurrentTime(time: number): void {
-		this.#frame = Math.round(time * this.#frameRate)
+		this.#frame = Math.round(time * this.#frameRate);
 	}
 
 	getFrameTime(frame: number): number {
