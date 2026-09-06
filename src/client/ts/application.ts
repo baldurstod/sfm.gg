@@ -14,6 +14,7 @@ import { Command } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
+import { SfmClip } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
@@ -27,6 +28,7 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
+import { SfmTimeFrame } from './model/timeframe';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -91,6 +93,8 @@ class Application {
 		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 		Controller.addEventListener('userbladeclip', (event) => this.#bladeClip(event.detail));
+		Controller.addEventListener('useraddcliptotrack', (event) => this.#addClipToTrack(event.detail));
+		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -359,6 +363,58 @@ class Application {
 		this.#setActiveFilmClips();
 	}
 
+	static #addClipToTrack(track: SfmTrack): void {
+		const topClip = track.trackGroup?.parentClip;
+		if (!topClip) {
+			return;
+		}
+		const action = History.startAction();
+
+		let newCLip: SfmClip;
+		switch (track.getTrackType()) {
+			case 'film':
+				newCLip = new SfmFilmClip({ scene: new SfmScene() });
+				break;
+			case 'sound':
+				// TODO: add sound selection
+				newCLip = new SfmSoundClip();
+				break;
+			default:
+				throw new Error('code me ' + track.getTrackType());
+		}
+
+		action.do(track, 'add-clip', newCLip);
+		//action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
+		this.#setSelectedClip({
+			topClip,
+			selected: newCLip,
+		});
+		History.commit(action);
+		//this.refreshHTML();
+
+		this.#setActiveFilmClips();
+	}
+
+	static #fillGaps(track: SfmTrack): void {
+		const action = History.startAction();
+
+
+		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
+
+		const gaps = track.getGaps(timeFrame?.getStart() ?? -Infinity, timeFrame?.getEnd() ?? Infinity);
+		console.info(gaps);
+		for (const gap of gaps) {
+			console.info(gap.getStart(), gap.getEnd());
+			const clip = createClip(track, gap);
+			action.do(clip, 'set-name', 'slug');
+			action.do(track, 'add-clip', clip);
+		}
+
+		History.commit(action);
+		//this.refreshHTML();
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
 	static #setPlaying(playing: boolean): void {
 		this.#player.setPlaying(playing);
 	}
@@ -463,4 +519,19 @@ async function save(session: SfmSession) {
 	load(result);
 	*/
 
+}
+
+function createClip(track: SfmTrack, timeFrame: SfmTimeFrame): SfmClip {
+	const start = timeFrame.getStart();
+	const end = timeFrame.getEnd();
+	switch (track.getTrackType()) {
+		case 'film':
+			return new SfmFilmClip({ timeFrame: { start, end } });
+		case 'sound':
+			// TODO: add sound selection
+			return new SfmSoundClip({ timeFrame: { start, end } });
+			break;
+		default:
+			throw new Error('code me ' + track.getTrackType());
+	}
 }

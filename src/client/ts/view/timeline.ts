@@ -7,8 +7,6 @@ import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
-import { SfmSoundClip } from '../model/clips/soundclip';
-import { SfmTimeFrame } from '../model/timeframe';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
@@ -443,8 +441,8 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_clip: { i18n: '#add_clip', f: (): void => this.#addClipToTrack(track) },
-			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => this.#fillGaps(track) } },
+			add_clip: { i18n: '#add_clip', f: (): void => { Controller.dispatchEvent('useraddcliptotrack', { detail: track }) } },
+			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => { Controller.dispatchEvent('userfillgaps', { detail: track }) } } },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
 
@@ -452,62 +450,4 @@ export class TimelinePanel extends Panel {
 		event.preventDefault();
 		event.stopPropagation();
 	}
-
-	#addClipToTrack(track: SfmTrack): void {
-		const action = History.startAction();
-
-		let newCLip: SfmClip;
-		switch (track.getTrackType()) {
-			case 'film':
-				newCLip = new SfmFilmClip();
-				break;
-			case 'sound':
-				// TODO: add sound selection
-				newCLip = new SfmSoundClip();
-				break;
-			default:
-				throw new Error('code me ' + track.getTrackType());
-		}
-
-		action.do(track, 'add-clip', newCLip);
-		//action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
-		History.commit(action);
-		this.#setSelectedClip(newCLip);
-		this.refreshHTML();
-	}
-
-	#fillGaps(track: SfmTrack): void {
-		const action = History.startAction();
-
-
-		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
-
-		const gaps = track.getGaps(timeFrame?.getStart() ?? -Infinity, timeFrame?.getEnd() ?? Infinity);
-		console.info(gaps);
-		for (const gap of gaps) {
-			console.info(gap.getStart(), gap.getEnd());
-			const clip = createClip(track, gap);
-			action.do(clip, 'set-name', 'slug');
-			action.do(track, 'add-clip', clip);
-		}
-
-		History.commit(action);
-		this.refreshHTML();
-	}
-}
-
-function createClip(track: SfmTrack, timeFrame: SfmTimeFrame): SfmClip {
-	const start = timeFrame.getStart();
-	const end = timeFrame.getEnd();
-	switch (track.getTrackType()) {
-		case 'film':
-			return new SfmFilmClip({ timeFrame: { start, end } });
-		case 'sound':
-			// TODO: add sound selection
-			return new SfmSoundClip({ timeFrame: { start, end } });
-			break;
-		default:
-			throw new Error('code me ' + track.getTrackType());
-	}
-
 }

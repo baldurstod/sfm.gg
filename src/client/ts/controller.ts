@@ -3,6 +3,7 @@ import { SfmCamera } from './model/camera';
 import { SfmClip } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSession } from './model/session';
+import { SfmTrack } from './model/track';
 import { Serializable } from './serialize/serializable';
 
 export type ControllerEvent = 'setsession'
@@ -39,6 +40,8 @@ export type ControllerEvent = 'setsession'
 	| 'refreshtimeline'
 	| 'refreshtoolbar'
 	| 'userbladeclip'
+	| 'useraddcliptotrack'
+	| 'userfillgaps'
 	;
 
 // Same as CustomEventInit with required detail
@@ -76,6 +79,7 @@ export class Controller {
 	static addEventListener(type: 'refreshtoolbar', callback: (evt: CustomEvent<RefreshToolbar>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userbladeclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddcliptotrack' | 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -108,6 +112,7 @@ export class Controller {
 	static dispatchEvent(type: 'refreshtoolbar', options: ControllerEventInit<RefreshToolbar>): boolean;
 	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userbladeclip', options: ControllerEventInit<SfmFilmClip>): boolean;
+	static dispatchEvent(type: 'useraddcliptotrack' | 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
