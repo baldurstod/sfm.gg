@@ -1,9 +1,10 @@
 import { Character } from './misc/character';
 import { SfmCamera } from './model/camera';
-import { SfmClip } from './model/clips/clip';
+import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
+import { SfmTrackGroup } from './model/trackgroup';
 import { Serializable } from './serialize/serializable';
 
 export type ControllerEvent = 'setsession'
@@ -41,6 +42,7 @@ export type ControllerEvent = 'setsession'
 	| 'refreshtoolbar'
 	| 'userbladeclip'
 	| 'useraddcliptotrack'
+	| 'useraddtracktotrackgroup'
 	| 'userfillgaps'
 	;
 
@@ -80,6 +82,7 @@ export class Controller {
 	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userbladeclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcliptotrack' | 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddtracktotrackgroup', callback: (evt: CustomEvent<AddTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -113,6 +116,7 @@ export class Controller {
 	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userbladeclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'useraddcliptotrack' | 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
+	static dispatchEvent(type: 'useraddtracktotrackgroup', options: ControllerEventInit<AddTrack>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
@@ -147,4 +151,9 @@ export type RefreshToolbar = {
 export type AddCharacter = {
 	character: Character;
 	clips: Set<SfmFilmClip>;
+}
+
+export type AddTrack = {
+	type: SfmClipType;
+	group: SfmTrackGroup;
 }

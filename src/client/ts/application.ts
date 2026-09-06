@@ -8,13 +8,13 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, Controller, SetSelectedClip } from './controller';
+import { AddCharacter, AddTrack, Controller, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Command } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
-import { SfmClip } from './model/clips/clip';
+import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
@@ -98,6 +98,7 @@ class Application {
 		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 		Controller.addEventListener('userbladeclip', (event) => this.#bladeClip(event.detail));
 		Controller.addEventListener('useraddcliptotrack', (event) => this.#addClipToTrack(event.detail));
+		Controller.addEventListener('useraddtracktotrackgroup', (event) => this.#addTrackToTrackGroup(event.detail));
 		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
@@ -530,6 +531,31 @@ class Application {
 		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
 	}
 
+	static #addTrackToTrackGroup(params: AddTrack): void {
+		const action = History.startAction();
+		let name: string;
+		switch (params.type as SfmClipType) {
+			case 'film':
+				name = 'Film track';
+				break;
+			case 'channel':
+				name = 'Channel track';
+				break;
+			case 'effect':
+				name = 'Effect track';
+				break;
+			case 'operator':
+				name = 'Operator track';
+				break;
+			case 'sound':
+				name = 'Sound track';
+				break;
+		}
+		action.do(params.group, 'add-track', new SfmTrack({ trackType: params.type, name }));
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
 }
 
 async function load(file: JSONFile) {

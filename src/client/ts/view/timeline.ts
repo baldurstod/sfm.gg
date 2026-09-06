@@ -1,11 +1,11 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller, ControllerEventInit, SetSelectedClip } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
-import { SfmClip } from '../model/clips/clip';
+import { SfmClip, SfmClipType } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
@@ -204,7 +204,10 @@ export class TimelinePanel extends Panel {
 
 		switch (true) {
 			case (element as SfmTrackGroup).isSfmTrackGroup:
-				inner = outer = createElement('div', { class: 'trackgroup', });
+				inner = outer = createElement('div', {
+					class: 'trackgroup',
+					$contextmenu: (event: MouseEvent) => this.#displayTrackGroupContextMenu(event, element as SfmTrackGroup),
+				});
 				break;
 			case (element as SfmTrack).isSfmTrack:
 				outer = createElement('div', {
@@ -435,6 +438,28 @@ export class TimelinePanel extends Panel {
 		this.#dragAction = null;
 	}
 
+	#displayTrackGroupContextMenu(event: MouseEvent, group: SfmTrackGroup): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const submenu: HarmonyMenuItems = [];
+		for (const a of ['film', 'sound', 'channel', 'effect', 'operator'] as SfmClipType[]) {
+			submenu.push({ i18n: `#${a}`, f: (): void => { Controller.dispatchEvent('useraddtracktotrackgroup', { detail: { group, type: a } }) }, });
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			add_clip: {
+				i18n: '#add_track',
+				submenu,
+			},
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, group);
+
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
 	#displayTrackContextMenu(event: MouseEvent, track: SfmTrack): void {
 		if (event.shiftKey || !this.#htmlContextMenu) {
 			return;
@@ -446,7 +471,6 @@ export class TimelinePanel extends Panel {
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
 
-		//SceneExplorerEntity.#explorer?.showContextMenu(event.clientX, event.clientY, this.#entity);
 		event.preventDefault();
 		event.stopPropagation();
 	}
