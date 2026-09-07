@@ -69,6 +69,7 @@ export class TimelinePanel extends Panel {
 			after: this.#htmlTimeTracks[0],
 			class: 'content',
 			$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
+			$contextmenu: (event: MouseEvent) => this.#displayContextMenu(event),
 		});
 
 		this.#htmlPlayHead = createElement('div', {
@@ -436,6 +437,28 @@ export class TimelinePanel extends Panel {
 		}
 		History.commit(this.#dragAction);
 		this.#dragAction = null;
+	}
+
+	#displayContextMenu(event: MouseEvent): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			add_clip: {
+				i18n: '#add_track_group', f: (): void => {
+					const detail = this.#topFilmClip;
+					if (!detail) {
+						return;
+					}
+					Controller.dispatchEvent('useraddtrackgroup', { detail })
+				}
+			},
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY);
+
+		event.preventDefault();
+		event.stopPropagation();
 	}
 
 	#displayTrackGroupContextMenu(event: MouseEvent, group: SfmTrackGroup): void {

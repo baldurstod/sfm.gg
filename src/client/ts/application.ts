@@ -100,6 +100,7 @@ class Application {
 		Controller.addEventListener('useraddcliptotrack', (event) => this.#addClipToTrack(event.detail));
 		Controller.addEventListener('useraddtracktotrackgroup', (event) => this.#addTrackToTrackGroup(event.detail));
 		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
+		Controller.addEventListener('useraddtrackgroup', (event) => this.#addTrackGroup(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -552,6 +553,14 @@ class Application {
 				break;
 		}
 		action.do(params.group, 'add-track', new SfmTrack({ trackType: params.type, name }));
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #addTrackGroup(topClip: SfmFilmClip): void {
+		const action = History.startAction();
+		action.do(topClip, 'add-track-group', new SfmTrackGroup());
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');
