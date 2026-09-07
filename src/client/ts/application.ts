@@ -369,6 +369,7 @@ class Application {
 
 		console.info(...bounds);
 
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(newTime);
 		this.#updateCurrentTime();
 	}
@@ -381,6 +382,7 @@ class Application {
 
 		const frameRate = this.#player.getFrameRate();
 
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(Math.round(topClip.getStart() * frameRate) / frameRate);
 		this.#updateCurrentTime();
 	}
@@ -393,6 +395,7 @@ class Application {
 
 		const frameRate = this.#player.getFrameRate();
 
+		Controller.dispatchEvent('usersetplaying', { detail: false });
 		this.#player.setCurrentTime(Math.round(topClip.getEnd() * frameRate) / frameRate);
 		this.#updateCurrentTime();
 	}
