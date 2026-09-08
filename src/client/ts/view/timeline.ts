@@ -34,6 +34,7 @@ export class TimelinePanel extends Panel {
 	#frameRate = 24;
 	//#dragTime = false;
 	#elementsOuter = new Map<Serializable, HTMLElement>();
+	#elementsTitle = new Map<Serializable, HTMLElement>();
 	#elementsInner = new Map<Serializable, HTMLElement>();
 	#dragOperation: DragOperation | null = null;
 	#dragElement: Serializable | null = null;
@@ -167,15 +168,15 @@ export class TimelinePanel extends Panel {
 
 		for (const trackGroup of topFilmClip.getTrackGroup()) {
 			const tracks = trackGroup.getTracks();
-			const [htmlTrackGroup] = this.#getSerializableElement(trackGroup);
-			htmlTrackGroup.style.cssText = `--tracks:${tracks.length};`;
-			this.#htmlContent?.append(htmlTrackGroup);
-			htmlTrackGroup.replaceChildren();
+			const [htmlTrackGroupOuter, htmlTrackGroupInner] = this.#getSerializableElement(trackGroup);
+			htmlTrackGroupOuter.style.cssText = `--tracks:${tracks.length};`;
+			this.#htmlContent?.append(htmlTrackGroupOuter);
+			htmlTrackGroupInner.replaceChildren();
 
 			for (const [id, track] of tracks.entries()) {
 				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
 				htmlTrackOuter.style.cssText = `--start:${topFilmClip.getStart()};--duration:${topFilmClip.getDuration()};--track:${id};`;
-				htmlTrackGroup.append(htmlTrackOuter);
+				htmlTrackGroupInner.append(htmlTrackOuter);
 				htmlTrackInner.replaceChildren();
 
 				let maxRow = -1;
@@ -198,15 +199,34 @@ export class TimelinePanel extends Panel {
 
 	#getSerializableElement(element: Serializable): [HTMLElement, HTMLElement] {
 		let outer = this.#elementsOuter.get(element);
+		let title = this.#elementsTitle.get(element);
 		let inner = this.#elementsInner.get(element);
+
+		if (title) {
+			title.innerText = element.getName();
+		}
+
 		if (outer && inner) {
 			return [outer, inner];
 		}
 
 		switch (true) {
 			case (element as SfmTrackGroup).isSfmTrackGroup:
-				inner = outer = createElement('div', {
+				/*inner = outer = createElement('div', {
 					class: 'trackgroup',
+					$contextmenu: (event: MouseEvent) => this.#displayTrackGroupContextMenu(event, element as SfmTrackGroup),
+				});*/
+				outer = createElement('div', {
+					class: 'trackgroup',
+					childs: [
+						createElement('div', {
+							class: 'trackgroup-header',
+							child: title = createTitle(element),
+						}),
+						inner = createElement('div', {
+							class: 'track-container',
+						}),
+					],
 					$contextmenu: (event: MouseEvent) => this.#displayTrackGroupContextMenu(event, element as SfmTrackGroup),
 				});
 				break;
@@ -215,7 +235,8 @@ export class TimelinePanel extends Panel {
 					class: 'track',
 					childs: [
 						createElement('div', {
-							innerText: element.getName(),
+							class: 'track-header',
+							child: title = createTitle(element),
 						}),
 						inner = createElement('div', {
 							class: 'clip-container',
@@ -230,7 +251,7 @@ export class TimelinePanel extends Panel {
 					childs: [
 						createElement('div', {
 							class: 'clip-header',
-							innerText: element.getName(),
+							child: title = createTitle(element),
 							$mousedown: (event: MouseEvent) => {
 								this.#startDragOperation('moveclip', element);
 								this.#dragTime = this.#getTimeFromMouseEvent(event);
@@ -250,8 +271,12 @@ export class TimelinePanel extends Panel {
 							$mousedown: () => this.#startDragClipEnd(element),
 						}),
 					],
-					$click: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
-					$mousedown: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
+					$click: (event: MouseEvent) => {
+						if (event.target === outer) {
+							this.#clipMouseDownOrClick(event, element);
+						}
+					},
+					//$mousedown: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
 				});
 				break;
 			default:
@@ -260,11 +285,15 @@ export class TimelinePanel extends Panel {
 
 
 		this.#elementsOuter.set(element, outer);
+		if (title) {
+			this.#elementsTitle.set(element, title);
+		}
 		this.#elementsInner.set(element, inner);
 		return [outer, inner];
 	}
 
 	#clipMouseDownOrClick(event: MouseEvent, element: Serializable): void {
+		console.info(event.target);
 		if (event.ctrlKey) {
 			this.#addSelectedClip(element as SfmClip);
 		} else {
@@ -497,4 +526,43 @@ export class TimelinePanel extends Panel {
 		event.preventDefault();
 		event.stopPropagation();
 	}
+}
+
+
+function createTitle(element: Serializable): HTMLElement {
+	function removeInput(event: Event, title: HTMLElement) {
+		console.info(event);
+		try {
+			// safeguard for dom exception
+			(event.target as HTMLElement).parentElement?.replaceChild(
+				(title as HTMLElement),
+				(event.target as HTMLElement),
+			);
+		} catch (e) { }
+
+	}
+
+	return createElement('span', {
+		innerText: element.getName(),
+		$dblclick: (event: MouseEvent) => {
+			event.stopPropagation();
+			event.preventDefault();
+
+			const title = (event.target as HTMLElement);
+			const input = createElement('input', {
+				value: element.getName(),
+				$change: (change: InputEvent) => {
+					removeInput(change, title);
+					Controller.dispatchEvent('usersetname', { detail: { element, name: (change.target as HTMLInputElement).value } });
+				},
+				$blur: (event: Event) => removeInput(event, title),
+			}) as HTMLInputElement;
+			title.parentElement?.replaceChild(
+				input,
+				event.target as HTMLElement
+			);
+			input.focus();
+		}
+	});
+
 }

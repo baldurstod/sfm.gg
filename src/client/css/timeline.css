@@ -141,6 +141,10 @@
 	top: calc(var(--track)* var(--track-height));
 }
 
+.track-header{
+	cursor: pointer;
+}
+
 .clip-container {
 	height: calc(var(--rows) * var(--clip-height));
 	position: relative;

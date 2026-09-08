@@ -77,8 +77,6 @@ export abstract class Serializable implements Undoable {
 			default:
 				throw new Error('unknow command: ' + command.command);
 		}
-
-		return false;
 	}
 
 

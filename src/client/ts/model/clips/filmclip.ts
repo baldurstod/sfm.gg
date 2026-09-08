@@ -200,7 +200,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
 				return true;
 			default:
-				return super.do(command);
+				return super.undo(command);
 		}
 	}
 

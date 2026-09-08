@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddTrack, Controller, SetSelectedClip } from './controller';
+import { AddCharacter, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Command } from './history/action';
 import { History } from './history/history';
@@ -101,6 +101,7 @@ class Application {
 		Controller.addEventListener('useraddtracktotrackgroup', (event) => this.#addTrackToTrackGroup(event.detail));
 		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
 		Controller.addEventListener('useraddtrackgroup', (event) => this.#addTrackGroup(event.detail));
+		Controller.addEventListener('usersetname', (event) => this.#setName(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -564,6 +565,14 @@ class Application {
 	static #addTrackGroup(topClip: SfmFilmClip): void {
 		const action = History.startAction();
 		action.do(topClip, 'add-track-group', new SfmTrackGroup());
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #setName(detail: SetName): void {
+		const action = History.startAction();
+		action.do(detail.element, 'set-name', detail.name);
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');

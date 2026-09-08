@@ -77,9 +77,9 @@ export class SfmTrack extends Serializable implements Undoable {
 				command.undoParams = command.params.track;
 				this.#addClip(command.params);
 				return true;
+			default:
+				return super.do(command);
 		}
-
-		return false;
 	}
 
 	undo(command: Command): boolean {
@@ -94,9 +94,9 @@ export class SfmTrack extends Serializable implements Undoable {
 					previousTrack.#addClip(command.params);
 				}
 				return true;
+			default:
+				return super.undo(command);
 		}
-
-		return false;
 	}
 
 	getGaps(start: number, end: number): Set<SfmTimeFrame> {

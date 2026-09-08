@@ -36,9 +36,9 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				command.undoParams = command.params.trackGroup;
 				this.#addTrack(command.params);
 				return true;
+			default:
+				return super.do(command);
 		}
-
-		return false;
 	}
 
 	undo(command: Command): boolean {
@@ -53,9 +53,9 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 					previousTrackGroup.#addTrack(command.params);
 				}
 				return true;
+			default:
+				return super.undo(command);
 		}
-
-		return false;
 	}
 
 	static override getTypeName(): string {

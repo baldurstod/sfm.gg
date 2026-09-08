@@ -45,6 +45,7 @@ export type ControllerEvent = 'setsession'
 	| 'useraddtracktotrackgroup'
 	| 'useraddtrackgroup'
 	| 'userfillgaps'
+	| 'usersetname'
 	;
 
 // Same as CustomEventInit with required detail
@@ -85,6 +86,7 @@ export class Controller {
 	static addEventListener(type: 'useraddcliptotrack' | 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddtracktotrackgroup', callback: (evt: CustomEvent<AddTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddtrackgroup', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'usersetname', callback: (evt: CustomEvent<SetName>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -120,6 +122,7 @@ export class Controller {
 	static dispatchEvent(type: 'useraddcliptotrack' | 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'useraddtracktotrackgroup', options: ControllerEventInit<AddTrack>): boolean;
 	static dispatchEvent(type: 'useraddtrackgroup', options: ControllerEventInit<SfmFilmClip>): boolean;
+	static dispatchEvent(type: 'usersetname', options: ControllerEventInit<SetName>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
@@ -159,4 +162,9 @@ export type AddCharacter = {
 export type AddTrack = {
 	type: SfmClipType;
 	group: SfmTrackGroup;
+}
+
+export type SetName = {
+	element: Serializable;
+	name: string;
 }
