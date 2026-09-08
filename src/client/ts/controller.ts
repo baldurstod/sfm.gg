@@ -84,7 +84,8 @@ export class Controller {
 	static addEventListener(type: 'refreshtoolbar', callback: (evt: CustomEvent<RefreshToolbar>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userbladeclip' | 'userdeleteselectedclips', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'useraddcliptotrack' | 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddcliptotrack', callback: (evt: CustomEvent<AddClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddtracktotrackgroup', callback: (evt: CustomEvent<AddTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddtrackgroup', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersetname', callback: (evt: CustomEvent<SetName>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -120,7 +121,8 @@ export class Controller {
 	static dispatchEvent(type: 'refreshtoolbar', options: ControllerEventInit<RefreshToolbar>): boolean;
 	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userbladeclip' | 'userdeleteselectedclips', options: ControllerEventInit<SfmFilmClip>): boolean;
-	static dispatchEvent(type: 'useraddcliptotrack' | 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
+	static dispatchEvent(type: 'useraddcliptotrack', options: ControllerEventInit<AddClip>): boolean;
+	static dispatchEvent(type: 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'useraddtracktotrackgroup', options: ControllerEventInit<AddTrack>): boolean;
 	static dispatchEvent(type: 'useraddtrackgroup', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'usersetname', options: ControllerEventInit<SetName>): boolean;
@@ -158,6 +160,13 @@ export type RefreshToolbar = {
 export type AddCharacter = {
 	character: Character;
 	clips: Set<SfmFilmClip>;
+}
+
+export type AddClip = {
+	/** Track to add the clip into */
+	track: SfmTrack;
+	/** Time corresponding to the user click */
+	time: number;
 }
 
 export type AddTrack = {

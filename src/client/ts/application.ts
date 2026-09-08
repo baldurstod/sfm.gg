@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Command } from './history/action';
 import { History } from './history/history';
@@ -477,7 +477,8 @@ class Application {
 		}
 	}
 
-	static #addClipToTrack(track: SfmTrack): void {
+	static #addClipToTrack(detail: AddClip): void {
+		const track = detail.track;
 		const topClip = track.trackGroup?.parentClip;
 		if (!topClip) {
 			return;
@@ -487,7 +488,26 @@ class Application {
 		let newCLip: SfmClip;
 		switch (track.getTrackType()) {
 			case 'film':
-				newCLip = new SfmFilmClip({ scene: new SfmScene() });
+				// For a film clip, we first look for a gap corresponding to the click position
+				const gaps = track.getGaps();
+
+				let clipTime: SfmTimeFrame;
+				for (const gap of gaps) {
+					if (gap.inTimeFrame(detail.time)) {
+						clipTime = gap;
+						break;
+					}
+				}
+
+				let start = clipTime!?.getStart();
+				let end = clipTime!?.getEnd();
+
+				newCLip = new SfmFilmClip({
+					scene: new SfmScene(), timeFrame: {
+						...(start !== -Infinity) && { start, },
+						...(end !== Infinity) && { end, },
+					}
+				});
 				break;
 			case 'sound':
 				// TODO: add sound selection

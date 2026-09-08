@@ -481,7 +481,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_clip: {
+			add_track_group: {
 				i18n: '#add_track_group', f: (): void => {
 					const detail = this.#topFilmClip;
 					if (!detail) {
@@ -508,7 +508,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_clip: {
+			add_track: {
 				i18n: '#add_track',
 				submenu,
 			},
@@ -525,7 +525,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_clip: { i18n: '#add_clip', f: (): void => { Controller.dispatchEvent('useraddcliptotrack', { detail: track }) } },
+			add_clip: { i18n: '#add_clip', f: (): void => { Controller.dispatchEvent('useraddcliptotrack', { detail: { track, time: this.#getTimeFromMouseEvent(event) } }) } },
 			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => { Controller.dispatchEvent('userfillgaps', { detail: track }) } } },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);

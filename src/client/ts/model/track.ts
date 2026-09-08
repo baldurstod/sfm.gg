@@ -110,7 +110,7 @@ export class SfmTrack extends Serializable implements Undoable {
 		}
 	}
 
-	getGaps(start: number, end: number): Set<SfmTimeFrame> {
+	getGaps(start: number = -Infinity, end: number = Infinity): Set<SfmTimeFrame> {
 		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
 
 		for (const clip of this.#clips) {
