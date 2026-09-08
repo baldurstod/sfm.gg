@@ -84,6 +84,7 @@ export class TimelinePanel extends Panel {
 		ShortcutHandler.addContext('timeline', this.panel!.getContent());
 
 		ShortcutHandler.addEventListener('app.shortcuts.timeline.blade', () => this.#bladeClips());
+		ShortcutHandler.addEventListener('app.shortcuts.timeline.delete', () => this.#deleteSelectedClips());
 
 		this.#setCssVars();
 	}
@@ -448,6 +449,12 @@ export class TimelinePanel extends Panel {
 	#bladeClips(): void {
 		if (this.#topFilmClip) {
 			Controller.dispatchEvent('userbladeclip', { detail: this.#topFilmClip, });
+		}
+	}
+
+	#deleteSelectedClips(): void {
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('userdeleteselectedclips', { detail: this.#topFilmClip, });
 		}
 	}
 

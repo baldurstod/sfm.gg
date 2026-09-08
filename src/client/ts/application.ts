@@ -97,6 +97,7 @@ class Application {
 		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 		Controller.addEventListener('userbladeclip', (event) => this.#bladeClip(event.detail));
+		Controller.addEventListener('userdeleteselectedclips', (event) => this.#deleteSelectedClips(event.detail));
 		Controller.addEventListener('useraddcliptotrack', (event) => this.#addClipToTrack(event.detail));
 		Controller.addEventListener('useraddtracktotrackgroup', (event) => this.#addTrackToTrackGroup(event.detail));
 		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
@@ -453,6 +454,27 @@ class Application {
 		}
 		History.commit(action);
 		this.#setActiveFilmClips();
+	}
+
+	static #deleteSelectedClips(topClip: SfmFilmClip): void {
+		const action = History.startAction();
+		const time = this.#player.getCurrentTime();
+
+		let deleted = 0;
+		for (const selected of topClip.getSelectedClips()) {// We create a copy as we update the original set
+			if (!selected.track) {
+				continue;
+			}
+
+			if (action.do(selected.track, 'delete-clip', selected)) {
+				++deleted;
+			}
+		}
+
+		if (deleted) {
+			History.commit(action);
+			Controller.dispatchEvent('refreshtimeline');
+		}
 	}
 
 	static #addClipToTrack(track: SfmTrack): void {

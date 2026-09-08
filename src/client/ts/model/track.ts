@@ -77,6 +77,13 @@ export class SfmTrack extends Serializable implements Undoable {
 				command.undoParams = command.params.track;
 				this.#addClip(command.params);
 				return true;
+			case 'delete-clip':
+				if (!this.#clips.has(command.params)) {
+					return false;
+				}
+				command.undoParams = command.params;
+				this.#deleteClip(command.params);
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -93,6 +100,10 @@ export class SfmTrack extends Serializable implements Undoable {
 				if (previousTrack) {
 					previousTrack.#addClip(command.params);
 				}
+				return true;
+			case 'delete-clip':
+				// Reattach the clip to this track
+				this.#addClip(command.undoParams);
 				return true;
 			default:
 				return super.undo(command);

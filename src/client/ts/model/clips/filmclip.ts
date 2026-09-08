@@ -170,6 +170,13 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 					this.#primarySelectedClip = command.params;
 				}
 				return true;
+			case 'remove-selected-clip':
+				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
+				this.#selectedClips.delete(command.params);
+				if (this.#primarySelectedClip === command.params) {
+					this.#primarySelectedClip = undefined;
+				}
+				return true;
 			case 'set-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
 				this.#selectedClips.clear();
@@ -195,6 +202,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				return true;
 			case 'add-selected-clip':
 			case 'set-selected-clip':
+			case 'remove-selected-clip':
 				this.#selectedClips.clear();
 				this.#primarySelectedClip = command.undoParams[0];
 				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
