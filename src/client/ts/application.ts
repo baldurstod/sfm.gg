@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, SelectCharacter, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
@@ -80,7 +80,7 @@ class Application {
 
 		Controller.addEventListener('useropenadvancedoptions', () => OptionsManager.showOptionsManager());
 		Controller.addEventListener('useraddmodel', () => this.#userAddModel());
-		Controller.addEventListener('userselectcharacter', () => this.#userselectCharacter());
+		Controller.addEventListener('userselectcharacter', (event) => this.#userselectCharacter(event.detail));
 		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
 		Controller.addEventListener('usergotopreviousframe', () => this.#userPreviousFrame());
@@ -255,16 +255,23 @@ class Application {
 		this.#modelSelectorPanel.open();
 	}
 
-	static #userselectCharacter(): void {
-		const topClip = this.#session.getTopFilmClip();
-		if (!topClip) {
-			return;
-		}
+	static #userselectCharacter(detail: SelectCharacter | void): void {
+		let primary: SfmClip | undefined;
+		let selected: Set<SfmClip>;
+		if (detail) {
+			primary = detail.primary;
+			selected = detail.clips;
+		} else {
+			const topClip = this.#session.getTopFilmClip();
+			if (!topClip) {
+				return;
+			}
 
-		const primary = topClip.getPrimarySelectedClip();
-		const selected = topClip.getSelectedClips();
-		if (!primary) {
-			return;
+			primary = topClip.getPrimarySelectedClip();
+			selected = topClip.getSelectedClips();
+			if (!primary) {
+				return;
+			}
 		}
 
 		this.#getCharacterSelectorPanel().selectCharacter(primary, selected);
@@ -304,6 +311,7 @@ class Application {
 		}
 
 		if (!isInClip) {
+			// If the play head is not in one of the clip, move it so the character appears
 			const newTime = this.#previousOrNextClip(1, detail.clips);
 			if (newTime !== undefined) {
 				Controller.dispatchEvent('usersetplaying', { detail: false });

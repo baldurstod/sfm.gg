@@ -330,6 +330,10 @@ export class CharacterSelectorPanel extends Panel {
 			clips = new Set<SfmFilmClip>([this.#primarySelectedClip as SfmFilmClip]);
 		} else {
 			clips = new Set<SfmFilmClip>();
+
+			if ((this.#primarySelectedClip as SfmFilmClip).isSfmFilmClip) {
+				clips.add(this.#primarySelectedClip as SfmFilmClip);
+			}
 			for (const selectedClip of this.#selectedClips) {
 				if ((selectedClip as SfmFilmClip).isSfmFilmClip) {
 					clips.add(selectedClip as SfmFilmClip);

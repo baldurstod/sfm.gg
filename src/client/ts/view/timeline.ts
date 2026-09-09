@@ -2,7 +2,7 @@ import { ShortcutHandler } from 'harmony-browser-utils';
 import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { Controller, ControllerEventInit, SetSelectedClip } from '../controller';
+import { Controller, ControllerEventInit, SelectCharacter, SetSelectedClip } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip, SfmClipType } from '../model/clips/clip';
@@ -563,7 +563,13 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
+		const clips = new Set<SfmClip>();
+		if (this.#topFilmClip) {
+			this.#topFilmClip.getSelectedClips().forEach(clip => clips.add(clip));
+		}
+
 		const contextMenu: HarmonyMenuItemsDict = {
+			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } as SelectCharacter }) }, } },
 			delete_clip: { i18n: '#delete_clip', f: (): void => { Controller.dispatchEvent('userdeleteclip', { detail: clip }) }, },
 			...(this.#topFilmClip) && { delete_selected_clips: { i18n: '#delete_selected_clips', f: (): void => { Controller.dispatchEvent('userdeleteselectedclips', { detail: this.#topFilmClip!, }) } } },
 		};

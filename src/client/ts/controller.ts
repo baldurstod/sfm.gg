@@ -74,7 +74,8 @@ export class Controller {
 	static addEventListener(type: 'usersavesession', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'useraddmodel' | 'userselectcharacter', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddmodel', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userselectcharacter', callback: (evt: CustomEvent<SelectCharacter | void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<AddCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -114,7 +115,8 @@ export class Controller {
 	static dispatchEvent(type: 'usersavesession', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenadvancedoptions', options?: EventInit): boolean;
-	static dispatchEvent(type: 'useraddmodel' | 'userselectcharacter', options?: EventInit): boolean;
+	static dispatchEvent(type: 'useraddmodel', options?: EventInit): boolean;
+	static dispatchEvent(type: 'userselectcharacter', options?: CustomEventInit<SelectCharacter>): boolean;
 	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<AddCharacter>): boolean;
 	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
@@ -166,6 +168,11 @@ export type RefreshToolbar = {
 	addCharacter?: boolean;
 	undoButton?: boolean;
 	redoButton?: boolean;
+}
+
+export type SelectCharacter = {
+	primary: SfmClip;
+	clips: Set<SfmClip>;
 }
 
 export type AddCharacter = {
