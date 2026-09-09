@@ -41,7 +41,10 @@ export type ControllerEvent = 'setsession'
 	| 'refreshtimeline'
 	| 'refreshtoolbar'
 	| 'userbladeclip'
+	// Delete the selected clips under the provided film clip
 	| 'userdeleteselectedclips'
+	// Delete the provided film clip
+	| 'userdeleteclip'
 	| 'userdeletetrack'
 	| 'userdeletetrackgroup'
 	| 'useraddcliptotrack'
@@ -86,6 +89,7 @@ export class Controller {
 	static addEventListener(type: 'refreshtoolbar', callback: (evt: CustomEvent<RefreshToolbar>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userbladeclip' | 'userdeleteselectedclips', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userdeleteclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcliptotrack', callback: (evt: CustomEvent<AddClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userfillgaps', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddtracktotrackgroup', callback: (evt: CustomEvent<AddTrack>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -125,6 +129,7 @@ export class Controller {
 	static dispatchEvent(type: 'refreshtoolbar', options: ControllerEventInit<RefreshToolbar>): boolean;
 	static dispatchEvent(type: 'userundolastaction' | 'userredolastaction' | 'refreshtimeline', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userbladeclip' | 'userdeleteselectedclips', options: ControllerEventInit<SfmFilmClip>): boolean;
+	static dispatchEvent(type: 'userdeleteclip', options: ControllerEventInit<SfmClip>): boolean;
 	static dispatchEvent(type: 'useraddcliptotrack', options: ControllerEventInit<AddClip>): boolean;
 	static dispatchEvent(type: 'userfillgaps', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'useraddtracktotrackgroup', options: ControllerEventInit<AddTrack>): boolean;

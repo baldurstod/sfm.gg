@@ -297,7 +297,7 @@ export class TimelinePanel extends Panel {
 							this.#clipMouseDownOrClick(event, element);
 						}
 					},
-					//$mousedown: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
+					$contextmenu: (event: MouseEvent) => this.#displayClipContextMenu(event, element as SfmClip),
 				});
 				break;
 			default:
@@ -553,6 +553,21 @@ export class TimelinePanel extends Panel {
 			delete_track: { i18n: '#delete_track', f: (): void => { Controller.dispatchEvent('userdeletetrack', { detail: track }) }, },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
+
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	#displayClipContextMenu(event: MouseEvent, clip: SfmClip): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			delete_clip: { i18n: '#delete_clip', f: (): void => { Controller.dispatchEvent('userdeleteclip', { detail: clip }) }, },
+			...(this.#topFilmClip) && { delete_selected_clips: { i18n: '#delete_selected_clips', f: (): void => { Controller.dispatchEvent('userdeleteselectedclips', { detail: this.#topFilmClip!, }) } } },
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, clip);
 
 		event.preventDefault();
 		event.stopPropagation();
