@@ -92,6 +92,7 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			case 'delete-track':
 				// Reattach the track
 				this.#addTrack(command.undoParams);
+				return true;
 			case 'set-order':
 				this.#order = command.undoParams;
 				return true;

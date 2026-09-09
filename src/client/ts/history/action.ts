@@ -5,15 +5,17 @@ export interface Undoable {
 }
 
 /**
- * A single command. Multiple commands part of the same action can be undone at once.
+ * A single command. Multiple commands part of the same action will be undone at once.
  */
 export class Command {
 	readonly element: Undoable;
 	readonly command: string;
 	readonly params: any/*TODO: improve type*/;
+	readonly action: Action;
 	undoParams: any/*TODO: improve type*/;
 
-	constructor(element: Undoable, command: string, params: any) {
+	constructor(action: Action, element: Undoable, command: string, params: any) {
+		this.action = action;
 		this.element = element;
 		this.command = command;
 		this.params = params;
@@ -36,7 +38,7 @@ export class Action {
 	#committed = false;
 
 	do(element: Undoable, command: string, params: any): boolean {
-		const operation = new Command(element, command, params);
+		const operation = new Command(this, element, command, params);
 		const result = element.do(operation);
 		if (!result) {
 			return false;

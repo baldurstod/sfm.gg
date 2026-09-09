@@ -10,7 +10,7 @@ import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { AddCharacter, AddClip, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
-import { Command } from './history/action';
+import { Action, Command } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
@@ -156,41 +156,35 @@ class Application {
 	}
 
 	static createNewSession(): void {
+		const action = new Action();
 		this.#session = new SfmSession({ name: 'session' });
 
 		const film = new SfmFilmClip({ name: 'Film' });
 		this.#session.setTopFilmClip(film);
 
-
 		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { start: 0, end: 15 }, });
 		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmScene(), timeFrame: { start: 25, end: 35 }, });
-		//clip.scene.getScene().addChild(new Box({ /*segments: 16, rings: 16*/ }));
+
 		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
 		clip.scene!.getScene().addChild(workCamera.getCamera());
 
-		//this.#session.addClip(clip);
-		//film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
 		const filmTrackGroup = new SfmTrackGroup({ name: 'Film', order: film.getNextTrackGroupOrder(), });
-		film.do(new Command(film, 'add-track-group', filmTrackGroup));//const filmTrackGroup = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' }));
+		action.do(film, 'add-track-group', filmTrackGroup);
 		const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film', order: filmTrackGroup.getNextTrackOrder(), });
-		//const filmTrack = .addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' }));
-		filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
-		filmTrack.do(new Command(filmTrack, 'add-clip', clip));
-		filmTrack.do(new Command(filmTrack, 'add-clip', clip2));
+		action.do(filmTrackGroup, 'add-track', filmTrack);
+		action.do(filmTrack, 'add-clip', clip);
+		action.do(filmTrack, 'add-clip', clip2);
 
 		const soundTrackGroup = new SfmTrackGroup({ name: 'Sounds', order: film.getNextTrackGroupOrder(), });
-		film.do(new Command(film, 'add-track-group', soundTrackGroup));/*film.addTrackGroup(soundTrackGroup/*new SfmTrackGroup({ name: 'Sounds' })).addTracks([
-			dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' }),
-			music = new SfmTrack({ name: 'Music', trackType: 'sound', }),
-			]* /);*/
+		action.do(film, 'add-track-group', soundTrackGroup);
 		const dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound', order: soundTrackGroup.getNextTrackOrder(), });
-		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', dialog));
+		action.do(soundTrackGroup, 'add-track', dialog);
 		const music = new SfmTrack({ name: 'Music', trackType: 'sound', order: soundTrackGroup.getNextTrackOrder(), });
-		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', music));
+		action.do(soundTrackGroup, 'add-track', music);
 
-		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { start: 10, end: 1 } })));//dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
-		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { end: 0.5 } })));//dialog.addClip(new SfmSoundClip({ timeFrame: { end: 0.5 } }));
-		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ name: 'music1' })));//music.addClip(new SfmSoundClip({ name: 'music1' }));
+		action.do(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
+		action.do(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { end: 0.5 } }));
+		action.do(dialog, 'add-clip', new SfmSoundClip({ name: 'music1' }));
 
 		this.#player.setFilmClip(film);
 
