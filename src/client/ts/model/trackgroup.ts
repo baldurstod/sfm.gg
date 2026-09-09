@@ -1,13 +1,24 @@
 import { Command, Undoable } from '../history/action';
-import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilmClip } from './clips/filmclip';
 import { SfmTrack } from './track';
+
+export interface TrackGroupParameters extends SerializableParameters {
+	/** Track group order. Default to 0 */
+	order?: number;
+}
 
 export class SfmTrackGroup extends Serializable implements Undoable {
 	readonly isSfmTrackGroup = true as const;
 	parentClip: SfmFilmClip | null = null;
 	readonly #tracks = new Set<SfmTrack>();
+	#order = 0;
+
+	constructor(params: TrackGroupParameters) {
+		super(params);
+		this.#order = params.order ?? 0;
+	}
 
 	#addTrack(track: SfmTrack): SfmTrack {
 		this.#tracks.add(track);
@@ -30,6 +41,20 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 		return [...this.#tracks];
 	}
 
+	getOrder(): number {
+		return this.#order;
+	}
+
+	getNextTrackOrder(): number {
+		let order = -1;
+
+		for (const trackGroup of this.#tracks) {
+			order = Math.max(trackGroup.getOrder(), order);
+		}
+
+		return ++order;
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-track':
@@ -42,6 +67,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				}
 				command.undoParams = command.params;
 				this.#deleteTrack(command.params);
+				return true;
+			case 'set-order':
+				command.undoParams = this.#order;
+				this.#order = command.params;
 				return true;
 			default:
 				return super.do(command);
@@ -63,6 +92,8 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			case 'delete-track':
 				// Reattach the track
 				this.#addTrack(command.undoParams);
+			case 'set-order':
+				this.#order = command.undoParams;
 				return true;
 			default:
 				return super.undo(command);
@@ -79,6 +110,7 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
+		json.order = this.#order;
 
 		if (this.#tracks.size) {
 			json.tracks = [...this.#tracks];
@@ -93,6 +125,7 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 
 	override unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		super.unserialize(json, context);
+		this.#order = json.order as number ?? 0;
 
 		if (json.tracks) {
 			for (const trackId of json.tracks as string[]) {

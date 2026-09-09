@@ -49,7 +49,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		group.parentClip = null;
 	}
 
-	getTrackGroup(): SfmTrackGroup[] {
+	getTrackGroups(): SfmTrackGroup[] {
 		return [...this.#trackGroups];
 	}
 
@@ -151,6 +151,16 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		}
 
 		return clips;
+	}
+
+	getNextTrackGroupOrder(): number {
+		let order = -1;
+
+		for (const trackGroup of this.#trackGroups) {
+			order = Math.max(trackGroup.getOrder(), order);
+		}
+
+		return ++order;
 	}
 
 	override createClip(name: string): SfmClip {

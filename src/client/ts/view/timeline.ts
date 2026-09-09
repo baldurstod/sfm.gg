@@ -167,16 +167,35 @@ export class TimelinePanel extends Panel {
 			return lastRow;
 		}
 
-		for (const trackGroup of topFilmClip.getTrackGroup()) {
+		// Sort track groups by order
+		const trackGroups = topFilmClip.getTrackGroups();
+		trackGroups[Symbol.iterator] = function* (): ArrayIterator<SfmTrackGroup> {
+			yield* [...this.values()].sort(
+				(a, b) => {
+					return a.getOrder() < b.getOrder() ? -1 : 1;
+				}
+			);
+		};
+
+		for (const trackGroup of trackGroups) {
 			const tracks = trackGroup.getTracks();
+			tracks[Symbol.iterator] = function* (): ArrayIterator<SfmTrack> {
+				yield* [...this.values()].sort(
+					(a, b) => {
+						return a.getOrder() < b.getOrder() ? -1 : 1;
+					}
+				);
+			};
+
 			const [htmlTrackGroupOuter, htmlTrackGroupInner] = this.#getSerializableElement(trackGroup);
 			htmlTrackGroupOuter.style.cssText = `--tracks:${tracks.length};`;
 			this.#htmlContent?.append(htmlTrackGroupOuter);
 			htmlTrackGroupInner.replaceChildren();
 
-			for (const [id, track] of tracks.entries()) {
+			let trackId = 0;
+			for (const track of tracks) {
 				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
-				htmlTrackOuter.style.cssText = `--start:${topFilmClip.getStart()};--duration:${topFilmClip.getDuration()};--track:${id};`;
+				htmlTrackOuter.style.cssText = `--start:${topFilmClip.getStart()};--duration:${topFilmClip.getDuration()};--track:${trackId};`;
 				htmlTrackGroupInner.append(htmlTrackOuter);
 				htmlTrackInner.replaceChildren();
 
@@ -194,6 +213,7 @@ export class TimelinePanel extends Panel {
 				}
 
 				htmlTrackInner.style.cssText = `--rows:${maxRow + 1};`;
+				++trackId;
 			}
 		}
 	}

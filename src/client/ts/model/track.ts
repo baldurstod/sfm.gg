@@ -10,6 +10,8 @@ import { SfmTrackGroup } from './trackgroup';
 export interface TrackParameters extends SerializableParameters {
 	/** Track type. Default to 'film' */
 	trackType?: SfmClipType;
+	/** Track group order. Default to 0 */
+	order?: number;
 }
 
 export class SfmTrack extends Serializable implements Undoable {
@@ -19,10 +21,12 @@ export class SfmTrack extends Serializable implements Undoable {
 	#trackType: SfmClipType;
 	mute = false;
 	volume = 1;
+	#order = 0;
 
 	constructor(params: TrackParameters) {
 		super(params);
 		this.#trackType = params.trackType ?? 'film';
+		this.#order = params.order ?? 0;
 
 		this.#clips[Symbol.iterator] = function* (): SetIterator<SfmClip> {
 			yield* [...this.keys()].sort(
@@ -71,6 +75,30 @@ export class SfmTrack extends Serializable implements Undoable {
 		return this.#trackType;
 	}
 
+	getGaps(start: number = -Infinity, end: number = Infinity): Set<SfmTimeFrame> {
+		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
+
+		for (const clip of this.#clips) {
+			for (const gap of gaps) {
+				const overlap = clip.overlapTimeFrame(gap);
+				if (!overlap) {
+					continue;
+				}
+
+				const result = gap.subtract(clip.getTimeFrame());
+				gaps.delete(gap);
+
+				result.forEach(gap => gaps.add(gap));
+			}
+		}
+
+		return gaps;
+	}
+
+	getOrder(): number {
+		return this.#order;
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-clip':
@@ -83,6 +111,10 @@ export class SfmTrack extends Serializable implements Undoable {
 				}
 				command.undoParams = command.params;
 				this.#deleteClip(command.params);
+				return true;
+			case 'set-order':
+				command.undoParams = this.#order;
+				this.#order = command.params;
 				return true;
 			default:
 				return super.do(command);
@@ -105,29 +137,12 @@ export class SfmTrack extends Serializable implements Undoable {
 				// Reattach the clip to this track
 				this.#addClip(command.undoParams);
 				return true;
+			case 'set-order':
+				this.#order = command.undoParams;
+				return true;
 			default:
 				return super.undo(command);
 		}
-	}
-
-	getGaps(start: number = -Infinity, end: number = Infinity): Set<SfmTimeFrame> {
-		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
-
-		for (const clip of this.#clips) {
-			for (const gap of gaps) {
-				const overlap = clip.overlapTimeFrame(gap);
-				if (!overlap) {
-					continue;
-				}
-
-				const result = gap.subtract(clip.getTimeFrame());
-				gaps.delete(gap);
-
-				result.forEach(gap => gaps.add(gap));
-			}
-		}
-
-		return gaps;
 	}
 
 	static override getTypeName(): string {
@@ -151,6 +166,7 @@ export class SfmTrack extends Serializable implements Undoable {
 		json.track_type = this.#trackType;
 		json.mute = this.mute;
 		json.volume = this.volume;
+		json.order = this.#order;
 
 		return json;
 	}
@@ -175,6 +191,7 @@ export class SfmTrack extends Serializable implements Undoable {
 
 		this.mute = json.mute as boolean ?? false;
 		this.volume = json.volume as number ?? 1;
+		this.#order = json.order as number ?? 0;
 
 		this.#trackType = json.track_type as SfmClipType | undefined ?? 'film';// TODO: check value
 	}

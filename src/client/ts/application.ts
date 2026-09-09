@@ -170,22 +170,22 @@ class Application {
 
 		//this.#session.addClip(clip);
 		//film.addTrackGroup(new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })).addClip(clip);
-		const filmTrackGroup = new SfmTrackGroup({ name: 'Film' });
+		const filmTrackGroup = new SfmTrackGroup({ name: 'Film', order: film.getNextTrackGroupOrder(), });
 		film.do(new Command(film, 'add-track-group', filmTrackGroup));//const filmTrackGroup = film.addTrackGroup(new SfmTrackGroup({ name: 'Film' }));
-		const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film' });
+		const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film', order: filmTrackGroup.getNextTrackOrder(), });
 		//const filmTrack = .addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' }));
 		filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
 		filmTrack.do(new Command(filmTrack, 'add-clip', clip));
 		filmTrack.do(new Command(filmTrack, 'add-clip', clip2));
 
-		const dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' })
-		const music = new SfmTrack({ name: 'Music', trackType: 'sound', });
-		const soundTrackGroup = new SfmTrackGroup({ name: 'Sounds' });
+		const soundTrackGroup = new SfmTrackGroup({ name: 'Sounds', order: film.getNextTrackGroupOrder(), });
 		film.do(new Command(film, 'add-track-group', soundTrackGroup));/*film.addTrackGroup(soundTrackGroup/*new SfmTrackGroup({ name: 'Sounds' })).addTracks([
 			dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound' }),
 			music = new SfmTrack({ name: 'Music', trackType: 'sound', }),
-		]* /);*/
+			]* /);*/
+		const dialog = new SfmTrack({ name: 'Dialog', trackType: 'sound', order: soundTrackGroup.getNextTrackOrder(), });
 		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', dialog));
+		const music = new SfmTrack({ name: 'Music', trackType: 'sound', order: soundTrackGroup.getNextTrackOrder(), });
 		soundTrackGroup.do(new Command(soundTrackGroup, 'add-track', music));
 
 		dialog.do(new Command(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { start: 10, end: 1 } })));//dialog.addClip(new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
@@ -608,7 +608,7 @@ class Application {
 
 	static #addTrackGroup(topClip: SfmFilmClip): void {
 		const action = History.startAction();
-		action.do(topClip, 'add-track-group', new SfmTrackGroup());
+		action.do(topClip, 'add-track-group', new SfmTrackGroup({ order: topClip.getNextTrackGroupOrder(), }));
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');
@@ -678,49 +678,6 @@ async function save(session: SfmSession) {
 	console.info('save', result);
 
 	load(result);
-
-	/*
-
-
-	session = new SfmSession({ name: 'session' });
-	const topFilmClip = session.getTopFilmClip();
-	if (topFilmClip?.scene) {
-		topFilmClip.scene.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
-	}
-
-	session = new SfmSession({ name: 'session' });
-
-	const film = new SfmFilmClip({ name: 'Film' });
-	session.setTopFilmClip(film);
-
-	const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), });
-	clip.scene!.getScene().addChild(new Box({ /*segments: 16, rings: 16* / }));
-	clip.scene!.getScene().addChild(workCamera.getCamera());
-	clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
-
-	const operatorsTrackGroup = new SfmTrackGroup({ name: 'Operators' });
-	clip.do(new Command(clip, 'add-track-group', operatorsTrackGroup));//const operatorsTrackGroup = clip.addTrackGroup(new SfmTrackGroup({ name: 'Operators' }));
-	const operatorsTrack = new SfmTrack({ name: 'Operators', trackType: 'operator', });
-	//const operatorsTrack = operatorsTrackGroup.addTrack(new SfmTrack({ name: 'Operators', trackType: 'operator', }));
-	operatorsTrackGroup.do(new Command(operatorsTrackGroup, 'add-Track', operatorsTrack));
-	const operatorClip = new SfmOperatorClip({ name: 'Operators' });//operatorsTrack.addClip(new SfmOperatorClip({ name: 'Operators' })) as SfmOperatorClip;
-	operatorsTrack.do(new Command(operatorsTrack, 'add-clip', operatorClip));
-	operatorClip.addOperator(new SfmModuloOperator({ name: 'Modulo' }));
-
-	//this.#session.addClip(clip);
-	const filmTrackGroup = new SfmTrackGroup({ name: 'Film' });
-	const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film' });
-	film.do(new Command(film, 'add-track-group', filmTrackGroup));//film.addTrackGroup(filmTrackGroup/*new SfmTrackGroup({ name: 'Film' })).addTrack(new SfmTrack({ name: 'Film 1', trackType: 'film' })* /)//.addClip(clip);
-	filmTrackGroup
-	filmTrackGroup.do(new Command(filmTrackGroup, 'add-track', filmTrack));
-	filmTrack.do(new Command(filmTrack, 'add-clip', clip));
-
-	const result = SfmSerializer.serializeJSON(session);
-	console.info('save', result);
-
-	load(result);
-	*/
-
 }
 
 function createClip(track: SfmTrack, timeFrame: SfmTimeFrame): SfmClip {
