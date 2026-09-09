@@ -28,14 +28,6 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 		this.scene = params.scene;
 		this.activeCamera = params.camera;
-
-		/*
-		if (params.trackGroups) {
-			for (const trackGroup of params.trackGroups) {
-				this.#addTrackGroup(trackGroup);
-			}
-		}
-		*/
 	}
 
 	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {

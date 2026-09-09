@@ -10,7 +10,7 @@ import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { AddCharacter, AddClip, AddTrack, Controller, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
-import { Action, Command } from './history/action';
+import { Action } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
@@ -289,10 +289,25 @@ class Application {
 
 	static async #userAddCharacter(detail: AddCharacter): Promise<void> {
 		const scenes = new Set<SfmScene>();
+		let isInClip = false;
+		const currentTime = this.#player.getCurrentTime();
 		for (const clip of detail.clips) {
 			const sfmScene = clip.scene;
 			if (sfmScene) {
 				scenes.add(sfmScene);
+				// Check if the current time is in one of the selected clip
+				if (!isInClip && clip.inTimeFrame(currentTime)) {
+					isInClip = true;
+				}
+			}
+		}
+
+		if (!isInClip) {
+			const newTime = this.#previousOrNextClip(1, detail.clips);
+			if (newTime !== undefined) {
+				Controller.dispatchEvent('usersetplaying', { detail: false });
+				this.#player.setCurrentTime(newTime);
+				this.#updateCurrentTime();
 			}
 		}
 
@@ -313,21 +328,17 @@ class Application {
 		this.#updateCurrentTime();
 	}
 
-	static #getClipBounds(): Set<number> {
+	static #getClipBounds(clips: Set<SfmFilmClip>): Set<number> {
 		const frameRate = this.#player.getFrameRate();
-		const topClip = this.#session.getTopFilmClip();
 		const result = new Set<number>();
 
-		if (topClip) {
-			const clips = topClip.getSubFilmClips();
-			clips.add(topClip);
-			for (const clip of clips) {
-				// Note: with round start / end times to match the frame rate, to match the player time
-				result.add(Math.round(clip.getStart() * frameRate) / frameRate);
-				result.add(Math.round(clip.getEnd() * frameRate) / frameRate);
-			}
+		for (const clip of clips) {
+			// Note: we round start / end times to match the frame rate, to match the player time
+			result.add(Math.round(clip.getStart() * frameRate) / frameRate);
+			result.add(Math.round(clip.getEnd() * frameRate) / frameRate);
 		}
 
+		// Sort the result by ascending time
 		result[Symbol.iterator] = function* (): SetIterator<number> {
 			yield* [...this.keys()].sort(
 				(a, b) => {
@@ -348,8 +359,25 @@ class Application {
 	}
 
 	static #userPreviousOrNextClip(delta: number): void {
+		const topClip = this.#session.getTopFilmClip();
+		if (!topClip) {
+			return;
+		}
+		const clips = topClip.getSubFilmClips();
+		clips.add(topClip);
+
+		const newTime = this.#previousOrNextClip(delta, clips);
+		if (newTime === undefined) {
+			return;
+		}
+
 		Controller.dispatchEvent('usersetplaying', { detail: false });
-		const bounds = this.#getClipBounds();
+		this.#player.setCurrentTime(newTime);
+		this.#updateCurrentTime();
+	}
+
+	static #previousOrNextClip(delta: number, clips: Set<SfmFilmClip>): number | undefined {
+		const bounds = this.#getClipBounds(clips);
 
 		const currentTime = this.#player.getCurrentTime();
 		bounds.add(currentTime);
@@ -360,16 +388,7 @@ class Application {
 			return;
 		}
 
-		const newTime = boundsArray[i + delta];
-		if (newTime === undefined) {
-			return;
-		}
-
-		console.info(...bounds);
-
-		Controller.dispatchEvent('usersetplaying', { detail: false });
-		this.#player.setCurrentTime(newTime);
-		this.#updateCurrentTime();
+		return boundsArray[i + delta];
 	}
 
 	static #userFirstFrame(): void {
