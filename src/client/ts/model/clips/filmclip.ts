@@ -163,6 +163,13 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				command.undoParams = (command.params as SfmTrackGroup).parentClip;
 				this.#addTrackGroup(command.params as SfmTrackGroup);
 				return true;
+			case 'delete-track-group':
+				if (!this.#trackGroups.has(command.params)) {
+					return false;
+				}
+				command.undoParams = command.params;
+				this.#deleteTrackGroup(command.params);
+				return true;
 			case 'add-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
 				this.#selectedClips.add(command.params);
@@ -199,6 +206,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				if (previousClip) {
 					previousClip.#addTrackGroup(command.params);
 				}
+				return true;
+			case 'delete-track-group':
+				// Reattach the track group
+				this.#addTrackGroup(command.undoParams);
 				return true;
 			case 'add-selected-clip':
 			case 'set-selected-clip':

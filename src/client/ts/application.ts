@@ -103,6 +103,8 @@ class Application {
 		Controller.addEventListener('userfillgaps', (event) => this.#fillGaps(event.detail));
 		Controller.addEventListener('useraddtrackgroup', (event) => this.#addTrackGroup(event.detail));
 		Controller.addEventListener('usersetname', (event) => this.#setName(event.detail));
+		Controller.addEventListener('userdeletetrack', (event) => this.#deleteTrack(event.detail));
+		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -615,6 +617,32 @@ class Application {
 	static #setName(detail: SetName): void {
 		const action = History.startAction();
 		action.do(detail.element, 'set-name', detail.name);
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #deleteTrack(track: SfmTrack): void {
+		const trackGroup = track.trackGroup;
+		if (!trackGroup) {
+			return;
+		}
+
+		const action = History.startAction();
+		action.do(trackGroup, 'delete-track', track);
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #deleteTrackGroup(trackGroup: SfmTrackGroup): void {
+		const topClip = trackGroup?.parentClip;
+		if (!topClip) {
+			return;
+		}
+
+		const action = History.startAction();
+		action.do(topClip, 'delete-track-group', trackGroup);
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');

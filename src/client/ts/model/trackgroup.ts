@@ -36,6 +36,13 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				command.undoParams = command.params.trackGroup;
 				this.#addTrack(command.params);
 				return true;
+			case 'delete-track':
+				if (!this.#tracks.has(command.params)) {
+					return false;
+				}
+				command.undoParams = command.params;
+				this.#deleteTrack(command.params);
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -52,6 +59,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				if (previousTrackGroup) {
 					previousTrackGroup.#addTrack(command.params);
 				}
+				return true;
+			case 'delete-track':
+				// Reattach the track
+				this.#addTrack(command.undoParams);
 				return true;
 			default:
 				return super.undo(command);

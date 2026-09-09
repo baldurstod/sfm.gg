@@ -1,5 +1,5 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HarmonyPanel, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller, ControllerEventInit, SetSelectedClip } from '../controller';
@@ -508,10 +508,8 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_track: {
-				i18n: '#add_track',
-				submenu,
-			},
+			add_track: { i18n: '#add_track', submenu, },
+			delete_track_group: { i18n: '#delete_track_group', f: (): void => { Controller.dispatchEvent('userdeletetrackgroup', { detail: group }) }, },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, group);
 
@@ -532,6 +530,7 @@ export class TimelinePanel extends Panel {
 				}
 			},
 			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => { Controller.dispatchEvent('userfillgaps', { detail: track }) } } },
+			delete_track: { i18n: '#delete_track', f: (): void => { Controller.dispatchEvent('userdeletetrack', { detail: track }) }, },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
 
@@ -539,7 +538,6 @@ export class TimelinePanel extends Panel {
 		event.stopPropagation();
 	}
 }
-
 
 function createTitle(element: Serializable): HTMLElement {
 	function removeInput(event: Event, title: HTMLElement) {
