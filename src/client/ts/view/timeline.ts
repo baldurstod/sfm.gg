@@ -1,5 +1,5 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HarmonyPanel, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { Controller, ControllerEventInit, SetSelectedClip } from '../controller';
@@ -525,7 +525,12 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			add_clip: { i18n: '#add_clip', f: (): void => { Controller.dispatchEvent('useraddcliptotrack', { detail: { track, time: this.#getTimeFromMouseEvent(event) } }) } },
+			add_clip: {
+				i18n: '#add_clip', f: (): void => {
+					Controller.dispatchEvent('useraddcliptotrack', { detail: { track, time: this.#getTimeFromMouseEvent(event) } });
+					this.getPanel().getContent().focus();
+				}
+			},
 			...(track.getTrackType() === 'film') && { fill_gaps: { i18n: '#fill_gaps', f: (): void => { Controller.dispatchEvent('userfillgaps', { detail: track }) } } },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, track);
