@@ -2,20 +2,21 @@ import { Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
+import { SfmNode } from '../node';
 import { SfmScene } from '../scene';
 import { SfmTrack } from '../track';
 import { SfmTrackGroup } from '../trackgroup';
 import { ClipParameters, SfmClip, SfmClipType } from './clip';
 
 export interface FilmClipParameters extends ClipParameters {
-	scene?: SfmScene;
+	scene?: SfmNode<SfmScene>;
 	camera?: SfmCamera;
 	//trackGroups?: SfmTrackGroup[];
 }
 
 export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly isSfmFilmClip = true as const;
-	scene?: SfmScene;
+	scene?: SfmNode<SfmScene>;
 	readonly #cameras = new Set<SfmCamera>();
 	activeCamera?: SfmCamera;
 	readonly #trackGroups = new Set<SfmTrackGroup>();
@@ -45,17 +46,17 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return [...this.#trackGroups];
 	}
 
-	setScene(scene: SfmScene): void {
+	setScene(scene: SfmNode<SfmScene>): void {//TODO: remove: create do action
 		this.scene = scene;
 	}
 
-	addCamera(camera: SfmCamera): void {
+	addCamera(camera: SfmCamera): void {//TODO: remove: create do action
 		this.#cameras.add(camera);
 
-		this.scene?.getScene().addChild(camera.getCamera());
+		this.scene?.getEntity()?.getScene().addChild(camera.getCamera());
 	}
 
-	setActiveCamera(camera: SfmCamera): void {
+	setActiveCamera(camera: SfmCamera): void {//TODO: remove: create do action
 		this.activeCamera = camera;
 	}
 
@@ -274,7 +275,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		this.#cameras.clear();
 
 		if (json.scene) {
-			const scene = elements.get(json.scene as string) as SfmScene | undefined; // TODO: check if it's actually a scene
+			const scene = elements.get(json.scene as string) as SfmNode<SfmScene> | undefined; // TODO: check if it's actually a scene
 			if (scene) {
 				this.scene = scene;
 			}

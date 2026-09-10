@@ -1,6 +1,7 @@
 import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
-import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
+import { SerializableParameters } from '../serialize/serializable';
+import { SfmSerializer } from '../serialize/serializer';
+import { SfmEntity } from './entity';
 
 /*
 export interface CameraParameters extends SerializableParameters {
@@ -8,7 +9,7 @@ export interface CameraParameters extends SerializableParameters {
 }
 */
 
-export class SfmCamera extends Serializable {
+export class SfmCamera extends SfmEntity {
 	readonly isSfmCamera = true as const;
 	readonly #camera = new Camera();
 	readonly #cameraText = new Text2D({ parent: this.#camera });

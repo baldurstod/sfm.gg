@@ -163,11 +163,14 @@ class Application {
 		const film = new SfmFilmClip({ name: 'Film' });
 		this.#session.setTopFilmClip(film);
 
-		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmScene(), timeFrame: { start: 0, end: 15 }, });
-		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmScene(), timeFrame: { start: 25, end: 35 }, });
+		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 0, end: 15 }, });
+		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 25, end: 35 }, });
 
-		clip.scene!.addChild(new SfmNode())!.entity = new SfmPrimitiveBox();
-		clip.scene!.getScene().addChild(workCamera.getCamera());
+		const node = new SfmNode({ entity: new SfmPrimitiveBox() });
+		action.do(clip.scene!, 'add-child', node);//clip.scene!.addChild(node)//!.#entity = new SfmPrimitiveBox();
+		action.do(node, 'set-entity', new SfmPrimitiveBox());
+		const cameraNode = new SfmNode({ entity: workCamera });
+		action.do(clip.scene!, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		const filmTrackGroup = new SfmTrackGroup({ name: 'Film', order: film.getNextTrackGroupOrder(), });
 		action.do(film, 'add-track-group', filmTrackGroup);
@@ -300,7 +303,7 @@ class Application {
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
 		for (const clip of detail.clips) {
-			const sfmScene = clip.scene;
+			const sfmScene = clip.scene?.getEntity();
 			if (sfmScene) {
 				scenes.add(sfmScene);
 				// Check if the current time is in one of the selected clip
@@ -538,7 +541,8 @@ class Application {
 				let end = clipTime!?.getEnd();
 
 				newCLip = new SfmFilmClip({
-					scene: new SfmScene(), timeFrame: {
+					scene: new SfmNode<SfmScene>({ entity: new SfmScene(), }),
+					timeFrame: {
 						...(start !== -Infinity) && { start, },
 						...(end !== Infinity) && { end, },
 					}

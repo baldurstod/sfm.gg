@@ -1,10 +1,72 @@
-import { Serializable, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Command } from '../history/action';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 
-export class SfmNode extends Serializable {
+type AddChildUndo = {
+	childs: Set<SfmNode>;
+	parent?: SfmNode;
+}
+
+export interface NodeParameters<T extends SfmEntity = SfmEntity> extends SerializableParameters {
+	entity?: T;
+}
+
+/**
+ * An element of the scene hierarchy. It hold a linked entity and children nodes
+ */
+export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 	readonly isSfmNode = true as const;
-	entity?: SfmEntity;
+	#entity?: T;
+	#parent?: SfmNode;
+	#children = new Set<SfmNode>();
+
+	constructor(params: NodeParameters<T> = {}) {
+		super(params);
+
+		if (params.entity) {
+			this.#entity = params.entity;
+		}
+	}
+
+	getEntity(): T | undefined {
+		return this.#entity;
+	}
+
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'add-child':
+				command.undoParams = {
+					childs: new Set(this.#children),
+					parent: (command.params as SfmNode).#parent,
+				};
+				this.#children.add(command.params);// TODO: check if its an SfmNode
+				(command.params as SfmNode).#parent = this;
+				return true;
+			case 'set-entity':
+				command.undoParams = this.#entity;
+				this.#entity = command.params;// TODO: check if its an SfmEntity
+				return true;
+			/*
+			case 'set-parent':
+				command.undoParams = this.#parent;
+				this.#parent = command.params;// TODO: check if its an SfmNode
+				return true;
+			*/
+			default:
+				return super.do(command);
+		}
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'set-entity':
+				this.#entity = command.undoParams;
+				return true;
+			default:
+				return super.undo(command);
+		}
+	}
 
 	static override getTypeName(): string {
 		return 'Node';
@@ -17,8 +79,8 @@ export class SfmNode extends Serializable {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
-		if (this.entity) {
-			json.entity = this.entity;
+		if (this.#entity) {
+			json.entity = this.#entity;
 		}
 
 		return json;
@@ -28,7 +90,7 @@ export class SfmNode extends Serializable {
 		super.unserialize(json, context);
 
 		if (json.entity) {
-			this.entity = context.elements.get(json.entity as string) as SfmEntity | undefined; // TODO: check if it's actually an entity
+			this.#entity = context.elements.get(json.entity as string) as any; // TODO: check if it's actually an entity
 		}
 	}
 
@@ -45,7 +107,7 @@ export class SfmNode extends Serializable {
 	override getProperty(name: string): SerializablePropertyType {
 		switch (name) {
 			case 'entity':
-				return this.entity;
+				return this.#entity;
 			default:
 				throw new Error("do me " + name);
 		}
@@ -53,3 +115,8 @@ export class SfmNode extends Serializable {
 }
 
 SfmSerializer.registerSerializable(SfmNode);
+
+//new SfmNode().do(new Command(new Action(), new SfmNode(), 'add-child', new SfmNode()));
+//const node = new SfmNode();
+//const action = History.startAction();
+//action.do(node, 'add-child', node);

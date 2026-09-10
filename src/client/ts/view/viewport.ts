@@ -184,7 +184,7 @@ export class ViewportPanel extends Panel {
 	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
 		ViewportPanel.#scene.removeChildren();
 
-		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getScene()));
+		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getScene()));
 	}
 
 	#setTopFilmClip(clip: SfmFilmClip): void {
