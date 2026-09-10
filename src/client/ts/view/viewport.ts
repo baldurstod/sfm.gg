@@ -1,4 +1,4 @@
-import { Camera, CanvasAttributes, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
+import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene } from 'harmony-3d';
 import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
@@ -6,6 +6,7 @@ import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
 import { SfmCamera } from '../model/camera';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
@@ -26,6 +27,7 @@ export class ViewportPanel extends Panel {
 	#id = ++ViewportPanel.nextId;
 	#titleI18n?: string;
 	static #scene = new Scene();
+	static #test = new Map<SfmNode, Entity>();
 
 	constructor(titleI18n?: string) {
 		super();
@@ -184,7 +186,40 @@ export class ViewportPanel extends Panel {
 	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
 		ViewportPanel.#scene.removeChildren();
 
-		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getEngineEntity()));
+		for (const clip of clips) {
+			let current = clip.scene;
+			if (!current) {
+				continue;
+			}
+			ViewportPanel.#scene.addChild(current.getEntity()?.getEngineEntity());
+
+
+			const stack: SfmNode[] = [current];
+			// TODO: improve this: this run every frame
+			do {
+				let current = stack.pop();
+				if (!current) {
+					continue;
+				}
+
+				stack.push(...current.getChildren());
+
+				const currentEntity = current.getEntity()?.getEngineEntity();
+				if (!currentEntity) {
+					continue;
+				}
+				const parentEntity = current.getParent()?.getEntity()?.getEngineEntity();
+				if (!parentEntity) {
+					continue;
+				}
+				parentEntity.addChild(currentEntity);
+			} while (stack.length);
+		}
+		//clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getEngineEntity()));
+	}
+
+	#getNodeEntity(node: SfmNode): Entity | undefined {
+		return node.getEntity()?.getEngineEntity();
 	}
 
 	#setTopFilmClip(clip: SfmFilmClip): void {

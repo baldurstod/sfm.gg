@@ -33,6 +33,14 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 		return this.#entity;
 	}
 
+	getParent(): SfmNode | undefined {
+		return this.#parent;
+	}
+
+	getChildren(): Set<SfmNode> {
+		return new Set<SfmNode>(this.#children);
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-child':
