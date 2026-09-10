@@ -324,7 +324,7 @@ class Application {
 		}
 
 		for (const scene of scenes) {
-			scene.getScene().addChild(await characterToModel(detail.character));
+			scene.getEngineEntity().addChild(await characterToModel(detail.character));
 		}
 	}
 

@@ -53,7 +53,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	addCamera(camera: SfmCamera): void {//TODO: remove: create do action
 		this.#cameras.add(camera);
 
-		this.scene?.getEntity()?.getScene().addChild(camera.getCamera());
+		this.scene?.getEntity()?.getEngineEntity().addChild(camera.getEngineEntity());
 	}
 
 	setActiveCamera(camera: SfmCamera): void {//TODO: remove: create do action

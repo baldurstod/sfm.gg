@@ -19,7 +19,7 @@ export class ViewportPanel extends Panel {
 	#camerasOptions = new WeakMap<SfmCamera, HTMLOptionElement>();
 	#optionsCameras = new WeakMap<HTMLOptionElement, SfmCamera>();
 	#useWorkCamera = true;
-	#cameraControl = new FirstPersonControl(workCamera.getCamera()!);
+	#cameraControl = new FirstPersonControl(workCamera.getEngineEntity()!);
 	#canvasAttributes: CanvasAttributes | null = null;
 	#orbitGizmo = new OrbitGizmo();
 	static nextId = 0;
@@ -149,7 +149,7 @@ export class ViewportPanel extends Panel {
 
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
 		if (view) {
-			view.camera = workCamera.getCamera();
+			view.camera = workCamera.getEngineEntity();
 		}
 	}
 
@@ -184,7 +184,7 @@ export class ViewportPanel extends Panel {
 	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
 		ViewportPanel.#scene.removeChildren();
 
-		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getScene()));
+		clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getEngineEntity()));
 	}
 
 	#setTopFilmClip(clip: SfmFilmClip): void {
@@ -218,7 +218,7 @@ export class ViewportPanel extends Panel {
 		option.selected = true;
 
 		//this.#useWorkCamera = false;
-		this.#setCanvasCamera(detail.camera.getCamera());
+		this.#setCanvasCamera(detail.camera.getEngineEntity());
 	}
 
 	#cameraAdded(detail: CameraAdded): void {
@@ -259,9 +259,9 @@ export class ViewportPanel extends Panel {
 			this.#useWorkCamera = false;
 		} else {
 			if (this.#useWorkCamera) {
-				camera = workCamera.getCamera()!;
+				camera = workCamera.getEngineEntity()!;
 			} else {
-				camera = this.#topFilmClip?.activeCamera?.getCamera() ?? workCamera.getCamera()!;
+				camera = this.#topFilmClip?.activeCamera?.getEngineEntity() ?? workCamera.getEngineEntity()!;
 			}
 		}
 

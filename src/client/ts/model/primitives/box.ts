@@ -1,3 +1,4 @@
+import { Box } from 'harmony-3d';
 import { SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmEntity } from '../entity';
@@ -9,9 +10,14 @@ export interface PrimitiveBoxParameters extends SerializableParameters {
 
 export class SfmPrimitiveBox extends SfmEntity {
 	readonly isSfmPrimitive = true as const;
+	#box = new Box();
 
 	constructor(params: PrimitiveBoxParameters = {}) {
 		super(params);
+	}
+
+	override getEngineEntity(): Box {
+		return this.#box;
 	}
 
 	static override getTypeName(): string {

@@ -30,12 +30,12 @@ export class SfmCamera extends SfmEntity {
 		this.#cameraText.setText(name);
 	}
 
-	getCamera(): Camera {
-		return this.#camera;
-	}
-
 	copy(source: SfmCamera): void {
 		this.#camera.copy(source.#camera);
+	}
+
+	override getEngineEntity(): Camera {
+		return this.#camera;
 	}
 
 	static override getTypeName(): string {

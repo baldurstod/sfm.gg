@@ -1,12 +1,15 @@
+import { Entity } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
 import { Serializable, UnserializationContext } from '../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
+import { JSONSerializable } from '../serialize/serializer';
 
 export type SfmEntityPropertyValue = string | number | Serializable | Serializable[];
 
 export abstract class SfmEntity extends Serializable {
 	readonly isSfmEntity = true as const;
 	readonly properties = new Map<string, SfmEntityPropertyValue>();
+
+	abstract getEngineEntity(): Entity;
 
 	static override getTypeName(): string {
 		return 'Entity';
