@@ -1,12 +1,15 @@
 import { Scene } from 'harmony-3d';
+import { Command } from '../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 import { SfmNode } from './node';
+import { SfmWorld } from './world';
 
 export class SfmScene extends SfmEntity {
 	readonly isSfmScene = true as const;
 	#scene = new Scene();
+	#world?: SfmWorld;
 
 	#addChild(child: SfmNode): SfmNode | null {
 		// TODO: check child
@@ -22,6 +25,27 @@ export class SfmScene extends SfmEntity {
 		*/
 		//this.children.add(child);
 		return child;
+	}
+
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'set-world':
+				command.undoParams = this.#world;
+				this.#world = command.params;
+				return true;
+			default:
+				return super.do(command);
+		}
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'set-world':
+				this.#world = command.undoParams;
+				return true;
+			default:
+				return super.undo(command);
+		}
 	}
 
 	override getEngineEntity(): Scene {
