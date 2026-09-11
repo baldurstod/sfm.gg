@@ -113,7 +113,7 @@ export abstract class Serializable implements Undoable {
 	}
 
 	setProperty(name: string, value: SerializablePropertyType): boolean {
-		return true;
+		return false;
 	}
 }
 

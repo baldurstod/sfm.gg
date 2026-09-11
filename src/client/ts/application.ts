@@ -14,6 +14,7 @@ import { Action } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
+import { SfmChannelClip } from './model/clips/channelclip';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmSoundClip } from './model/clips/soundclip';
@@ -551,6 +552,10 @@ class Application {
 			case 'sound':
 				// TODO: add sound selection
 				newCLip = new SfmSoundClip();
+				break;
+			case 'channel':
+				// TODO: something ???
+				newCLip = new SfmChannelClip();
 				break;
 			default:
 				throw new Error('code me ' + track.getTrackType());
