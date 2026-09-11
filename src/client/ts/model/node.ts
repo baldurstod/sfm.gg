@@ -4,6 +4,7 @@ import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 
 type AddChildUndo = {
+	child: SfmNode;
 	childs: Set<SfmNode>;
 	parent?: SfmNode;
 }
@@ -46,6 +47,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 			case 'add-child':
 				command.undoParams = {
 					childs: new Set(this.#children),
+					child: command.params as SfmNode,
 					parent: (command.params as SfmNode).#parent,
 				};
 				this.#children.add(command.params);// TODO: check if its an SfmNode
@@ -68,6 +70,11 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 
 	undo(command: Command): boolean {
 		switch (command.command) {
+			case 'add-child':
+				this.#children.clear();
+				(command.undoParams as AddChildUndo).childs.forEach(child => this.#children.add(child));
+				(command.undoParams as AddChildUndo).child.#parent = (command.undoParams as AddChildUndo).parent;
+				return true;
 			case 'set-entity':
 				this.#entity = command.undoParams;
 				return true;
@@ -91,6 +98,12 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 			json.entity = this.#entity;
 		}
 
+		// Serialize children
+		if (this.#children.size) {
+			json.children = [...this.#children];
+		}
+
+
 		return json;
 	}
 
@@ -99,6 +112,18 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 
 		if (json.entity) {
 			this.#entity = context.elements.get(json.entity as string) as any; // TODO: check if it's actually an entity
+		}
+
+		// Unserialize children
+		this.#children.clear();
+		if (json.children) {
+			for (const childId of json.children as string[]) {
+				const child = context.elements.get(childId) as SfmNode | undefined; // TODO: check if it's actually a track group
+
+				if (child) {
+					this.#children.add(child);
+				}
+			}
 		}
 	}
 
