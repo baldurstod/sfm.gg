@@ -23,6 +23,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	#activeFilmTrack?: SfmTrack;
 	#primarySelectedClip?: SfmClip;
 	readonly #selectedClips = new Set<SfmClip>();
+	type: SfmClipType = 'film' as const;
 
 	constructor(params: FilmClipParameters = {}) {
 		super(params);

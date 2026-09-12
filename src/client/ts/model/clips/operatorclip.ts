@@ -9,6 +9,7 @@ export interface OperatorClipParameters extends ClipParameters {
 export class SfmOperatorClip extends SfmClip {
 	readonly isSfmOperatorClip = true as const;
 	readonly #operators = new Set<SfmOperator>();
+	type: SfmClipType = 'operator' as const;
 
 	addOperator(operator: SfmOperator): SfmOperator {
 		this.#operators.add(operator);

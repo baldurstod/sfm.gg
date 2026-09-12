@@ -1,10 +1,11 @@
 import { Command, Undoable } from '../../history/action';
 import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
+import { SfmOperatorContext } from '../operators/operator';
 import { SfmTimeFrame, TimeFrameParameters } from '../timeframe';
 import { SfmTrack } from '../track';
 
-export type SfmClipType = 'channel' | 'sound' | 'effect' | 'film' | 'operator';
+export type SfmClipType = 'sound' | 'effect' | 'film' | 'operator';
 
 export interface ClipParameters extends SerializableParameters {
 	timeFrame?: TimeFrameParameters;
@@ -16,6 +17,7 @@ export abstract class SfmClip extends Serializable implements Undoable {
 	readonly isSfmClip = true as const;
 	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
 	track: SfmTrack | null = null;
+	abstract type: SfmClipType;
 
 	constructor(params: ClipParameters = {}) {
 		super(params);

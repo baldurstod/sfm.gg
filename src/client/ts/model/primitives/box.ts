@@ -39,25 +39,6 @@ export class SfmPrimitiveBox extends SfmEntity {
 		super.unserialize(json, context);
 
 	}
-
-	override getProperties(): SerializableProperty[] {
-		return [
-			{
-				name: 'TODO',
-				i18n: '#TODO',
-				settable: true,
-			},
-		];
-	}
-
-	override getProperty(name: string): SerializablePropertyType {
-		switch (name) {
-			case 'TODO':
-				return 'TODO';
-			default:
-				throw new Error("do me " + name);
-		}
-	}
 }
 
 SfmSerializer.registerSerializable(SfmPrimitiveBox);

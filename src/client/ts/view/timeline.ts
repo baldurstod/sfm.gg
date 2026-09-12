@@ -11,6 +11,7 @@ import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
+import { SfmOperatorClip } from '../model/clips/operatorclip';
 
 type DragOperation = 'time' | 'clipstart' | 'clipend' | 'moveclip';
 
@@ -104,30 +105,10 @@ export class TimelinePanel extends Panel {
 
 	#addSelectedClip(clip: SfmClip): void {
 		Controller.dispatchEvent('useraddselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
-		/*
-		this.#topFilmClip?.addSelectedClip(clip);
-		const [outer] = this.#getSerializableElement(clip);
-		outer.classList.add('active');
-		this.refreshHTML();
-		*/
 	}
 
 	#setSelectedClip(clip: SfmClip): void {
 		Controller.dispatchEvent('usersetselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
-		/*
-		for (const [,outer] of this.#elementsOuter) {
-			//const [outer] = this.#getSerializableElement(selected);
-			outer.classList.remove('active');
-
-		}
-		//this.#selectedClips.clear();
-		this.#topFilmClip?.setSelectedClip(clip);
-
-		//this.#selectedClips.add(clip);
-		const [outer] = this.#getSerializableElement(clip);
-		outer.classList.add('active');
-		this.refreshHTML();
-		*/
 	}
 
 	protected refreshHTML(): void {
@@ -201,20 +182,30 @@ export class TimelinePanel extends Panel {
 
 				let maxRow = -1;
 				for (const clip of track.getClips()) {
-					const [htmlClip] = this.#getSerializableElement(clip);
+					const [htmlClipOuter, htmlClipInner] = this.#getSerializableElement(clip);
 					const row = getClipRow(clip);
 					maxRow = Math.max(row, maxRow);
-					htmlClip.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--row:${row}`;
-					htmlTrackInner.append(htmlClip);
+					htmlClipOuter.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--row:${row}`;
+					htmlTrackInner.append(htmlClipOuter);
+					addRemoveClass(htmlClipOuter, 'active', this.#topFilmClip?.isSelectedClip(clip) ?? false);
 
-
-					addRemoveClass(htmlClip, 'active', this.#topFilmClip?.isSelectedClip(clip) ?? false);
-
+					this.#populateClip(clip, htmlClipInner);
 				}
 
 				htmlTrackInner.style.cssText = `--rows:${maxRow + 1};`;
 				++trackId;
 			}
+		}
+	}
+
+	#populateClip(clip: SfmClip, html: HTMLElement): void {
+		html.replaceChildren();
+		switch (true) {
+			case (clip as SfmOperatorClip).isSfmOperatorClip:
+				for (const channel of (clip as SfmOperatorClip).getOperators()) {
+					html.append(channel.getName());
+				}
+				break;
 		}
 	}
 
@@ -267,7 +258,7 @@ export class TimelinePanel extends Panel {
 				});
 				break;
 			case (element as SfmClip).isSfmClip:
-				inner = outer = createElement('div', {
+				outer = createElement('div', {
 					class: `clip ${(element as SfmClip).getClipType()}-clip`,
 					childs: [
 						createElement('div', {
@@ -280,6 +271,9 @@ export class TimelinePanel extends Panel {
 								this.#dragEnd = (element as SfmClip).getEnd();
 								console.info(this.#dragTime);
 							}
+						}),
+						inner = createElement('div', {
+							class: 'clip-content',
 						}),
 						createElement('div', {
 							class: 'resize-clip resize-clip-start',

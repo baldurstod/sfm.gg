@@ -81,15 +81,6 @@ export class SfmScene extends SfmEntity {
 			},
 		];
 	}
-
-	override getProperty(name: string): SerializablePropertyType {
-		switch (name) {
-			//case 'children':
-			//return [...this.children];
-			default:
-				throw new Error("do me " + name);
-		}
-	}
 }
 
 SfmSerializer.registerSerializable(SfmScene);

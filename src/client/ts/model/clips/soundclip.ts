@@ -1,11 +1,14 @@
+import { errorOnce } from 'harmony-utils';
 import { UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmClip, SfmClipType } from '../clips/clip';
+import { SfmOperatorContext } from '../operators/operator';
 
 export class SfmSoundClip extends SfmClip {
 	readonly isSfmSoundClip = true as const;
 	volume = 1;
 	mute = false;
+	type: SfmClipType = 'sound' as const;
 
 	getClipType(): SfmClipType {
 		return 'sound';

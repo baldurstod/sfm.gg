@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { RenderSettingsParameters, SfmRenderSettings } from './rendersettings';
 
@@ -59,13 +59,6 @@ export class SfmSessionSettings extends Serializable {
 			},
 			*/
 		];
-	}
-
-	override getProperty(name: string): SerializablePropertyType {
-		switch (name) {
-			default:
-				throw new Error("do me " + name);
-		}
 	}
 }
 

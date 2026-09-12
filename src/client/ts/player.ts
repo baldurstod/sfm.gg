@@ -12,13 +12,13 @@ export class Player {
 	#playTime = 0;
 
 	constructor() {
+		// Initiate ticking
 		this.#tick(0);
 	}
 
 	#tick(timestamp: number): void {
 		cancelAnimationFrame(this.#animationFrame);
 		this.#animationFrame = requestAnimationFrame((timestamp: number) => this.#tick(timestamp));
-
 
 		//this.#time = (tick - this.#timeOrigin) * 0.001;
 		const delta = (timestamp - this.#previousTick);
