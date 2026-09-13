@@ -37,6 +37,14 @@ export class SfmOperatorClip extends SfmClip {
 				command.undoParams = new Set<SfmOperator>(this.#operators);
 				this.#operators.add(command.params);//TODO: check if it's actually an operator
 				return true;
+			case 'delete-operator':
+				//TODO: check if it's actually an operator
+				if (!this.#operators.has(command.params)) {
+					return false;
+				}
+				command.undoParams = command.params;
+				this.#operators.delete(command.params);
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -46,7 +54,11 @@ export class SfmOperatorClip extends SfmClip {
 		switch (command.command) {
 			case 'add-operator':
 				this.#operators.clear();
-				(command.undoParams as Set<SfmOperator>).forEach(channel => this.#operators.add(channel));
+				(command.undoParams as Set<SfmOperator>).forEach(operator => this.#operators.add(operator));
+				return true;
+			case 'delete-operator':
+				// Reattach the operator to this clip
+				this.#operators.add(command.undoParams)
 				return true;
 			default:
 				return super.undo(command);

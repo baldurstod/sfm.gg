@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddTrack, Controller, SelectCharacter, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
@@ -109,6 +109,7 @@ class Application {
 		Controller.addEventListener('usersetname', (event) => this.#setName(event.detail));
 		Controller.addEventListener('userdeletetrack', (event) => this.#deleteTrack(event.detail));
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
+		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -202,8 +203,6 @@ class Application {
 
 		const modulo = new SfmModuloOperator();
 		const channel = new SfmChannel({
-			//fromElement: new SfmModuloOperator(),
-			//fromAttribute: 'ouptput',
 			predecessor: {
 				name: 'output',
 				element: modulo,
@@ -723,6 +722,14 @@ class Application {
 
 		const action = History.startAction();
 		action.do(topClip, 'delete-track-group', trackGroup);
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #deleteOperator(detail: DeleteOperator): void {
+		const action = History.startAction();
+		action.do(detail.clip, 'delete-operator', detail.operator);
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');

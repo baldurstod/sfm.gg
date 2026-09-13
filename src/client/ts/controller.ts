@@ -2,6 +2,8 @@ import { Character } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
+import { SfmOperatorClip } from './model/clips/operatorclip';
+import { SfmOperator } from './model/operators/operator';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
@@ -47,6 +49,7 @@ export type ControllerEvent = 'setsession'
 	| 'userdeleteclip'
 	| 'userdeletetrack'
 	| 'userdeletetrackgroup'
+	| 'userdeleteoperator'
 	| 'useraddcliptotrack'
 	| 'useraddtracktotrackgroup'
 	| 'useraddtrackgroup'
@@ -98,6 +101,7 @@ export class Controller {
 	static addEventListener(type: 'usersetname', callback: (evt: CustomEvent<SetName>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeletetrack', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeletetrackgroup', callback: (evt: CustomEvent<SfmTrackGroup>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userdeleteoperator', callback: (evt: CustomEvent<DeleteOperator>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -139,6 +143,7 @@ export class Controller {
 	static dispatchEvent(type: 'usersetname', options: ControllerEventInit<SetName>): boolean;
 	static dispatchEvent(type: 'userdeletetrack', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'userdeletetrackgroup', options: ControllerEventInit<SfmTrackGroup>): boolean;
+	static dispatchEvent(type: 'userdeleteoperator', options: ControllerEventInit<DeleteOperator>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
@@ -190,6 +195,11 @@ export type AddClip = {
 export type AddTrack = {
 	type: SfmClipType;
 	group: SfmTrackGroup;
+}
+
+export type DeleteOperator = {
+	clip: SfmOperatorClip;
+	operator: SfmOperator;
 }
 
 export type SetName = {

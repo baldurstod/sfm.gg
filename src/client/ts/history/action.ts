@@ -57,6 +57,7 @@ export class Action {
 	do(element: SfmNode, command: 'add-child', params: SfmNode): boolean;
 	do(element: SfmNode, command: 'set-entity', params: SfmEntity): boolean;
 	do(element: SfmNode, command: 'set-parent', params: SfmNode): boolean;
+	do(element: SfmOperatorClip, command: 'delete-operator', params: SfmOperator): boolean;
 	do(element: SfmTrack, command: 'add-clip', params: SfmClip): boolean;
 	do(element: SfmTrack, command: 'delete-clip', params: SfmClip): boolean;
 	do(element: SfmTrackGroup, command: 'add-track', params: SfmTrack): boolean;

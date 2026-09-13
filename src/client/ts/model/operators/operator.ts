@@ -7,6 +7,8 @@ import { SfmOperatorContext } from '../interfaces/operator';
 import { HasInputs, HasOutputs, SfmOperatorIO, SfmOperatorOutput } from './io';
 
 export abstract class SfmOperator extends Serializable implements HasInputs, HasOutputs {
+	readonly isSfmOperator = true as const;
+
 	protected readonly inputs = new Map<string, SfmOperatorOutput>();
 
 	abstract getInputs(): SfmOperatorIO[];

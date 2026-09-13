@@ -2,16 +2,17 @@ import { ShortcutHandler } from 'harmony-browser-utils';
 import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { Controller, ControllerEventInit, SelectCharacter, SetSelectedClip } from '../controller';
+import { Controller, ControllerEventInit, DeleteOperator, SelectCharacter, SetSelectedClip } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip, SfmClipType } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmOperatorClip } from '../model/clips/operatorclip';
+import { SfmOperator } from '../model/operators/operator';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
-import { SfmOperatorClip } from '../model/clips/operatorclip';
 
 type DragOperation = 'time' | 'clipstart' | 'clipend' | 'moveclip';
 
@@ -202,8 +203,12 @@ export class TimelinePanel extends Panel {
 		html.replaceChildren();
 		switch (true) {
 			case (clip as SfmOperatorClip).isSfmOperatorClip:
-				for (const channel of (clip as SfmOperatorClip).getOperators()) {
-					html.append(channel.getName());
+				for (const operator of (clip as SfmOperatorClip).getOperators()) {
+					html.append(createElement('span', {
+						class: `operator`,
+						innerText: operator.getName(),
+						$contextmenu: (event: MouseEvent) => this.#displayOperatorContextMenu(event, clip as SfmOperatorClip, operator),
+					}));
 				}
 				break;
 		}
@@ -568,6 +573,29 @@ export class TimelinePanel extends Panel {
 			...(this.#topFilmClip) && { delete_selected_clips: { i18n: '#delete_selected_clips', f: (): void => { Controller.dispatchEvent('userdeleteselectedclips', { detail: this.#topFilmClip!, }) } } },
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, clip);
+
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	#displayOperatorContextMenu(event: MouseEvent, clip: SfmOperatorClip, operator: SfmOperator): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			delete_operator: {
+				i18n: '#delete_operator', f: (): void => {
+					Controller.dispatchEvent('userdeleteoperator', {
+						detail: {
+							clip,
+							operator,
+						} as DeleteOperator,
+					})
+				},
+			},
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, operator);
 
 		event.preventDefault();
 		event.stopPropagation();
