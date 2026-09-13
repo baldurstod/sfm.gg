@@ -14,11 +14,13 @@ import { Action } from './history/action';
 import { History } from './history/history';
 import { characterToModel, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
-import { SfmChannelClip } from './model/clips/channelclip';
+import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
+import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
+import { SfmModuloOperator } from './model/operators/math/modulo';
 import { SfmPrimitiveBox } from './model/primitives/box';
 import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
@@ -190,6 +192,21 @@ class Application {
 		action.do(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { start: 10, end: 1 } }));
 		action.do(dialog, 'add-clip', new SfmSoundClip({ timeFrame: { end: 0.5 } }));
 		action.do(dialog, 'add-clip', new SfmSoundClip({ name: 'music1' }));
+
+		const operatorTrackGroup = new SfmTrackGroup({ name: 'Operators', order: film.getNextTrackGroupOrder(), });
+		action.do(film, 'add-track-group', operatorTrackGroup);
+		const operators = new SfmTrack({ name: 'Operators', trackType: 'operator', order: operatorTrackGroup.getNextTrackOrder(), });
+		action.do(operatorTrackGroup, 'add-track', operators);
+		const operatorClip = new SfmOperatorClip();
+		action.do(operators, 'add-clip', operatorClip);
+
+		const channel = new SfmChannel({
+			fromElement: new SfmModuloOperator(),
+			fromAttribute: 'ouptput',
+			toElement: workCamera,
+			toAttribute: 'fov',
+		});
+		action.do(operatorClip, 'add-operator', channel);
 
 		this.#player.setFilmClip(film);
 
@@ -376,7 +393,7 @@ class Application {
 		if (!topClip) {
 			return;
 		}
-		const clips = topClip.getSubFilmClips();
+		const clips = topClip.getSubClips('film');
 		clips.add(topClip);
 
 		const newTime = this.#previousOrNextClip(delta, clips);
@@ -437,15 +454,33 @@ class Application {
 	}
 
 	static #updateCurrentTime(): void {
-		Controller.dispatchEvent('setcurrenttime', { detail: this.#player.getCurrentTime() });
+		const time = this.#player.getCurrentTime();
+		Controller.dispatchEvent('setcurrenttime', { detail: time });
 		this.#setActiveFilmClips();
+		this.#updateClips(time);
 	}
 
 	static #setActiveFilmClips(): void {
 		const top = this.#session.getTopFilmClip();
 		if (top) {
-			const clips = top.getSubFilmClipsAtTime(this.#player.getCurrentTime());
+			const clips = top.getSubClipsAtTime(this.#player.getCurrentTime(), 'film');
 			Controller.dispatchEvent('setactivefilmclips', { detail: clips });
+		}
+	}
+
+	static #updateClips(time: number): void {
+		const topClip = this.#session.getTopFilmClip();
+		if (!topClip) {
+			return;
+		}
+
+		const clips = topClip.getSubClipsAtTime(time);
+
+		for (const clip of clips) {
+			clip.update({
+				id: 0/*TODO: create a monotonic increment*/,
+				time,
+			});
 		}
 	}
 
@@ -553,9 +588,9 @@ class Application {
 				// TODO: add sound selection
 				newCLip = new SfmSoundClip();
 				break;
-			case 'channel':
+			case 'operator':
 				// TODO: something ???
-				newCLip = new SfmChannelClip();
+				newCLip = new SfmOperatorClip();
 				break;
 			default:
 				throw new Error('code me ' + track.getTrackType());
@@ -628,9 +663,6 @@ class Application {
 		switch (params.type as SfmClipType) {
 			case 'film':
 				name = 'Film track';
-				break;
-			case 'channel':
-				name = 'Channel track';
 				break;
 			case 'effect':
 				name = 'Effect track';

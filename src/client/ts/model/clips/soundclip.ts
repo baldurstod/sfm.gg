@@ -18,6 +18,10 @@ export class SfmSoundClip extends SfmClip {
 		return new SfmSoundClip({ name });
 	}
 
+	override update(context: SfmOperatorContext): void {
+		errorOnce('code me');
+	}
+
 	static override getTypeName(): string {
 		return 'SoundClip';
 	}

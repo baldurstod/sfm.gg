@@ -1,5 +1,5 @@
 import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
-import { SerializableParameters } from '../serialize/serializable';
+import { SerializableParameters, SerializablePropertyType } from '../serialize/serializable';
 import { SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 
@@ -18,6 +18,19 @@ export class SfmCamera extends SfmEntity {
 	constructor(params: SerializableParameters = {}) {
 		super(params);
 		this.#setName(this.getName());
+		/*
+		this.initDefaultProperties({
+			// TODO: set actual values
+			'fov': { type: 'number', default: 50 },
+			'focal': { type: 'number', default: 0 },
+			'aperture': { type: 'number', default: 0 },
+			'tone_map_scale': { type: 'number', default: 0 },
+			'bloom_scale': { type: 'number', default: 0 },
+			'ssao_bias': { type: 'number', default: 0 },
+			'ssao_strength': { type: 'number', default: 0 },
+			'ssao_radius': { type: 'number', default: 0 },
+		});
+		*/
 	}
 
 	setName(name: string): void {
@@ -36,6 +49,25 @@ export class SfmCamera extends SfmEntity {
 
 	override getEngineEntity(): Camera {
 		return this.#camera;
+	}
+
+	override getProperty(name: string): SerializablePropertyType {
+		switch (name) {
+			case 'fov':
+				return this.#camera.verticalFov;
+			default:
+				return super.getProperty(name);
+		}
+	}
+
+	override  setProperty(name: string, value: SerializablePropertyType): boolean {
+		switch (name) {
+			case 'fov':
+				this.#camera.verticalFov = value as number;
+				return true;
+			default:
+				return super.setProperty(name, value);
+		}
 	}
 
 	static override getTypeName(): string {

@@ -52,6 +52,8 @@ export abstract class SfmClip extends Serializable implements Undoable {
 		return this.#timeFrame.overlap(other);
 	}
 
+	abstract update(context: SfmOperatorContext): void;
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'set-start':

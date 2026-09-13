@@ -1,6 +1,7 @@
 import { Command } from '../../history/action';
 import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
-import { JSONSerializable } from '../../serialize/serializer';
+import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { SfmOperator, SfmOperatorContext } from '../operators/operator';
 
 export interface ChannelParameters extends SerializableParameters {
 	fromElement?: Serializable;
@@ -11,7 +12,7 @@ export interface ChannelParameters extends SerializableParameters {
 	toIndex?: number;
 }
 
-export class SfmChannel extends Serializable {
+export class SfmChannel extends SfmOperator {
 	readonly isSfmChannel = true as const;
 
 	#fromElement: Serializable | null;
@@ -21,7 +22,7 @@ export class SfmChannel extends Serializable {
 	#toAttribute: string;
 	#toIndex: number;
 
-	constructor(params: ChannelParameters) {
+	constructor(params: ChannelParameters = {}) {
 		super(params);
 		this.#fromElement = params.fromElement ?? null;
 		this.#fromAttribute = params.fromAttribute ?? '';
@@ -29,6 +30,17 @@ export class SfmChannel extends Serializable {
 		this.#toElement = params.toElement ?? null;
 		this.#toAttribute = params.toAttribute ?? '';
 		this.#toIndex = params.toIndex ?? 0;
+	}
+
+	override operate(context: SfmOperatorContext): boolean {
+		if (!this.#fromElement || !this.#toElement) {
+			return false;
+		}
+
+		const prop = this.#fromElement.getProperty(this.#fromAttribute);
+		this.#toElement.setProperty(this.#toAttribute, prop);
+
+		return true;
 	}
 
 	do(command: Command): boolean {
@@ -128,3 +140,5 @@ export class SfmChannel extends Serializable {
 		this.#toIndex = json.to_index as number ?? 0;//TODO:check the actual value
 	}
 }
+
+SfmSerializer.registerSerializable(SfmChannel);

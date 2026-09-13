@@ -1,8 +1,10 @@
+import { errorOnce } from 'harmony-utils';
 import { Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
 import { SfmNode } from '../node';
+import { SfmOperatorContext } from '../operators/operator';
 import { SfmScene } from '../scene';
 import { SfmTrack } from '../track';
 import { SfmTrackGroup } from '../trackgroup';
@@ -103,16 +105,16 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return 'film';
 	}
 
-	getSubFilmClipsAtTime(time: number): Set<SfmFilmClip> {
+	getSubClipsAtTime(time: number, type?: SfmClipType | undefined): Set<SfmFilmClip> {
 		const clips = new Set<SfmFilmClip>();
 		for (const trackGroup of this.#trackGroups) {
 			for (const track of trackGroup.getTracks()) {
-				if (track.getTrackType() !== 'film') {
+				if (type !== undefined && track.getTrackType() !== type) {
 					continue;
 				}
 				for (const clip of track.getClips()) {
 					// At this point, it should be a film clip, be we check just to be sure
-					if (!(clip as SfmFilmClip).isSfmFilmClip) {
+					if (type !== undefined && clip.type !== type) {
 						continue;
 					}
 
@@ -126,19 +128,20 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return clips;
 	}
 
-	getSubFilmClips(): Set<SfmFilmClip> {
+	getSubClips(type?: SfmClipType | undefined): Set<SfmFilmClip> {
 		const clips = new Set<SfmFilmClip>();
 
 		for (const trackGroup of this.#trackGroups) {
 			for (const track of trackGroup.getTracks()) {
-				if (track.getTrackType() !== 'film') {
+				if (type !== undefined && track.getTrackType() !== type) {
 					continue;
 				}
 				for (const clip of track.getClips()) {
 					// At this point, it should be a film clip, be we check just to be sure
-					if (!(clip as SfmFilmClip).isSfmFilmClip) {
+					if (type !== undefined && clip.type !== type) {
 						continue;
 					}
+
 					clips.add(clip as SfmFilmClip);
 				}
 			}
@@ -159,6 +162,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 	override createClip(name: string): SfmClip {
 		return new SfmFilmClip({ name });
+	}
+
+	override update(context: SfmOperatorContext): void {
+		errorOnce('code me');
 	}
 
 	override do(command: Command): boolean {

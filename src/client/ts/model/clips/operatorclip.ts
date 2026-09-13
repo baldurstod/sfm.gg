@@ -1,6 +1,7 @@
+import { Command } from '../../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { SfmOperator } from '../operators/operator';
+import { SfmOperator, SfmOperatorContext } from '../operators/operator';
 import { ClipParameters, SfmClip, SfmClipType } from './clip';
 
 export interface OperatorClipParameters extends ClipParameters {
@@ -11,13 +12,8 @@ export class SfmOperatorClip extends SfmClip {
 	readonly #operators = new Set<SfmOperator>();
 	type: SfmClipType = 'operator' as const;
 
-	addOperator(operator: SfmOperator): SfmOperator {
-		this.#operators.add(operator);
-		return operator;
-	}
-
-	deleteOperator(operator: SfmOperator): void {
-		this.#operators.delete(operator);
+	getOperators(): Set<SfmOperator> {
+		return new Set(this.#operators);
 	}
 
 	getClipType(): SfmClipType {
@@ -26,6 +22,34 @@ export class SfmOperatorClip extends SfmClip {
 
 	createClip(name: string): SfmClip {
 		return new SfmOperatorClip({ name });
+	}
+
+	override update(context: SfmOperatorContext): void {
+		for (const operator of this.#operators) {
+			operator.operate(context);
+		}
+	}
+
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'add-operator':
+				command.undoParams = new Set<SfmOperator>(this.#operators);
+				this.#operators.add(command.params);//TODO: check if it's actually an operator
+				return true;
+			default:
+				return super.do(command);
+		}
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'add-operator':
+				this.#operators.clear();
+				(command.undoParams as Set<SfmOperator>).forEach(channel => this.#operators.add(channel));
+				return true;
+			default:
+				return super.undo(command);
+		}
 	}
 
 	static override getTypeName(): string {

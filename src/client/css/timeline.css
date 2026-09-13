@@ -171,6 +171,10 @@
 	background-color: blueviolet;
 }
 
+.operator-clip {
+	background-color: rgb(212, 149, 13);
+}
+
 .resize-clip {
 	position: absolute;
 	top: 0;

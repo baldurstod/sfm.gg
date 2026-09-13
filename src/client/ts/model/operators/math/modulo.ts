@@ -1,9 +1,17 @@
-import { Serializable } from '../../../serialize/serializable';
+import { errorOnce } from 'harmony-utils';
+import { SerializablePropertyType } from '../../../serialize/serializable';
 import { SfmSerializer } from '../../../serialize/serializer';
-import { SfmOperator, SfmOperatorIO } from '../operator';
+import { SfmOperator, SfmOperatorContext, SfmOperatorIO } from '../operator';
 
-export class SfmModuloOperator extends Serializable implements SfmOperator {
+export class SfmModuloOperator extends SfmOperator {
 	modulo: number = 1;
+
+
+
+	override operate(context: SfmOperatorContext): boolean {
+		errorOnce('TODO')
+		return true;
+	}
 
 	getInputs(): SfmOperatorIO[] {
 		return [{
@@ -23,8 +31,26 @@ export class SfmModuloOperator extends Serializable implements SfmOperator {
 		}];
 	}
 
+	getOutputValue(context: SfmOperatorContext, name: string, outputId = 0): SerializablePropertyType {
+		return context.time;
+	}
+
+	/*
 	operate(): boolean {
 		return true;
+	}
+	*/
+
+	override getProperty(name: string): SerializablePropertyType {
+		//override getProperty(name: string): SerializablePropertyType {
+		switch (name) {
+			case 'output':
+				//return this.#camera.verticalFov;
+				throw new Error("TODO");
+				break;
+			default:
+				return super.getProperty(name);
+		}
 	}
 
 	static override getTypeName(): string {

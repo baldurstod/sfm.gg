@@ -1,7 +1,9 @@
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmOperatorClip } from '../model/clips/operatorclip';
 import { SfmEntity } from '../model/entity';
 import { SfmNode } from '../model/node';
+import { SfmOperator } from '../model/operators/operator';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
@@ -45,6 +47,7 @@ export class Action {
 	#committed = false;
 
 	do(element: Serializable, command: 'set-name', params: string): boolean;
+	do(element: SfmOperatorClip, command: 'add-operator', params: SfmOperator): boolean;
 	do(element: SfmClip, command: 'set-end', params: number): boolean;
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
 	do(element: SfmFilmClip, command: 'add-selected-clip', params: SfmClip): boolean;
