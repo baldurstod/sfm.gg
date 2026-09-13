@@ -1,5 +1,5 @@
 import { Command } from '../../history/action';
-import { Serializable, SerializableParameters, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmOperatorIO, SfmOperatorOutput } from '../operators/io';
@@ -85,6 +85,29 @@ export class SfmChannel extends SfmOperator {
 		*/
 
 		return true;
+	}
+
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'toElement',
+				i18n: '#to_element',
+				type: 'element',
+				settable: true,
+			},
+			{
+				name: 'toAttribute',
+				i18n: '#to_attribute',
+				type: 'string',
+				settable: true,
+			},
+			{
+				name: 'toIndex',
+				i18n: '#to_index',
+				type: 'integer',
+				settable: true,
+			},
+		];
 	}
 
 	do(command: Command): boolean {

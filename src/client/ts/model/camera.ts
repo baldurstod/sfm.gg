@@ -1,5 +1,5 @@
 import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
-import { SerializableParameters, SerializablePropertyValue } from '../serialize/serializable';
+import { SerializableParameters, SerializableProperty, SerializablePropertyValue } from '../serialize/serializable';
 import { SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 import { SfmOperatorOutput } from './operators/io';
@@ -53,6 +53,17 @@ export class SfmCamera extends SfmEntity {
 		return this.#camera;
 	}
 
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'fov',
+				i18n: '#fov',
+				type: 'double',
+				settable: true,
+			},
+		];
+	}
+
 	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'fov':
@@ -62,7 +73,7 @@ export class SfmCamera extends SfmEntity {
 		}
 	}
 
-	override  setProperty(name: string, value: SerializablePropertyValue): boolean {
+	override setProperty(name: string, value: SerializablePropertyValue): boolean {
 		switch (name) {
 			case 'fov':
 				this.#camera.verticalFov = value as number;//TODO: check value type

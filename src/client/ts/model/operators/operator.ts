@@ -16,7 +16,7 @@ export abstract class SfmOperator extends Serializable implements HasInputs, Has
 	//abstract getOutput(name: string): SfmOperatorIO | null;//TODO
 	abstract getOutputValue(name: string): SerializablePropertyValue;
 	//abstract getOutputValue(context: SfmOperatorContext, name: string, outputId: number): SerializablePropertyType;
-	/** Do the operation. Return true is the operation succeed, false otherwise  */
+	/** Do the operation. Return true is the operation succeed, false otherwise */
 	abstract operate(context: SfmOperatorContext): boolean;
 
 	setPredecessor(input: string, predecessor: SfmOperatorOutput): void {

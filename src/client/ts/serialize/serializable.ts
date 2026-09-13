@@ -1,7 +1,7 @@
+import { quat, vec2, vec3, vec4 } from 'gl-matrix';
 import { generateRandomUUID } from 'harmony-3d';
 import { Command, Undoable } from '../history/action';
 import { JSONSerializable } from './serializer';
-import { quat, vec2, vec3, vec4 } from 'gl-matrix';
 
 /*
 export interface Serializable
@@ -51,6 +51,7 @@ export type SerializablePropertyValue =
 
 export type SerializablePropertyType = 'bool'
 	| 'string'
+	| 'integer'
 	| 'double'
 	| 'element'
 	| 'undefined'
@@ -62,6 +63,7 @@ export type SerializablePropertyType = 'bool'
 	| 'enum'// string enum
 	| 'bool_array'
 	| 'string_array'
+	| 'integer_array'
 	| 'double_array'
 	| 'element_array'
 	| 'undefined_array'
@@ -151,9 +153,7 @@ export abstract class Serializable implements Undoable {
 		this.#name = json.name as string;
 	}
 
-	getProperties(): SerializableProperty[] {
-		throw new Error('TODO: override me');
-	}
+	abstract getProperties(): SerializableProperty[];
 
 	getProperty(name: string): SerializablePropertyValue {// TODO: set abstract ?
 		return null;
