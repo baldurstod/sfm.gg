@@ -97,7 +97,7 @@ class Application {
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		Controller.addEventListener('userundolastaction', () => this.#undo());
 		Controller.addEventListener('userredolastaction', () => this.#redo());
-		Controller.addEventListener('useraddselectedclip', (event) => this.#addSelectedClip(event.detail));
+		Controller.addEventListener('useraddselectedclip', (event) => this.#addSelectedClip(event.detail.topClip, event.detail.selected));
 		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 		Controller.addEventListener('userbladeclip', (event) => this.#bladeClip(event.detail));
@@ -522,10 +522,7 @@ class Application {
 			action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
 			action.do(newCLip, 'set-end', end);//newCLip.setEnd(end);
 			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);
-			this.#addSelectedClip({
-				topClip,
-				selected: newCLip,
-			});
+			this.#addSelectedClip(topClip, newCLip, action);
 		}
 		History.commit(action);
 		this.#setActiveFilmClips();
@@ -653,10 +650,18 @@ class Application {
 		Controller.dispatchEvent('refreshtimeline');
 	}
 
-	static #addSelectedClip(detail: SetSelectedClip): void {
-		const action = History.startAction();
-		action.do(detail.topClip, 'add-selected-clip', detail.selected);
-		History.commit(action);
+	/**
+	 * Add clip to the selection
+	 * @param topClip The film clip to add the selection to
+	 * @param selected The clip to add to the selection
+	 * @param action An optional undoable action. If provided, the selection command will be added to the action. Otherwise a new independant action will be created
+	 */
+	static #addSelectedClip(topClip: SfmFilmClip, selected: SfmClip, action?: Action): void {
+		const selectionAction = action ?? History.startAction();
+		selectionAction.do(topClip, 'add-selected-clip', selected);
+		if (!action) {
+			History.commit(selectionAction);
+		}
 		Controller.dispatchEvent('refreshtimeline');
 		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
 	}
