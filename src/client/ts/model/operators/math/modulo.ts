@@ -11,7 +11,8 @@ export class SfmModuloOperator extends SfmOperator {
 
 	override operate(context: SfmOperatorContext): boolean {
 		errorOnce('TODO')
-		this.value = 1 + (context.time % 1) * 100;
+		const input = this.getInputValue('input') ?? 0;
+		this.value = 1 + ((input as number) % 1) * 100;
 		return true;
 	}
 

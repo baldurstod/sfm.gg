@@ -21,6 +21,7 @@ import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
 import { SfmNode } from './model/node';
 import { SfmModuloOperator } from './model/operators/math/modulo';
+import { SfmTimeOperator } from './model/operators/time';
 import { SfmPrimitiveBox } from './model/primitives/box';
 import { SfmScene } from './model/scene';
 import { SfmSession } from './model/session';
@@ -202,17 +203,21 @@ class Application {
 		const operatorClip = new SfmOperatorClip();
 		action.do(operators, 'add-clip', operatorClip);
 
-		const modulo = new SfmModuloOperator();
+		const time = new SfmTimeOperator();
+		const modulo = new SfmModuloOperator({ predecessors: { input: { output: 'time', element: time } } });
 		const channel = new SfmChannel({
-			predecessor: {
-				name: 'output',
-				element: modulo,
+			predecessors: {
+				input: {
+					output: 'output',
+					element: modulo,
+				}
 			},
 			toElement: box,
 			toAttribute: 'size.x',
 		});
 		action.do(operatorClip, 'add-operator', channel);
 		action.do(operatorClip, 'add-operator', modulo);
+		action.do(operatorClip, 'add-operator', time);
 
 		this.#player.setFilmClip(film);
 

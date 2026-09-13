@@ -1,17 +1,17 @@
 import { Command } from '../../history/action';
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
-import { SfmOperatorIO, SfmOperatorOutput } from '../operators/io';
-import { SfmOperator } from '../operators/operator';
+import { SfmOperatorIO } from '../operators/io';
+import { OperatorParameters, SfmOperator } from '../operators/operator';
 
-export interface ChannelParameters extends SerializableParameters {
+export interface ChannelParameters extends OperatorParameters {
 	/*
 	fromElement?: Serializable;
 	fromAttribute?: string;
 	fromIndex?: number;
 	*/
-	predecessor?: SfmOperatorOutput;
+	//predecessor?: SfmOperatorOutput;
 	toElement?: Serializable;
 	toAttribute?: string;
 	toIndex?: number;
@@ -19,7 +19,7 @@ export interface ChannelParameters extends SerializableParameters {
 
 export class SfmChannel extends SfmOperator {
 	readonly isSfmChannel = true as const;
-	#input?: SfmOperatorOutput | null;
+	//#input?: SfmOperatorOutput | null;
 
 	/*
 	#fromElement: Serializable | null;
@@ -32,10 +32,12 @@ export class SfmChannel extends SfmOperator {
 
 	constructor(params: ChannelParameters = {}) {
 		super(params);
+		/*
 		const predecessor = params.predecessor;
 		if (predecessor) {
 			this.setPredecessor('input', predecessor);
 		}
+		*/
 		/*
 		this.#fromElement = params.fromElement ?? null;
 		this.#fromAttribute = params.fromAttribute ?? '';
@@ -46,6 +48,7 @@ export class SfmChannel extends SfmOperator {
 		this.#toIndex = params.toIndex ?? 0;
 	}
 
+	/*
 	override setPredecessor(input: string, predecessor: SfmOperatorOutput | null): void {
 		if (input !== 'input') {
 			return;
@@ -54,6 +57,7 @@ export class SfmChannel extends SfmOperator {
 		//this.inputs.set(input.name, predecessor);
 		this.#input = predecessor;
 	}
+	*/
 
 	getInputs(): SfmOperatorIO[] {
 		throw new Error("TODO");
@@ -69,11 +73,16 @@ export class SfmChannel extends SfmOperator {
 	}
 
 	operate(context: SfmOperatorContext): boolean {
-		if (!this.#input || !this.#toElement) {
+		if (!this.#toElement) {
 			return false;
 		}
 
-		const value = this.#input.element.getOutputValue(this.#input.name);
+		const input = this.inputs.get('input');
+		if (!input) {
+			return false;
+		}
+
+		const value = input.element.getOutputValue(input.output);
 
 		const a = this.#toAttribute.split('.');
 		if (a.length === 1) {

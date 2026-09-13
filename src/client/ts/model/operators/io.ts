@@ -23,7 +23,7 @@ export type SfmOperatorInput = {
 
 export type SfmOperatorOutput = {
 	element: HasOutputs;
-	name: string;
+	output: string;
 	///** Output id, if several of the same name exist. Default to 0 */
 	//id?: number;
 };
