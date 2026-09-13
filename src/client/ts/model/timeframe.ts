@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 
 export interface TimeFrameParameters extends SerializableParameters {
@@ -222,6 +222,10 @@ export class SfmTimeFrame extends Serializable {
 		time.#offset = this.#offset;
 
 		return time;
+	}
+
+	override getProperties(): SerializableProperty[] {
+		return [];
 	}
 
 	static override getTypeName(): string {

@@ -1,5 +1,5 @@
 import { errorOnce } from 'harmony-utils';
-import { UnserializationContext } from '../../serialize/serializable';
+import { SerializableProperty, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmClip, SfmClipType } from '../clips/clip';
 import { SfmOperatorContext } from '../interfaces/operator';
@@ -20,6 +20,23 @@ export class SfmSoundClip extends SfmClip {
 
 	override update(context: SfmOperatorContext): void {
 		errorOnce('code me');
+	}
+
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'volume',
+				i18n: '#volume',
+				type: 'double',
+				settable: true,
+			},
+			{
+				name: 'mute',
+				i18n: '#mute',
+				type: 'bool',
+				settable: true,
+			},
+		];
 	}
 
 	static override getTypeName(): string {

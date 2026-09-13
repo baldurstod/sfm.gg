@@ -170,9 +170,10 @@ class Application {
 		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 0, end: 15 }, });
 		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 25, end: 35 }, });
 
-		const node = new SfmNode({ entity: new SfmPrimitiveBox() });
+		const box = new SfmPrimitiveBox();
+		const node = new SfmNode({ entity: box });
 		action.do(clip.scene!, 'add-child', node);//clip.scene!.addChild(node)//!.#entity = new SfmPrimitiveBox();
-		action.do(node, 'set-entity', new SfmPrimitiveBox());
+		//action.do(node, 'set-entity', new SfmPrimitiveBox());
 		const cameraNode = new SfmNode({ entity: workCamera });
 		action.do(clip.scene!, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
 
@@ -207,8 +208,8 @@ class Application {
 				name: 'output',
 				element: modulo,
 			},
-			toElement: workCamera,
-			toAttribute: 'fov',
+			toElement: box,
+			toAttribute: 'size.x',
 		});
 		action.do(operatorClip, 'add-operator', channel);
 		action.do(operatorClip, 'add-operator', modulo);

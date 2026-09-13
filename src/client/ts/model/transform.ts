@@ -1,5 +1,5 @@
 import { quat, ReadonlyQuat, ReadonlyVec3, vec3 } from 'gl-matrix';
-import { Serializable, SerializableParameters, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 
 const DEFAULT_POS = vec3.create();
@@ -34,6 +34,30 @@ export class SfmTransform extends Serializable {
 		quat.identity(this.#orientation);
 		vec3.set(this.#scale, 1, 1, 1);
 	}
+
+	override getProperties(): SerializableProperty[] {
+		return [
+			{
+				name: 'position',
+				i18n: '#position',
+				type: 'vec3',
+				settable: true,
+			},
+			{
+				name: 'orientation',
+				i18n: '#orientation',
+				type: 'quat',
+				settable: true,
+			},
+			{
+				name: 'scale',
+				i18n: '#scale',
+				type: 'vec3',
+				settable: true,
+			},
+		];
+	}
+
 
 	static override getTypeName(): string {
 		return 'Transform';

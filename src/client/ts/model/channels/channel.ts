@@ -75,14 +75,12 @@ export class SfmChannel extends SfmOperator {
 
 		const value = this.#input.element.getOutputValue(this.#input.name);
 
-
-		this.#toElement.setProperty(this.#toAttribute, value);
-
-		//throw new Error("TODO");
-
-		/*
-		const prop = this.#fromElement.getProperty(this.#fromAttribute);
-		*/
+		const a = this.#toAttribute.split('.');
+		if (a.length === 1) {
+			this.#toElement.setProperty(this.#toAttribute, value);
+		} else {
+			this.#toElement.setSubProperty(a[0]!, a[1]!, value as number/*TODO: check value type*/);
+		}
 
 		return true;
 	}

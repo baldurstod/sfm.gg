@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix';
-import { Serializable, UnserializationContext } from '../../serialize/serializable';
-import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { SerializableProperty } from '../../serialize/serializable';
+import { SfmSerializer } from '../../serialize/serializer';
 import { CurveKey } from './curvekey';
 import { SfmDataCurve, SfmDataCurveType } from './datacurve';
 
@@ -9,6 +9,10 @@ export class SfmDataCurveVector3 extends SfmDataCurve {
 	readonly keys: [Set<CurveKey<number>>, Set<CurveKey<number>>, Set<CurveKey<number>>,] = [new Set(), new Set(), new Set()];
 	curveType: SfmDataCurveType = 'linear';
 	readonly curveCount = 3;
+
+	override getProperties(): SerializableProperty[] {
+		return [];
+	}
 
 	static override getTypeName(): string {
 		return 'DataCurveVector3';

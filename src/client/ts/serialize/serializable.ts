@@ -1,5 +1,6 @@
 import { quat, vec2, vec3, vec4 } from 'gl-matrix';
 import { generateRandomUUID } from 'harmony-3d';
+import { errorOnce } from 'harmony-utils';
 import { Command, Undoable } from '../history/action';
 import { JSONSerializable } from './serializer';
 
@@ -160,6 +161,18 @@ export abstract class Serializable implements Undoable {
 	}
 
 	setProperty(name: string, value: SerializablePropertyValue): boolean {// TODO: set abstract ?
+		return false;
+	}
+
+	/**
+	 * Set the sub value of a property. For instance x value of a vector
+	 * @param name Name of the property
+	 * @param element Name of the sub element
+	 * @param value Value
+	 * @returns True in case of success, false otherwise
+	 */
+	setSubProperty(name: string, element: string, value: number): boolean {
+		errorOnce(`This method shoul be overriden, ${name} ${element} ${value}`);
 		return false;
 	}
 }
