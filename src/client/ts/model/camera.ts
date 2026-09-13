@@ -2,6 +2,8 @@ import { Camera, CameraFrustum, Text2D } from 'harmony-3d';
 import { SerializableParameters, SerializablePropertyType } from '../serialize/serializable';
 import { SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
+import { SfmAttribute } from './interfaces/attributes';
+import { SfmOperatorOutput } from './operators/io';
 
 /*
 export interface CameraParameters extends SerializableParameters {
@@ -14,6 +16,7 @@ export class SfmCamera extends SfmEntity {
 	readonly #camera = new Camera();
 	readonly #cameraText = new Text2D({ parent: this.#camera });
 	readonly #cameraFrustum = new CameraFrustum({ parent: this.#camera });
+	readonly #inputs = new Map<string, SfmOperatorOutput>();
 
 	constructor(params: SerializableParameters = {}) {
 		super(params);
@@ -63,11 +66,25 @@ export class SfmCamera extends SfmEntity {
 	override  setProperty(name: string, value: SerializablePropertyType): boolean {
 		switch (name) {
 			case 'fov':
-				this.#camera.verticalFov = value as number;
+				this.#camera.verticalFov = value as number;//TODO: check value type
 				return true;
 			default:
 				return super.setProperty(name, value);
 		}
+	}
+
+	setPredecessor(input: string, predecessor: SfmOperatorOutput): void {
+		this.#inputs.set(input, predecessor);
+	}
+
+	getAttributes(): SfmAttribute[] {
+		return [
+			{
+				name: 'fov',
+				i18n: '#fov',
+				type: 'number',
+			},
+		];
 	}
 
 	static override getTypeName(): string {

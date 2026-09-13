@@ -105,7 +105,6 @@ export abstract class Serializable implements Undoable {
 
 	getProperties(): SerializableProperty[] {
 		throw new Error('TODO: override me');
-
 	}
 
 	getProperty(name: string): SerializablePropertyType {// TODO: set abstract ?

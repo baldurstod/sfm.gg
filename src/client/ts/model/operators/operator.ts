@@ -1,56 +1,33 @@
 import { JSONObject } from 'harmony-types';
-import { Map2 } from 'harmony-utils';
-import { Serializable, UnserializationContext } from '../../serialize/serializable';
+import { errorOnce } from 'harmony-utils';
+import { Serializable, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
 import { SfmEntityPropertyValue } from '../entity';
+import { SfmOperatorContext } from '../interfaces/operator';
+import { HasInputs, HasOutputs, SfmOperatorIO, SfmOperatorOutput } from './io';
 
-export type SfmOperatorTypes = 'number';
+export abstract class SfmOperator extends Serializable implements HasInputs, HasOutputs {
+	protected readonly inputs = new Map<string, SfmOperatorOutput>();
 
-export type SfmOperatorIO = {
-	name: string;
-	i18n: string;
-	type: SfmOperatorTypes;
-	/** How many of that input is allowed ? Default to 1 */
-	limit?: number;
-}
-
-export type SfmOperatorContext = {
-	/** Id is an incremental value */
-	id: number;
-	time: number;
-}
-
-export type SfmOperatorInput = {
-	name: string;
-	/** Input id, if several of the same name exist. Default to 0 */
-	id?: number;
-};
-
-export type SfmOperatorOutput = {
-	operator: SfmOperator;
-	name: string;
-	/** Output id, if several of the same name exist. Default to 0 */
-	id?: number;
-};
-
-export abstract class SfmOperator extends Serializable {
-	protected readonly inputs = new Map2<string, number, SfmOperatorOutput>();
-
-	//abstract getInputs(): SfmOperatorIO[];
-	//abstract getOutputs(): SfmOperatorIO[];
+	abstract getInputs(): SfmOperatorIO[];
+	abstract getOutputs(): SfmOperatorIO[];
+	//abstract getOutput(name: string): SfmOperatorIO | null;//TODO
+	abstract getOutputValue(name: string): SerializablePropertyType;
 	//abstract getOutputValue(context: SfmOperatorContext, name: string, outputId: number): SerializablePropertyType;
 	/** Do the operation. Return true is the operation succeed, false otherwise  */
 	abstract operate(context: SfmOperatorContext): boolean;
 
-	setPredecessor(input: SfmOperatorInput, predecessor: SfmOperatorOutput): void {
-		this.inputs.set(input.name, input.id ?? 0, predecessor);
+	setPredecessor(input: string, predecessor: SfmOperatorOutput): void {
+		//TODO: check predecessor type
+		this.inputs.set(input, predecessor);
 	}
 
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
 		if (this.inputs.size) {
-			json.properties = Object.fromEntries(this.inputs) as JSONObject;
+			errorOnce('TODO');
+			//json.inputs = Object.fromEntries(this.inputs) as JSONObject;
 		}
 
 		return json;
@@ -60,7 +37,7 @@ export abstract class SfmOperator extends Serializable {
 		super.unserialize(json, context);
 
 		this.inputs.clear();
-		const properties = json.properties as JSONObject;
+		const properties = json.inputs as JSONObject;
 		if (properties) {
 			for (const key in properties) {
 				const value = properties[key] as SfmEntityPropertyValue;// TODO: check the value

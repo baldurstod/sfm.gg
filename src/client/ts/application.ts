@@ -200,13 +200,19 @@ class Application {
 		const operatorClip = new SfmOperatorClip();
 		action.do(operators, 'add-clip', operatorClip);
 
+		const modulo = new SfmModuloOperator();
 		const channel = new SfmChannel({
-			fromElement: new SfmModuloOperator(),
-			fromAttribute: 'ouptput',
+			//fromElement: new SfmModuloOperator(),
+			//fromAttribute: 'ouptput',
+			predecessor: {
+				name: 'output',
+				element: modulo,
+			},
 			toElement: workCamera,
 			toAttribute: 'fov',
 		});
 		action.do(operatorClip, 'add-operator', channel);
+		action.do(operatorClip, 'add-operator', modulo);
 
 		this.#player.setFilmClip(film);
 

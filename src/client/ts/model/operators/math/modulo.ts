@@ -1,19 +1,21 @@
 import { errorOnce } from 'harmony-utils';
 import { SerializablePropertyType } from '../../../serialize/serializable';
 import { SfmSerializer } from '../../../serialize/serializer';
-import { SfmOperator, SfmOperatorContext, SfmOperatorIO } from '../operator';
+import { SfmOperatorContext } from '../../interfaces/operator';
+import { SfmOperatorIO } from '../io';
+import { SfmOperator } from '../operator';
 
 export class SfmModuloOperator extends SfmOperator {
 	modulo: number = 1;
-
-
+	value = 50;
 
 	override operate(context: SfmOperatorContext): boolean {
 		errorOnce('TODO')
+		this.value = 10 + context.time % 10;
 		return true;
 	}
 
-	getInputs(): SfmOperatorIO[] {
+	override getInputs(): SfmOperatorIO[] {
 		return [{
 			name: 'input',
 			i18n: '#input',
@@ -22,7 +24,7 @@ export class SfmModuloOperator extends SfmOperator {
 		}];
 	}
 
-	getOutputs(): SfmOperatorIO[] {
+	override getOutputs(): SfmOperatorIO[] {
 		return [{
 			name: 'output',
 			i18n: '#output',
@@ -31,8 +33,9 @@ export class SfmModuloOperator extends SfmOperator {
 		}];
 	}
 
-	getOutputValue(context: SfmOperatorContext, name: string, outputId = 0): SerializablePropertyType {
-		return context.time;
+	//abstract getOutputValue(name: string): SfmOperatorIO[];
+	override getOutputValue(name: string): SerializablePropertyType {
+		return this.value;
 	}
 
 	/*

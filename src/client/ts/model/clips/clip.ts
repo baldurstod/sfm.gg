@@ -1,7 +1,7 @@
 import { Command, Undoable } from '../../history/action';
 import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
-import { SfmOperatorContext } from '../operators/operator';
+import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmTimeFrame, TimeFrameParameters } from '../timeframe';
 import { SfmTrack } from '../track';
 

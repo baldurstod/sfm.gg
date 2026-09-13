@@ -1,7 +1,8 @@
 import { Command } from '../../history/action';
 import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { SfmOperator, SfmOperatorContext } from '../operators/operator';
+import { SfmOperatorContext } from '../interfaces/operator';
+import { SfmOperator } from '../operators/operator';
 import { ClipParameters, SfmClip, SfmClipType } from './clip';
 
 export interface OperatorClipParameters extends ClipParameters {

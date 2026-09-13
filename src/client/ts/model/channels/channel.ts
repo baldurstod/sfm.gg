@@ -1,12 +1,17 @@
 import { Command } from '../../history/action';
-import { Serializable, SerializableParameters, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { SfmOperator, SfmOperatorContext } from '../operators/operator';
+import { SfmOperatorContext } from '../interfaces/operator';
+import { SfmOperatorIO, SfmOperatorOutput } from '../operators/io';
+import { SfmOperator } from '../operators/operator';
 
 export interface ChannelParameters extends SerializableParameters {
+	/*
 	fromElement?: Serializable;
 	fromAttribute?: string;
 	fromIndex?: number;
+	*/
+	predecessor?: SfmOperatorOutput;
 	toElement?: Serializable;
 	toAttribute?: string;
 	toIndex?: number;
@@ -14,37 +19,77 @@ export interface ChannelParameters extends SerializableParameters {
 
 export class SfmChannel extends SfmOperator {
 	readonly isSfmChannel = true as const;
+	#input?: SfmOperatorOutput | null;
 
+	/*
 	#fromElement: Serializable | null;
 	#fromAttribute: string;
 	#fromIndex: number;
+	*/
 	#toElement: Serializable | null;
 	#toAttribute: string;
 	#toIndex: number;
 
 	constructor(params: ChannelParameters = {}) {
 		super(params);
+		const predecessor = params.predecessor;
+		if (predecessor) {
+			this.setPredecessor('input', predecessor);
+		}
+		/*
 		this.#fromElement = params.fromElement ?? null;
 		this.#fromAttribute = params.fromAttribute ?? '';
 		this.#fromIndex = params.fromIndex ?? 0;
+		*/
 		this.#toElement = params.toElement ?? null;
 		this.#toAttribute = params.toAttribute ?? '';
 		this.#toIndex = params.toIndex ?? 0;
 	}
 
-	override operate(context: SfmOperatorContext): boolean {
-		if (!this.#fromElement || !this.#toElement) {
+	override setPredecessor(input: string, predecessor: SfmOperatorOutput | null): void {
+		if (input !== 'input') {
+			return;
+		}
+		//TODO: check predecessor type
+		//this.inputs.set(input.name, predecessor);
+		this.#input = predecessor;
+	}
+
+	getInputs(): SfmOperatorIO[] {
+		throw new Error("TODO");
+		return [];
+	}
+
+	override getOutputs(): SfmOperatorIO[] {
+		return [];
+	}
+
+	override getOutputValue(name: string): SerializablePropertyType {
+		return null;
+	}
+
+	operate(context: SfmOperatorContext): boolean {
+		if (!this.#input || !this.#toElement) {
 			return false;
 		}
 
+		const value = this.#input.element.getOutputValue(this.#input.name);
+
+
+		this.#toElement.setProperty(this.#toAttribute, value);
+
+		//throw new Error("TODO");
+
+		/*
 		const prop = this.#fromElement.getProperty(this.#fromAttribute);
-		this.#toElement.setProperty(this.#toAttribute, prop);
+		*/
 
 		return true;
 	}
 
 	do(command: Command): boolean {
 		switch (command.command) {
+			/*
 			case 'set-from-element':
 				command.undoParams = this.#fromElement;
 				this.#fromElement = command.params;//TODO: check if it's a suitable element
@@ -57,6 +102,7 @@ export class SfmChannel extends SfmOperator {
 				command.undoParams = this.#fromIndex;
 				this.#fromIndex = command.params;//TODO: check if it's a positive integer
 				return true;
+			*/
 			case 'set-to-element':
 				command.undoParams = this.#toElement;
 				this.#toElement = command.params;//TODO: check if it's a suitable element
@@ -76,6 +122,7 @@ export class SfmChannel extends SfmOperator {
 
 	undo(command: Command): boolean {
 		switch (command.command) {
+			/*
 			case 'set-from-element':
 				this.#fromElement = command.undoParams;
 				return true;
@@ -85,6 +132,7 @@ export class SfmChannel extends SfmOperator {
 			case 'set-from-index':
 				this.#fromIndex = command.undoParams;
 				return true;
+			*/
 			case 'set-to-element':
 				this.#toElement = command.undoParams;
 				return true;
@@ -110,9 +158,11 @@ export class SfmChannel extends SfmOperator {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
+		/*
 		json.from_element = this.#fromElement;
 		json.from_attribute = this.#fromAttribute;
 		json.from_index = this.#fromIndex;
+		*/
 		json.to_element = this.#toElement;
 		json.to_attribute = this.#toAttribute;
 		json.to_index = this.#toIndex;
@@ -124,12 +174,14 @@ export class SfmChannel extends SfmOperator {
 		super.unserialize(json, context);
 
 
+		/*
 		if (json.from_element) {
 			this.#fromElement = context.elements.get(json.from_element as string) as Serializable | null; // TODO: check if it's actually a Serializable
 		}
 
 		this.#fromAttribute = json.from_attribute as string ?? '';//TODO:check the actual value
 		this.#fromIndex = json.from_index as number ?? 0;//TODO:check the actual value
+		*/
 
 		if (json.to_element) {
 			this.#toElement = context.elements.get(json.to_element as string) as Serializable | null; // TODO: check if it's actually a Serializable
