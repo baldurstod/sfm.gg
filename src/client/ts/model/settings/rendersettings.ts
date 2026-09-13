@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 
 export interface RenderSettingsParameters extends SerializableParameters {
@@ -41,12 +41,14 @@ export class SfmRenderSettings extends Serializable {
 	override getProperties(): SerializableProperty[] {
 		throw new Error("TODO");
 		return [
+			/*
 			{
 				name: 'frameRate',
 				i18n: '#frame_rate',
 				//type: typeof SfmFilmClip,
 				settable: true,
 			},
+			*/
 			/*
 			{
 				name: 'film',
@@ -58,7 +60,7 @@ export class SfmRenderSettings extends Serializable {
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'frameRate':
 				return this.frameRate;

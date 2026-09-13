@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilmClip } from './clips/filmclip';
 import { SessionSettingsParameters, SfmSessionSettings } from './settings/sessionsettings';
@@ -105,30 +105,26 @@ export class SfmSession extends Serializable {
 	override getProperties(): SerializableProperty[] {
 		return [
 			{
-				name: 'activeClip',
-				i18n: '#active_clip',
-				//type: typeof SfmFilmClip,
+				name: 'topClip',
+				i18n: '#top_clip',
+				type: 'element',
 				settable: true,
 			},
-			/*
 			{
-				name: 'film',
-				i18n: '#film',
-				//type: typeof SfmFilmClip,
+				name: 'settings',
+				i18n: '#settings',
+				type: 'element',
 				settable: false,
 			},
-			*/
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
-			case 'activeClip':
+			case 'topClip':
 				return this.#topClip;
-			/*
-		case 'film':
-			return this.#film;
-			*/
+			case 'settings':
+				return this.#settings;
 			default:
 				throw new Error("do me " + name);
 		}

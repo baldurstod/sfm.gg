@@ -1,5 +1,5 @@
 import { Command } from '../../history/action';
-import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmOperator } from '../operators/operator';
@@ -103,13 +103,13 @@ export class SfmOperatorClip extends SfmClip {
 			{
 				name: 'operators',
 				i18n: '#operators',
-				//type: typeof nodeArray,
+				type: 'element_array',
 				settable: false,
 			},
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'operators':
 				return [...this.#operators];

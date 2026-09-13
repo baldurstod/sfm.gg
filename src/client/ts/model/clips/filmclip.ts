@@ -1,6 +1,6 @@
 import { errorOnce } from 'harmony-utils';
 import { Command, Undoable } from '../../history/action';
-import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
 import { SfmOperatorContext } from '../interfaces/operator';
@@ -341,25 +341,25 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			{
 				name: 'scene',
 				i18n: '#scene',
-				//type: typeof SfmScene,
+				type: 'element',
 				settable: true,
 			},
 			{
 				name: 'activeCamera',
 				i18n: '#active_camera',
-				//type: typeof SfmCamera,
+				type: 'element',
 				settable: true,
 			},
 			{
 				name: 'trackGroups',
 				i18n: '#track_groups',
-				//type: typeof nodeArray,
+				type: 'element_array',
 				settable: false,
 			},
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'scene':
 				return this.scene;

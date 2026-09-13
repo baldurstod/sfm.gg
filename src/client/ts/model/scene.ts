@@ -1,6 +1,6 @@
 import { Scene } from 'harmony-3d';
 import { Command } from '../history/action';
-import { SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { SerializableProperty, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 import { SfmNode } from './node';
@@ -73,12 +73,15 @@ export class SfmScene extends SfmEntity {
 	override getProperties(): SerializableProperty[] {
 
 		return [
+			//TODO: add world
+			/*
 			{
 				name: 'children',
 				i18n: '#children',
 				//type: typeof nodeArray,
 				settable: false,
 			},
+			*/
 		];
 	}
 }

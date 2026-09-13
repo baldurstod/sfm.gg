@@ -1,6 +1,6 @@
 import { JSONObject } from 'harmony-types';
 import { errorOnce } from 'harmony-utils';
-import { Serializable, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
 import { SfmEntityPropertyValue } from '../entity';
 import { SfmOperatorContext } from '../interfaces/operator';
@@ -14,7 +14,7 @@ export abstract class SfmOperator extends Serializable implements HasInputs, Has
 	abstract getInputs(): SfmOperatorIO[];
 	abstract getOutputs(): SfmOperatorIO[];
 	//abstract getOutput(name: string): SfmOperatorIO | null;//TODO
-	abstract getOutputValue(name: string): SerializablePropertyType;
+	abstract getOutputValue(name: string): SerializablePropertyValue;
 	//abstract getOutputValue(context: SfmOperatorContext, name: string, outputId: number): SerializablePropertyType;
 	/** Do the operation. Return true is the operation succeed, false otherwise  */
 	abstract operate(context: SfmOperatorContext): boolean;

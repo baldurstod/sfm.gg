@@ -1,5 +1,5 @@
 import { Command, Undoable } from '../history/action';
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilmClip } from './clips/filmclip';
 import { SfmTrack } from './track';
@@ -145,18 +145,17 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 	}
 
 	override getProperties(): SerializableProperty[] {
-
 		return [
 			{
 				name: 'tracks',
 				i18n: '#tracks',
-				//type: typeof nodeArray,
+				type: 'element_array',
 				settable: false,
 			},
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'tracks':
 				return [...this.#tracks];

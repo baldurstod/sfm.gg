@@ -1,5 +1,5 @@
 import { errorOnce } from 'harmony-utils';
-import { SerializablePropertyType } from '../../../serialize/serializable';
+import { SerializablePropertyValue } from '../../../serialize/serializable';
 import { SfmSerializer } from '../../../serialize/serializer';
 import { SfmOperatorContext } from '../../interfaces/operator';
 import { SfmOperatorIO } from '../io';
@@ -34,7 +34,7 @@ export class SfmModuloOperator extends SfmOperator {
 	}
 
 	//abstract getOutputValue(name: string): SfmOperatorIO[];
-	override getOutputValue(name: string): SerializablePropertyType {
+	override getOutputValue(name: string): SerializablePropertyValue {
 		return this.value;
 	}
 
@@ -44,7 +44,7 @@ export class SfmModuloOperator extends SfmOperator {
 	}
 	*/
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		//override getProperty(name: string): SerializablePropertyType {
 		switch (name) {
 			case 'output':

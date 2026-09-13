@@ -1,6 +1,7 @@
 import { generateRandomUUID } from 'harmony-3d';
 import { Command, Undoable } from '../history/action';
 import { JSONSerializable } from './serializer';
+import { quat, vec2, vec3, vec4 } from 'gl-matrix';
 
 /*
 export interface Serializable
@@ -24,13 +25,60 @@ export type UnserializationContext = {
 	fileVersion: number;
 }
 
-export type SerializablePropertyType = boolean | string | number | Serializable | undefined | null | boolean[] | string[] | number[] | Serializable[];
+export type SerializablePropertyValue =
+	boolean
+	| string
+	| number
+	| Serializable
+	| undefined
+	| null
+	| vec2
+	| vec3
+	| vec4
+	| quat
+	// Array types
+	| boolean[]
+	| string[]
+	| number[]
+	| Serializable[]
+	| undefined[]
+	| null[]
+	| vec2[]
+	| vec3[]
+	| vec4[]
+	| quat[]
+	;
+
+export type SerializablePropertyType = 'bool'
+	| 'string'
+	| 'double'
+	| 'element'
+	| 'undefined'
+	| 'null'
+	| 'vec2'
+	| 'vec3'
+	| 'vec4'
+	| 'quat'
+	| 'enum'// string enum
+	| 'bool_array'
+	| 'string_array'
+	| 'double_array'
+	| 'element_array'
+	| 'undefined_array'
+	| 'null_array'
+	| 'vec2_array'
+	| 'vec3_array'
+	| 'vec4_array'
+	| 'quat_array'
+	;
 
 export type SerializableProperty = {
 	name: string;
 	i18n: string;
-	//type: SerializablePropertyType | SerializablePropertyType[];
+	type: SerializablePropertyType;
 	settable: boolean;
+	/** Enum must be provided if type is 'enum' */
+	enum?: string[];
 }
 
 export abstract class Serializable implements Undoable {
@@ -107,11 +155,11 @@ export abstract class Serializable implements Undoable {
 		throw new Error('TODO: override me');
 	}
 
-	getProperty(name: string): SerializablePropertyType {// TODO: set abstract ?
+	getProperty(name: string): SerializablePropertyValue {// TODO: set abstract ?
 		return null;
 	}
 
-	setProperty(name: string, value: SerializablePropertyType): boolean {// TODO: set abstract ?
+	setProperty(name: string, value: SerializablePropertyValue): boolean {// TODO: set abstract ?
 		return false;
 	}
 }

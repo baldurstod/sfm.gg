@@ -1,5 +1,5 @@
 import { Command } from '../history/action';
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
 
@@ -132,12 +132,13 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 			{
 				name: 'entity',
 				i18n: '#entity',
+				type: 'element',
 				settable: true,
 			},
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'entity':
 				return this.#entity;

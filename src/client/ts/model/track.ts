@@ -1,5 +1,5 @@
 import { Command, Undoable } from '../history/action';
-import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyType, UnserializationContext } from '../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip, SfmClipType } from './clips/clip';
 import { SfmFilmClip } from './clips/filmclip';
@@ -201,31 +201,31 @@ export class SfmTrack extends Serializable implements Undoable {
 			{
 				name: 'clips',
 				i18n: '#clips',
-				//type: typeof nodeArray,
+				type: 'element_array',
 				settable: false,
 			},
 			{
 				name: 'trackType',
 				i18n: '#track_type',
-				//type: typeof nodeArray,
+				type: 'string',
 				settable: true,
 			},
 			{
 				name: 'mute',
 				i18n: '#mute',
-				//type: typeof nodeArray,
+				type: 'bool',
 				settable: true,
 			},
 			{
 				name: 'volume',
 				i18n: '#volume',
-				//type: typeof nodeArray,
+				type: 'double',
 				settable: true,
 			},
 		];
 	}
 
-	override getProperty(name: string): SerializablePropertyType {
+	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'clips':
 				return [...this.#clips];

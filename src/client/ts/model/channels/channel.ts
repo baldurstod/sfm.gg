@@ -1,5 +1,5 @@
 import { Command } from '../../history/action';
-import { Serializable, SerializableParameters, SerializablePropertyType, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmOperatorIO, SfmOperatorOutput } from '../operators/io';
@@ -64,7 +64,7 @@ export class SfmChannel extends SfmOperator {
 		return [];
 	}
 
-	override getOutputValue(name: string): SerializablePropertyType {
+	override getOutputValue(name: string): SerializablePropertyValue {
 		return null;
 	}
 

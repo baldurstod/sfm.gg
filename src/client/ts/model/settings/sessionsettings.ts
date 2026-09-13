@@ -44,12 +44,14 @@ export class SfmSessionSettings extends Serializable {
 	override getProperties(): SerializableProperty[] {
 		throw new Error("TODO");
 		return [
+			/*
 			{
 				name: 'activeClip',
 				i18n: '#active_clip',
 				//type: typeof SfmFilmClip,
 				settable: true,
 			},
+			*/
 			/*
 			{
 				name: 'film',
