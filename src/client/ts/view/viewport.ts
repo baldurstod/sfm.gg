@@ -27,7 +27,6 @@ export class ViewportPanel extends Panel {
 	#id = ++ViewportPanel.nextId;
 	#titleI18n?: string;
 	static #scene = new Scene();
-	static #test = new Map<SfmNode, Entity>();
 
 	constructor(titleI18n?: string) {
 		super();

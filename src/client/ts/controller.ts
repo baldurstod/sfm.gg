@@ -42,6 +42,7 @@ export type ControllerEvent = 'setsession'
 	| 'userredolastaction'
 	| 'refreshtimeline'
 	| 'refreshtoolbar'
+	| 'updateactiveclips'
 	| 'userbladeclip'
 	// Delete the selected clips under the provided film clip
 	| 'userdeleteselectedclips'
@@ -102,6 +103,7 @@ export class Controller {
 	static addEventListener(type: 'userdeletetrack', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeletetrackgroup', callback: (evt: CustomEvent<SfmTrackGroup>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeleteoperator', callback: (evt: CustomEvent<DeleteOperator>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'updateactiveclips', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -144,6 +146,7 @@ export class Controller {
 	static dispatchEvent(type: 'userdeletetrack', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'userdeletetrackgroup', options: ControllerEventInit<SfmTrackGroup>): boolean;
 	static dispatchEvent(type: 'userdeleteoperator', options: ControllerEventInit<DeleteOperator>): boolean;
+	static dispatchEvent(type: 'updateactiveclips', options?: EventInit): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));

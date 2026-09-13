@@ -111,6 +111,7 @@ class Application {
 		Controller.addEventListener('userdeletetrack', (event) => this.#deleteTrack(event.detail));
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
+		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });

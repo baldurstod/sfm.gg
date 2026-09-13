@@ -384,6 +384,7 @@ export class TimelinePanel extends Panel {
 					if (this.#dragAction) {
 						this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', delta + this.#dragStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
 						this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', delta + this.#dragEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+						Controller.dispatchEvent('updateactiveclips');
 					}
 					this.refreshHTML();
 				}
