@@ -2,6 +2,7 @@ import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmOperatorClip } from '../model/clips/operatorclip';
 import { SfmEntity } from '../model/entity';
+import { SfmLightType } from '../model/lights/light';
 import { SfmNode } from '../model/node';
 import { SfmOperator } from '../model/operators/operator';
 import { SfmTrack } from '../model/track';
@@ -50,6 +51,7 @@ export class Action {
 	do(element: SfmOperatorClip, command: 'add-operator', params: SfmOperator): boolean;
 	do(element: SfmClip, command: 'set-end', params: number): boolean;
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
+	do(element: SfmFilmClip, command: 'add-light', params: SfmLightType): boolean;
 	do(element: SfmFilmClip, command: 'add-selected-clip', params: SfmClip): boolean;
 	do(element: SfmFilmClip, command: 'add-track-group', params: SfmTrackGroup): boolean;
 	do(element: SfmFilmClip, command: 'delete-track-group', params: SfmTrackGroup): boolean;

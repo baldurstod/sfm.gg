@@ -3,6 +3,7 @@ import { SfmCamera } from './model/camera';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
+import { SfmLightType } from './model/lights/light';
 import { SfmOperator } from './model/operators/operator';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
@@ -56,6 +57,7 @@ export type ControllerEvent = 'setsession'
 	| 'useraddtrackgroup'
 	| 'userfillgaps'
 	| 'usersetname'
+	| 'useraddlight'
 	;
 
 // Same as CustomEventInit with required detail
@@ -104,6 +106,7 @@ export class Controller {
 	static addEventListener(type: 'userdeletetrackgroup', callback: (evt: CustomEvent<SfmTrackGroup>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeleteoperator', callback: (evt: CustomEvent<DeleteOperator>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'updateactiveclips', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddlight', callback: (evt: CustomEvent<AddLight>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -147,6 +150,7 @@ export class Controller {
 	static dispatchEvent(type: 'userdeletetrackgroup', options: ControllerEventInit<SfmTrackGroup>): boolean;
 	static dispatchEvent(type: 'userdeleteoperator', options: ControllerEventInit<DeleteOperator>): boolean;
 	static dispatchEvent(type: 'updateactiveclips', options?: EventInit): boolean;
+	static dispatchEvent(type: 'useraddlight', options: ControllerEventInit<AddLight>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
@@ -208,4 +212,9 @@ export type DeleteOperator = {
 export type SetName = {
 	element: Serializable;
 	name: string;
+}
+
+export type AddLight = {
+	type: SfmLightType;
+	clip: SfmFilmClip;
 }

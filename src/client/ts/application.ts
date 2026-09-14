@@ -8,7 +8,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddLight, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
@@ -57,6 +57,8 @@ class Application {
 
 		//load();
 		save(this.#session);
+
+		this.#updateCurrentTime();
 	}
 
 	static #initListeners() {
@@ -112,6 +114,7 @@ class Application {
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
+		Controller.addEventListener('useraddlight', (event) => this.#addLight(event.detail));
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -745,6 +748,15 @@ class Application {
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #addLight(detail: AddLight): void {
+		const action = History.startAction();
+		action.do(detail.clip, 'add-light', detail.type);
+		History.commit(action);
+
+		Controller.dispatchEvent('refreshtimeline');
+		this.#setActiveFilmClips();
 	}
 }
 
