@@ -73,13 +73,12 @@ export class SfmTimeFrame extends Serializable {
 	}
 
 	/**
-	 * Move the start time. The duration is not changed.
-	 * @param start Start time
+	 * Move the time frame. The duration is not changed.
+	 * @param delta The time amount to move
 	 */
-	moveStart(start: number): void {
-		const delta = start - this.#start;
-		this.#start = start;
-		this.#start = this.#end + delta;
+	move(delta: number): void {
+		this.#start += delta;
+		this.#end += delta;
 	}
 
 	/**

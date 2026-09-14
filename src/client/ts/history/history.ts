@@ -7,10 +7,11 @@ export class History {
 
 	/**
 	 * Create an action. An action is a list of atomic operations
+	 * @param action An optional action
 	 * @returns The created action
 	 */
-	static startAction(): Action {
-		const action = new Action();
+	static startAction(action?: Action): Action {
+		action = action ?? new Action();
 
 		this.#undo.push(action);
 		if (this.#redo.length > 0) {

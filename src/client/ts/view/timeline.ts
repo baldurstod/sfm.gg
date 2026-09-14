@@ -9,6 +9,7 @@ import { SfmClip, SfmClipType } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmOperatorClip } from '../model/clips/operatorclip';
 import { SfmOperator } from '../model/operators/operator';
+import { SfmTimeFrame } from '../model/timeframe';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
@@ -274,7 +275,6 @@ export class TimelinePanel extends Panel {
 								this.#dragTime = this.#getTimeFromMouseEvent(event);
 								this.#dragStart = (element as SfmClip).getStart();
 								this.#dragEnd = (element as SfmClip).getEnd();
-								console.info(this.#dragTime);
 							}
 						}),
 						inner = createElement('div', {
@@ -381,11 +381,7 @@ export class TimelinePanel extends Panel {
 				//this.#setClipEnd(time);
 				if (this.#dragElement) {
 					const delta = time - this.#dragTime;
-					if (this.#dragAction) {
-						this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', delta + this.#dragStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
-						this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', delta + this.#dragEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
-						Controller.dispatchEvent('updateactiveclips');
-					}
+					this.#moveClip(delta);
 					this.refreshHTML();
 				}
 				break;
@@ -393,6 +389,58 @@ export class TimelinePanel extends Panel {
 				console.info('unsupported opertaion ' + this.#dragOperation);
 				break;
 		}
+	}
+
+	#moveClip(delta: number): void {
+		if (!this.#dragAction) {
+			return;
+		}
+
+		let newStart = delta + this.#dragStart;
+		let newEnd = delta + this.#dragEnd;
+
+		const draggedClip = this.#dragElement as SfmClip;
+		// Special treatment for film clips: can't be moved before 0 or after track end or overlap other clips
+		if ((draggedClip as SfmFilmClip).isSfmFilmClip) {
+
+			if (newStart < 0) {
+				newStart = 0;
+				newEnd = draggedClip.getDuration();
+			}
+
+			// Get other clip from this film track
+			const clips = draggedClip.track?.getClips();
+			if (clips) {
+				const draggedTimeFrame = new SfmTimeFrame({ start: newStart, end: newEnd });//draggedClip.getTimeFrame();
+				const overlapping = new Set<SfmClip>();
+				// Prevent film clips from overlapping
+				for (const clip of clips) {
+					if (clip === draggedClip) {
+						continue;
+					}
+
+					const clipTimeFrame = clip.getTimeFrame();
+
+					console.info(delta, draggedTimeFrame.getStart(), draggedTimeFrame.getEnd(), clipTimeFrame.getStart(), clipTimeFrame.getEnd());
+
+					if (clipTimeFrame.overlap(draggedTimeFrame)) {
+						console.info(clip);
+						//return;
+						overlapping.add(clip);
+					}
+				}
+
+				if (overlapping.size > 0) {
+					return;
+				}
+			}
+		}
+
+		//console.info(this.#dragStart, this.#dragEnd);
+		this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', newStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
+		this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', newEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+		Controller.dispatchEvent('updateactiveclips');
+
 	}
 
 	#getTimeFromMouseEvent(event: MouseEvent): number {
@@ -491,7 +539,9 @@ export class TimelinePanel extends Panel {
 		if (!this.#dragAction) {
 			return;
 		}
-		History.commit(this.#dragAction);
+		if (this.#dragAction.hasOperations()) {
+			History.commit(this.#dragAction);
+		}
 		this.#dragAction = null;
 	}
 
