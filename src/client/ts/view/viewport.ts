@@ -6,6 +6,7 @@ import { CameraAdded, Controller, SetActiveCamera } from '../controller';
 import { workCamera } from '../graphics/graphics';
 import { SfmCamera } from '../model/camera';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmEntity } from '../model/entity';
 import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
@@ -183,17 +184,16 @@ export class ViewportPanel extends Panel {
 		this.#htmTime.innerText = formatTime(time);
 	}
 
-	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
+	async #setActiveFilmClips(clips: Set<SfmFilmClip>): Promise<void> {
 		ViewportPanel.#scene.removeChildren();
 		this.#removeChilds();
 
 		for (const clip of clips) {
-			let current = clip.scene;
+			let current: SfmNode<SfmEntity> | undefined = clip.scene;
 			if (!current) {
 				continue;
 			}
-			ViewportPanel.#scene.addChild(current.getEntity()?.getEngineEntity());
-
+			ViewportPanel.#scene.addChild(await current.getEntity()?.getEngineEntityAsync());
 
 			const stack: SfmNode[] = [current];
 			// TODO: improve this: this run every frame
@@ -205,11 +205,11 @@ export class ViewportPanel extends Panel {
 
 				stack.push(...current.getChildren());
 
-				const currentEntity = current.getEntity()?.getEngineEntity();
+				const currentEntity = await current.getEntity()?.getEngineEntityAsync();
 				if (!currentEntity) {
 					continue;
 				}
-				const parentEntity = current.getParent()?.getEntity()?.getEngineEntity();
+				const parentEntity = await current.getParent()?.getEntity()?.getEngineEntityAsync();
 				if (!parentEntity) {
 					continue;
 				}
@@ -228,11 +228,9 @@ export class ViewportPanel extends Panel {
 		}
 
 		existing.add(child);
-		console.info(this.#addedChilds);
 	}
 
 	#removeChilds(): void {
-		console.info(this.#addedChilds);
 		for (const [, s] of this.#addedChilds) {
 			for (const e of s) {
 				e.remove();
@@ -242,7 +240,7 @@ export class ViewportPanel extends Panel {
 		this.#addedChilds.clear();
 	}
 
-	#getNodeEntity(node: SfmNode): Entity | undefined {
+	#getNodeEntity(node: SfmNode): Entity | undefined | null {
 		return node.getEntity()?.getEngineEntity();
 	}
 

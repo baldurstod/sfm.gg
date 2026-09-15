@@ -12,13 +12,15 @@ import { AddCharacter, AddClip, AddLight, AddTrack, Controller, DeleteOperator, 
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { characterToModel, getTf2Characters } from './misc/character';
+import { getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
+import { SfmPointLight } from './model/lights/pointlight';
+import { SfmModel } from './model/model';
 import { SfmNode } from './model/node';
 import { SfmModuloOperator } from './model/operators/math/modulo';
 import { SfmTimeOperator } from './model/operators/time';
@@ -33,7 +35,6 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
-import { SfmPointLight } from './model/lights/pointlight';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -333,19 +334,28 @@ class Application {
 	}
 
 	static async #userAddCharacter(detail: AddCharacter): Promise<void> {
-		const scenes = new Set<SfmScene>();
+		//const scenes = new Set<SfmScene>();
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
+		const action = History.startAction();
 		for (const clip of detail.clips) {
-			const sfmScene = clip.scene?.getEntity();
-			if (sfmScene) {
-				scenes.add(sfmScene);
+			const sfmSceneNode = clip.scene;
+			if (sfmSceneNode) {
+				//scenes.add(sfmScene);
+				action.do(sfmSceneNode, 'add-child', new SfmNode({
+					entity: new SfmModel({
+						repository: detail.character.game,
+						path: detail.character.modelPath,
+					})
+				}));
+
 				// Check if the current time is in one of the selected clip
 				if (!isInClip && clip.inTimeFrame(currentTime)) {
 					isInClip = true;
 				}
 			}
 		}
+		History.commit(action);
 
 		if (!isInClip) {
 			// If the play head is not in one of the clip, move it so the character appears
@@ -357,9 +367,11 @@ class Application {
 			}
 		}
 
+		/*
 		for (const scene of scenes) {
 			scene.getEngineEntity().addChild(await characterToModel(detail.character));
 		}
+		*/
 	}
 
 	static #userPreviousFrame(): void {

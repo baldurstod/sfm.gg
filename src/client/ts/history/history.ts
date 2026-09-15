@@ -30,6 +30,7 @@ export class History {
 	}
 
 	static commit(action: Action): void {
+		//TODO: only commit if the action contain commands; discard otherwise
 		action.commit();
 		Controller.dispatchEvent('refreshtoolbar', {
 			detail: {
