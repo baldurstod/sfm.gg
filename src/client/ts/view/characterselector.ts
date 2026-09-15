@@ -1,4 +1,4 @@
-import { AmbientLight, Camera, CanvasAttributes, Graphics, GraphicsEvents, GraphicTickEvent, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
+import { AmbientLight, Camera, CanvasAttributes, Graphics, GraphicsEvents, GraphicTickEvent, Group, OrbitControl, PartialBy, Scene, Source1ModelInstance } from 'harmony-3d';
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
@@ -138,17 +138,19 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
-	setCharacters(characters: Character[]): void {
+	setCharacters(characters: PartialBy<Character, 'items'>[]): void {
 		this.#selectedCharacter = undefined;
 		this.initPanel();
 		this.#htmlCharacters!.innerText = '';
 
 		for (const character of characters) {
+			const c = structuredClone(character) as Character;
+			c.items = new Set();
 			createElement('img', {
 				parent: this.#htmlCharacters,
 				class: 'character',
 				src: character.icon,
-				$click: () => this.#selectCharacter(character),
+				$click: () => this.#selectCharacter(c),
 			});
 		}
 	}
@@ -380,6 +382,7 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
+		character.items.add(item);
 
 		characterModel.addChild(itemModel);
 
@@ -388,6 +391,7 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	#unEquipItem(character: Character, slot: CharacterSlot, item: Item): void {
+		character.items.delete(item);
 		const itemModel = this.#itemsModels.get(character, item);
 		if (itemModel) {
 			itemModel.remove();

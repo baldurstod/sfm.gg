@@ -334,20 +334,16 @@ class Application {
 	}
 
 	static async #userAddCharacter(detail: AddCharacter): Promise<void> {
-		//const scenes = new Set<SfmScene>();
+		const scenes = new Set<SfmNode<SfmScene>>();
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
 		const action = History.startAction();
+
+		// Make a scene list. Note that different clips can use the same scene. A set prevents duplicates
 		for (const clip of detail.clips) {
-			const sfmSceneNode = clip.scene;
-			if (sfmSceneNode) {
-				//scenes.add(sfmScene);
-				action.do(sfmSceneNode, 'add-child', new SfmNode({
-					entity: new SfmModel({
-						repository: detail.character.game,
-						path: detail.character.modelPath,
-					})
-				}));
+			const sceneNode = clip.scene;
+			if (sceneNode) {
+				scenes.add(sceneNode);
 
 				// Check if the current time is in one of the selected clip
 				if (!isInClip && clip.inTimeFrame(currentTime)) {
@@ -355,7 +351,6 @@ class Application {
 				}
 			}
 		}
-		History.commit(action);
 
 		if (!isInClip) {
 			// If the play head is not in one of the clip, move it so the character appears
@@ -367,11 +362,31 @@ class Application {
 			}
 		}
 
-		/*
-		for (const scene of scenes) {
-			scene.getEngineEntity().addChild(await characterToModel(detail.character));
+		// Add the character to the scenes
+		for (const sceneNode of scenes) {
+			const children = new Set<SfmNode>();
+
+			const characterNode = new SfmNode({
+				entity: new SfmModel({
+					repository: detail.character.game,
+					path: detail.character.modelPath,
+				}),
+			})
+			action.do(sceneNode, 'add-child', characterNode);
+
+			for (const item of detail.character.items) {
+				const itemNode = new SfmNode({
+					entity: new SfmModel({
+						repository: item.game,
+						path: item.modelPath,
+					}),
+				});
+				action.do(characterNode, 'add-child', itemNode);
+			}
 		}
-		*/
+		History.commit(action);
+
+		this.#setActiveFilmClips();
 	}
 
 	static #userPreviousFrame(): void {

@@ -32,6 +32,7 @@ export type Character = {
 	animation?: string;
 	keywords?: string[];
 	slots?: CharacterSlot[];
+	items: Set<Item>;
 }
 
 export type Item = {
@@ -42,7 +43,7 @@ export type Item = {
 	keywords?: string[];
 }
 
-const tf2Characters: PartialBy<Character, 'game'>[] = [
+const tf2Characters: PartialBy<Character, 'game' | 'items'>[] = [
 	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
 	{ name: 'sniper', icon: sniper, modelPath: 'models/player/sniper', },
 	{ name: 'soldier', icon: soldier, modelPath: 'models/player/soldier', },
@@ -54,7 +55,7 @@ const tf2Characters: PartialBy<Character, 'game'>[] = [
 	{ name: 'engineer', icon: engineer, modelPath: 'models/player/engineer', },
 ]
 
-export function getTf2Characters(): Character[] {
+export function getTf2Characters(): PartialBy<Character, 'items'>[] {
 	const characters = structuredClone(tf2Characters) as Character[];
 
 	for (const character of characters) {
