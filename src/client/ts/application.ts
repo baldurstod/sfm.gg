@@ -646,6 +646,7 @@ class Application {
 	static #undo(): void {
 		History.undo();
 		Controller.dispatchEvent('refreshtimeline');
+		this.#setActiveFilmClips();
 	}
 
 	static #redo(): void {

@@ -27,6 +27,7 @@ export class ViewportPanel extends Panel {
 	#id = ++ViewportPanel.nextId;
 	#titleI18n?: string;
 	static #scene = new Scene();
+	#addedChilds = new Map<Entity, Set<Entity>>();
 
 	constructor(titleI18n?: string) {
 		super();
@@ -184,6 +185,7 @@ export class ViewportPanel extends Panel {
 
 	#setActiveFilmClips(clips: Set<SfmFilmClip>): void {
 		ViewportPanel.#scene.removeChildren();
+		this.#removeChilds();
 
 		for (const clip of clips) {
 			let current = clip.scene;
@@ -212,9 +214,32 @@ export class ViewportPanel extends Panel {
 					continue;
 				}
 				parentEntity.addChild(currentEntity);
+				this.#setParentEntity(parentEntity, currentEntity);
 			} while (stack.length);
 		}
 		//clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getEngineEntity()));
+	}
+
+	#setParentEntity(parent: Entity, child: Entity): void {
+		let existing = this.#addedChilds.get(parent);
+		if (!existing) {
+			existing = new Set<Entity>();
+			this.#addedChilds.set(parent, existing);
+		}
+
+		existing.add(child);
+		console.info(this.#addedChilds);
+	}
+
+	#removeChilds(): void {
+		console.info(this.#addedChilds);
+		for (const [, s] of this.#addedChilds) {
+			for (const e of s) {
+				e.remove();
+			}
+		}
+
+		this.#addedChilds.clear();
 	}
 
 	#getNodeEntity(node: SfmNode): Entity | undefined {
