@@ -33,6 +33,7 @@ import { JSONFile, SfmSerializer } from './serialize/serializer';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
+import { SfmPointLight } from './model/lights/pointlight';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -652,6 +653,7 @@ class Application {
 	static #redo(): void {
 		History.redo();
 		Controller.dispatchEvent('refreshtimeline');
+		this.#setActiveFilmClips();
 	}
 
 	/**
@@ -752,8 +754,13 @@ class Application {
 	}
 
 	static #addLight(detail: AddLight): void {
+		const scene = detail.clip.scene;
+		if (!scene) {
+			return;
+		}
+
 		const action = History.startAction();
-		action.do(detail.clip, 'add-light', detail.type);
+		action.do(scene, 'add-child', new SfmNode({ entity: new SfmPointLight() }));
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');

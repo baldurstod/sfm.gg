@@ -21,11 +21,9 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	readonly element: Undoable;
 	readonly command: C;
 	readonly params: T;
-	readonly action: Action;
 	undoParams: any/*TODO: improve type*/;
 
-	constructor(action: Action, element: Undoable, command: C, params: T) {
-		this.action = action;
+	constructor(element: Undoable, command: C, params: T) {
 		this.element = element;
 		this.command = command;
 		this.params = params;
@@ -66,7 +64,7 @@ export class Action {
 	do(element: SfmTrackGroup, command: 'delete-track', params: SfmTrack): boolean;
 
 	do(element: Undoable, command: string, params: any): boolean {
-		const operation = new Command(this, element, command, params);
+		const operation = new Command(element, command, params);
 		const result = element.do(operation);
 		if (!result) {
 			return false;

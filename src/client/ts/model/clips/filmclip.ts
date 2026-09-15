@@ -4,7 +4,6 @@ import { SerializableProperty, SerializablePropertyValue, UnserializationContext
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
 import { SfmOperatorContext } from '../interfaces/operator';
-import { SfmPointLight } from '../lights/pointlight';
 import { SfmNode } from '../node';
 import { SfmScene } from '../scene';
 import { SfmTrack } from '../track';
@@ -202,13 +201,6 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#selectedClips.add(command.params);
 				this.#primarySelectedClip = command.params;
 				return true;
-			case 'add-light':
-				if (!this.scene) {
-					return false;
-				}
-				const lightNode = new SfmNode({ entity: new SfmPointLight() });
-				command.action.do(this.scene, 'add-child', lightNode);
-				return true;
 			default:
 				return super.do(command);
 		}
@@ -236,10 +228,6 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#selectedClips.clear();
 				this.#primarySelectedClip = command.undoParams[0];
 				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
-				return true;
-			case 'add-light':
-				// Nothing to do
-				console.info(this.scene);
 				return true;
 			default:
 				return super.undo(command);
