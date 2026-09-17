@@ -51,6 +51,7 @@ export class Action {
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
 	do(element: SfmFilmClip, command: 'add-light', params: SfmLightType): boolean;
 	do(element: SfmFilmClip, command: 'add-selected-clip', params: SfmClip): boolean;
+	do(element: SfmFilmClip, command: 'add-primary-selected-clip', params: SfmClip): boolean;
 	do(element: SfmFilmClip, command: 'add-track-group', params: SfmTrackGroup): boolean;
 	do(element: SfmFilmClip, command: 'delete-track-group', params: SfmTrackGroup): boolean;
 	do(element: SfmFilmClip, command: 'set-selected-clip', params: SfmClip): boolean;

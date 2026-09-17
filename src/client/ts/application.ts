@@ -2,13 +2,14 @@ import { Repositories, Source1MaterialManager, Source1ModelManager, Source1Parti
 import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
+import { errorOnce } from 'harmony-utils';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddLight, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
 import { initGraphics, workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
@@ -19,6 +20,8 @@ import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
+import { SfmAmbientLight } from './model/lights/ambientlight';
+import { SfmLight, SfmLightType } from './model/lights/light';
 import { SfmPointLight } from './model/lights/pointlight';
 import { SfmModel } from './model/model';
 import { SfmNode } from './model/node';
@@ -102,6 +105,7 @@ class Application {
 		Controller.addEventListener('userundolastaction', () => this.#undo());
 		Controller.addEventListener('userredolastaction', () => this.#redo());
 		Controller.addEventListener('useraddselectedclip', (event) => this.#addSelectedClip(event.detail.topClip, event.detail.selected));
+		Controller.addEventListener('useraddprimaryselectedclip', (event) => this.#addPrimarySelectedClip(event.detail.topClip, event.detail.selected));
 		Controller.addEventListener('usersetselectedclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('playersetcurrenttime', () => this.#updateCurrentTime());
 		Controller.addEventListener('userbladeclip', (event) => this.#bladeClip(event.detail));
@@ -116,7 +120,13 @@ class Application {
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
-		Controller.addEventListener('useraddlight', (event) => this.#addLight(event.detail));
+		Controller.addEventListener('useraddlight', (event) => {
+			const detail = event.detail;
+			const scene = detail.clip.scene;
+			if (scene) {
+				this.#addLight(detail.type, scene);
+			}
+		});
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -174,7 +184,8 @@ class Application {
 		const film = new SfmFilmClip({ name: 'Film' });
 		this.#session.setTopFilmClip(film);
 
-		const clip = new SfmFilmClip({ name: 'shot1', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 0, end: 15 }, });
+		const sceneNode = new SfmNode<SfmScene>({ entity: new SfmScene() });
+		const clip = new SfmFilmClip({ name: 'shot1', scene: sceneNode, timeFrame: { start: 0, end: 15 }, });
 		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 25, end: 35 }, });
 
 		const box = new SfmPrimitiveBox();
@@ -226,6 +237,26 @@ class Application {
 		action.do(operatorClip, 'add-operator', time);
 
 		this.#player.setFilmClip(film);
+
+
+
+		const characterNode = new SfmNode({
+			entity: new SfmModel({
+				repository: 'tf2',
+				path: 'models/player/sniper',
+			}),
+		});
+		const itemNode = new SfmNode({
+			entity: new SfmModel({
+				repository: 'tf2',
+				path: 'models/workshop/weapons/c_models/c_sydney_sleeper/c_sydney_sleeper',
+			}),
+		});
+
+		action.do(sceneNode, 'add-child', characterNode);
+		action.do(characterNode, 'add-child', itemNode);
+
+		this.#addLight('ambient', sceneNode, action);
 
 		Controller.dispatchEvent('settopfilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
@@ -699,6 +730,22 @@ class Application {
 		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
 	}
 
+	/**
+	 * Add clip to the selection, set it primary
+	 * @param topClip The film clip to add the selection to
+	 * @param selected The clip to add to the selection
+	 * @param action An optional undoable action. If provided, the selection command will be added to the action. Otherwise a new independant action will be created
+	 */
+	static #addPrimarySelectedClip(topClip: SfmFilmClip, selected: SfmClip, action?: Action): void {
+		const selectionAction = action ?? History.startAction();
+		selectionAction.do(topClip, 'add-primary-selected-clip', selected);
+		if (!action) {
+			History.commit(selectionAction);
+		}
+		Controller.dispatchEvent('refreshtimeline');
+		Controller.dispatchEvent('refreshtoolbar', { detail: { addCharacter: true, } });
+	}
+
 	static #setSelectedClip(detail: SetSelectedClip): void {
 		const action = History.startAction();
 		action.do(detail.topClip, 'set-selected-clip', detail.selected);
@@ -780,15 +827,25 @@ class Application {
 		Controller.dispatchEvent('refreshtimeline');
 	}
 
-	static #addLight(detail: AddLight): void {
-		const scene = detail.clip.scene;
-		if (!scene) {
-			return;
+	static #addLight(type: SfmLightType, scene: SfmNode<SfmScene>, action?: Action): void {
+		let light: SfmLight
+		switch (type) {
+			case 'ambient':
+				light = new SfmAmbientLight();
+				break;
+			case 'point':
+				light = new SfmPointLight();
+				break;
+			default:
+				errorOnce(`TODO: add light ${type}`);
+				return;
 		}
 
-		const action = History.startAction();
-		action.do(scene, 'add-child', new SfmNode({ entity: new SfmPointLight() }));
-		History.commit(action);
+		const selectionAction = action ?? History.startAction();
+		selectionAction.do(scene, 'add-child', new SfmNode({ entity: light }));
+		if (!action) {
+			History.commit(selectionAction);
+		}
 
 		Controller.dispatchEvent('refreshtimeline');
 		this.#setActiveFilmClips();

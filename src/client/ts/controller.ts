@@ -15,6 +15,7 @@ export type ControllerEvent = 'setsession'
 	| 'settopfilmclip'
 	| 'setcurrentclip'
 	| 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip'
+	| 'useraddprimaryselectedclip'
 	| 'setactivefilmclips'
 	| 'setactivecamera'
 	| 'useraddcamera'
@@ -73,6 +74,7 @@ export class Controller {
 	static addEventListener(type: 'settopfilmclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setcurrentclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useraddprimaryselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setactivefilmclips', callback: (evt: CustomEvent<Set<SfmFilmClip>>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setactivecamera', callback: (evt: CustomEvent<SetActiveCamera>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcamera', callback: (evt: CustomEvent<SfmCamera | null>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -119,6 +121,7 @@ export class Controller {
 	static dispatchEvent(type: 'settopfilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'setcurrentclip', options: ControllerEventInit<SfmClip>): boolean;
 	static dispatchEvent(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
+	static dispatchEvent(type: 'useraddprimaryselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
 	static dispatchEvent(type: 'setactivefilmclips', options: ControllerEventInit<Set<SfmFilmClip>>): boolean;
 	static dispatchEvent(type: 'userselectcamera', options: ControllerEventInit<SfmCamera>): boolean;
 	static dispatchEvent(type: 'usersavesession', options?: EventInit): boolean;
@@ -177,8 +180,11 @@ export type SetSelectedClip = {
 }
 
 export type RefreshToolbar = {
+	/** Enable the add character button */
 	addCharacter?: boolean;
+	/** Enable the undo button */
 	undoButton?: boolean;
+	/** Enable the redo button */
 	redoButton?: boolean;
 }
 

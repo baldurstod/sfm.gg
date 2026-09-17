@@ -615,6 +615,12 @@ export class TimelinePanel extends Panel {
 
 		const clips = new Set<SfmClip>();
 		if (this.#topFilmClip) {
+			Controller.dispatchEvent('useraddprimaryselectedclip', {
+				detail: {
+					topClip: this.#topFilmClip,
+					selected: clip,
+				}
+			});
 			this.#topFilmClip.getSelectedClips().forEach(clip => clips.add(clip));
 		}
 
@@ -623,10 +629,10 @@ export class TimelinePanel extends Panel {
 			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).scene) && {
 				add_light: {
 					i18n: '#add_light', submenu: [
-						{ i18n: '#add_pointlight', f: (): void => { Controller.dispatchEvent('useraddlight', { detail: { clip, type: 'point', } as AddLight }) }, }
-
+						{ i18n: '#add_ambient_light', f: (): void => { Controller.dispatchEvent('useraddlight', { detail: { clip, type: 'ambient', } as AddLight }) }, },
+						{ i18n: '#add_point_light', f: (): void => { Controller.dispatchEvent('useraddlight', { detail: { clip, type: 'point', } as AddLight }) }, },
 					],
-				}
+				},
 			},
 			delete_clip: { i18n: '#delete_clip', f: (): void => { Controller.dispatchEvent('userdeleteclip', { detail: clip }) }, },
 			...(this.#topFilmClip) && { delete_selected_clips: { i18n: '#delete_selected_clips', f: (): void => { Controller.dispatchEvent('userdeleteselectedclips', { detail: this.#topFilmClip!, }) } } },

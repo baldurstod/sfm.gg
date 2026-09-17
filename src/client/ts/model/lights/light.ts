@@ -1,7 +1,7 @@
-import { Serializable } from '../../serialize/serializable';
+import { SfmEntity } from '../entity';
 
-export type SfmLightType = 'point';
+export type SfmLightType = 'point' | 'ambient';
 
-export abstract class SfmLight extends Serializable {
+export abstract class SfmLight extends SfmEntity {
 	readonly isSfmLight = true as const;
 }

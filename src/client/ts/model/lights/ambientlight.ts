@@ -1,22 +1,22 @@
-import { PointLight } from 'harmony-3d';
+import { AmbientLight, PointLight } from 'harmony-3d';
 import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmLight } from './light';
 
-export class SfmPointLight extends SfmLight {
-	readonly isSfmPointLight = true as const;
-	#light = new PointLight();
+export class SfmAmbientLight extends SfmLight {
+	readonly isSfmAmbientLight = true as const;
+	#light = new AmbientLight();
 
-	override getEngineEntity(): PointLight {
+	override getEngineEntity(): AmbientLight {
 		return this.#light;
 	}
 
 	static override getTypeName(): string {
-		return 'PointLight';
+		return 'AmbientLight';
 	}
 
 	override getDefaultName(): string {
-		return 'Point light';
+		return 'Ambient light';
 	}
 
 	override serialize(): JSONSerializable {
@@ -53,4 +53,4 @@ export class SfmPointLight extends SfmLight {
 	}
 }
 
-SfmSerializer.registerSerializable(SfmPointLight);
+SfmSerializer.registerSerializable(SfmAmbientLight);
