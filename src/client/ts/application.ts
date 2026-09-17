@@ -410,6 +410,7 @@ class Application {
 					entity: new SfmModel({
 						repository: item.game,
 						path: item.modelPath,
+						skin: item.skin,
 					}),
 				});
 				action.do(characterNode, 'add-child', itemNode);

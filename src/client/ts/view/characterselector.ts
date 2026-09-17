@@ -25,7 +25,7 @@ export class CharacterSelectorPanel extends Panel {
 	#group?: Group;
 	#selectedCharacter?: Character;
 	readonly #selectedSlot = new Map<Character, CharacterSlot>();//?: CharacterSlot;
-	readonly #equipedItems = new Map2<Character, CharacterSlot, Item>();
+	readonly #equipedItems = new Map2<Character, CharacterSlot, Item[]>();
 	#items: Item[] = [];
 	#characterModels = new Map<Character, Source1ModelInstance>();
 	#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
@@ -87,11 +87,11 @@ export class CharacterSelectorPanel extends Panel {
 				}),
 				// Create add button
 				this.#htmlAddPrimaryClip = createElement('button', {
-					i18n: '#add_character',
+					i18n: '#add_to_the_selected_clip',
 					$click: () => this.#addCurrentCharacter(true),
 				}) as HTMLButtonElement,
 				this.#htmlAddSelectedClips = createElement('button', {
-					i18n: '#add_character',
+					i18n: '#add_to_all_selected_clips',
 					$click: () => this.#addCurrentCharacter(false),
 				}) as HTMLButtonElement,
 			],
@@ -356,20 +356,38 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
+		console.info(item);
+
 		const selectedSlot = this.#selectedSlot.get(this.#selectedCharacter);
 		if (!selectedSlot) {
 			return;
 		}
 
-		const current = this.#equipedItems.get(this.#selectedCharacter, selectedSlot);
-		if (current) {
-			this.#unEquipItem(this.#selectedCharacter, selectedSlot, current);
+		let items = this.#equipedItems.get(this.#selectedCharacter, selectedSlot);
+		if (items) {
+			// An equipped item is clicked again: remove it and exit
+			const itemIndex = items.indexOf(item);
+			if (items.indexOf(item) !== -1) {
+				items.splice(itemIndex, 1);
+				this.#unEquipItem(this.#selectedCharacter, selectedSlot, item);
+				return;
+			}
+
+			// Unequip the first item if we hit the items limit
+			if (items.length && items.length >= (selectedSlot.limit ?? Infinity)) {
+				this.#unEquipItem(this.#selectedCharacter, selectedSlot, items.pop()!);
+			}
+		} else {
+			// Create the item array
+			items = [];
+			this.#equipedItems.set(this.#selectedCharacter, selectedSlot, items);
 		}
+		items.push(item);
 		await this.#equipItem(this.#selectedCharacter, selectedSlot, item);
 	}
 
 	async #equipItem(character: Character, slot: CharacterSlot, item: Item): Promise<void> {
-		this.#equipedItems.set(character, slot, item);
+		//this.#equipedItems.set(character, slot, item);
 		const characterModel = this.#characterModels.get(character);
 		if (!characterModel) {
 			BugReporter.reportBug('debug', `Missing model for character ${JSON.stringify(character)}`);
@@ -396,6 +414,6 @@ export class CharacterSelectorPanel extends Panel {
 		if (itemModel) {
 			itemModel.remove();
 		}
-		this.#equipedItems.delete(character, slot);
+		//this.#equipedItems.delete(character, slot);
 	}
 }

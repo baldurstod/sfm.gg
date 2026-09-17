@@ -40,6 +40,7 @@ export type Item = {
 	name: string;
 	icon: string;
 	modelPath: string;
+	skin?: string;
 	keywords?: string[];
 }
 
@@ -119,6 +120,9 @@ export async function characterToModel(character: Character): Promise<Source1Mod
 export async function itemToModel(item: Item): Promise<Source1ModelInstance | null> {
 	let model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
+	if (item.skin) {
+		model?.setSkin(item.skin);
+	}
 
 	return model;
 }
@@ -149,11 +153,17 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 				continue;
 			}
 
+			let skin: string | undefined;
+			if (item.skin_red !== undefined) {
+				skin = item.skin_red as string;
+			}
+
 			result.push({
 				game: slot.character.game,
 				name: item.name as string,
 				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
 				modelPath: getTf2ModelPath(slot, item),//item.model_player as string,// TODO: use model_player_per_class
+				skin,
 			});
 		}
 	}

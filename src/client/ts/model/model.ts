@@ -7,6 +7,7 @@ import { SfmTransform } from './transform';
 export interface ModelParameters extends SerializableParameters {
 	repository?: string;
 	path?: string;
+	skin?: string;
 }
 
 export class SfmModel extends SfmEntity {
@@ -14,12 +15,14 @@ export class SfmModel extends SfmEntity {
 	readonly #bones: SfmTransform[] = [];
 	#repository?: string;
 	#path?: string;
-	#model?: Promise<Entity | null>;
+	#skin?: string;
+	#model?: Promise<Source1ModelInstance | null>;
 
 	constructor(params: ModelParameters = {}) {
 		super(params);
 		this.#repository = params.repository;
 		this.#path = params.path;
+		this.#skin = params.skin;
 	}
 
 	override getEngineEntity(): Entity | null {
@@ -32,7 +35,12 @@ export class SfmModel extends SfmEntity {
 
 			if (this.#repository && this.#path) {
 				this.#model = Source1ModelManager.createInstance(this.#repository, this.#path, true);
-				this.#model.then(model => (model as Source1ModelInstance)?.playSequence('ref'));
+				this.#model.then(model => {
+					(model as Source1ModelInstance)?.playSequence('ref')
+					if (this.#skin !== undefined) {
+						model?.setSkin(this.#skin);
+					}
+				});
 			}
 		}
 		return this.#model;
