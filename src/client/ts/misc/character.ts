@@ -37,6 +37,8 @@ export type Character = {
 
 export type Item = {
 	game: GameList;
+	id: string;
+	style: string;
 	name: string;
 	icon: string;
 	modelPath: string;
@@ -158,7 +160,11 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 				skin = item.skin_red as string;
 			}
 
+
+
 			result.push({
+				id: item.defindex as string,
+				style: item.style as string,
 				game: slot.character.game,
 				name: item.name as string,
 				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant

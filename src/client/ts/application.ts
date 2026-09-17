@@ -401,6 +401,11 @@ class Application {
 				entity: new SfmModel({
 					repository: detail.character.game,
 					path: detail.character.modelPath,
+					metadatas: {
+						game: detail.character.game,
+						type: 'character',
+						character: detail.character.name,
+					}
 				}),
 			})
 			action.do(sceneNode, 'add-child', characterNode);
@@ -411,6 +416,12 @@ class Application {
 						repository: item.game,
 						path: item.modelPath,
 						skin: item.skin,
+						metadatas: {
+							game: item.game,
+							item_id: item.id,
+							item_style: item.style,
+							type: 'item',
+						}
 					}),
 				});
 				action.do(characterNode, 'add-child', itemNode);
