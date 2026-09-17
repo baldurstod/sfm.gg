@@ -1,4 +1,4 @@
-import { Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebRepository } from 'harmony-3d';
+import { Graphics, GraphicsEvents, GraphicTickEvent, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
 import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
@@ -10,7 +10,7 @@ import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { AddCharacter, AddClip, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
-import { initGraphics, workCamera } from './graphics/graphics';
+import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
 import { getTf2Characters } from './misc/character';
@@ -57,13 +57,35 @@ class Application {
 		this.#initListeners();
 		this.#initHTML();
 		this.#initOptions();
-		initGraphics();
+		this.#initGraphics();
 		this.createNewSession();
 
 		//load();
 		save(this.#session);
 
 		this.#updateCurrentTime();
+	}
+
+	static #initGraphics(): void {
+		Graphics.initCanvas({
+			useOffscreenCanvas: true,
+			autoResize: false,
+			webGL: {
+				alpha: true,
+				preserveDrawingBuffer: true,
+				premultipliedAlpha: false,
+			}
+		});
+
+		const handleTick = (event: Event) => {
+			WebGLStats.tick();
+			Graphics.renderMultiCanvas((event as CustomEvent<GraphicTickEvent>).detail.delta, /*TODO: add context*/{
+				time: this.#player.getCurrentTime(),
+			});
+		}
+
+		GraphicsEvents.addEventListener('tick', handleTick);
+		Graphics.play();
 	}
 
 	static #initListeners() {
