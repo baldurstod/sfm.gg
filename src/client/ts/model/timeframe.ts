@@ -14,34 +14,42 @@ export interface TimeFrameParameters extends SerializableParameters {
 
 export class SfmTimeFrame extends Serializable {
 	readonly isSfmTimeFrame = true as const;
-	#start: number;
-	#end: number;
+	#start: number = 0;
+	#duration: number = 60;
 	#offset: number;
 
 	constructor(params: TimeFrameParameters = {}) {
 		super(params);
 
-		this.#start = params.start ?? 0;
-		this.#end = params.end ?? 60;
-
-		if (params.duration !== undefined && (params.start === undefined || params.end === undefined)) {
-			if (params.start === undefined && params.end !== undefined) {
-				this.#start = params.end - params.duration;
-			}
-
-			if (params.end === undefined && params.start !== undefined) {
-				this.#end = params.start + params.duration;
-			}
-
-			if (params.start === undefined && params.end === undefined) {
-				this.#end = this.#start + params.duration;
-			}
+		if ((params.start !== undefined && params.end !== undefined) && params.end < params.start) {
+			const tmp = params.start;
+			params.start = params.end;
+			params.end = tmp;
 		}
 
-		if (this.#start > this.#end) {
-			let a = this.#start;
-			this.#start = this.#end;
-			this.#end = a;
+		if (params.start !== undefined) {
+			this.#start = params.start;
+			if (params.end !== undefined) {
+				this.#duration = params.end - params.start;
+			} else {// params.end is undefined
+				this.#duration = params.duration ?? 60;
+			}
+		} else {// params.start is undefined
+			if (params.end !== undefined) {
+				if (params.duration !== undefined) {
+					this.#start = params.end - params.duration;
+					this.#duration = params.duration;
+				} else {// params.duration is undefined
+					this.#duration = params.end;
+				}
+			} else {// params.end is undefined
+				//this.#duration = 60;
+				if (params.duration !== undefined) {
+					this.#duration = params.duration;
+				} else {// params.duration is undefined
+					// Nothing to do
+				}
+			}
 		}
 
 		this.#offset = params.offset ?? 0;
@@ -52,11 +60,11 @@ export class SfmTimeFrame extends Serializable {
 	}
 
 	getEnd(): number {
-		return this.#end;
+		return this.#start + this.#duration;
 	}
 
 	getDuration(): number {
-		return this.#end - this.#start;
+		return this.#duration;
 	}
 
 	/**
@@ -66,10 +74,13 @@ export class SfmTimeFrame extends Serializable {
 	 * @returns
 	 */
 	setStart(start: number): void {
-		if (start >= this.#end) {
+		const end = this.getEnd();
+		if (start >= end) {
 			return;
 		}
+
 		this.#start = start;
+		this.#duration = end - start;
 	}
 
 	/**
@@ -78,7 +89,6 @@ export class SfmTimeFrame extends Serializable {
 	 */
 	move(delta: number): void {
 		this.#start += delta;
-		this.#end += delta;
 	}
 
 	/**
@@ -88,10 +98,11 @@ export class SfmTimeFrame extends Serializable {
 	 * @returns
 	 */
 	setEnd(end: number): void {
-		if (end <= this.#start) {
+		const start = this.getStart();
+		if (end <= start) {
 			return;
 		}
-		this.#end = end;
+		this.#duration = end - start;
 	}
 
 	/**
@@ -100,7 +111,7 @@ export class SfmTimeFrame extends Serializable {
 	 * @returns True if the time frame
 	 */
 	inTimeFrame(time: number): boolean {
-		return time >= this.#start && time <= this.#end;
+		return time >= this.#start && time <= this.getEnd();
 	}
 
 	/**
@@ -118,13 +129,16 @@ export class SfmTimeFrame extends Serializable {
 			b = tmp;
 		}
 
+		const aEnd = a.getEnd();
+		const bEnd = b.getEnd();
+
 		// At this point, a start before or at the same time b
-		if (a.#end >= b.#end) {
+		if (aEnd >= bEnd) {
 			// The timeframes overlap for the full duration of b
-			return new SfmTimeFrame({ start: b.#start, end: b.#end });
-		} else if (a.#end > b.#start) {
+			return new SfmTimeFrame({ start: b.#start, duration: b.#duration });
+		} else if (aEnd > b.#start) {
 			// The timeframes overlap from the start of b to the end of a
-			return new SfmTimeFrame({ start: b.#start, end: a.#end });
+			return new SfmTimeFrame({ start: b.#start, duration: aEnd - b.#start });
 		}
 
 		// No overlap
@@ -172,38 +186,40 @@ export class SfmTimeFrame extends Serializable {
 		 * other  ----------------------
 		 * result
 		 */
+		const thisEnd = this.getEnd();
+		const otherEnd = other.getEnd();
 
 		if (this.#start < other.#start) {
-			if (this.#end <= other.#start) {
+			if (thisEnd <= other.#start) {
 				// Case 1
-				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
+				result.add(new SfmTimeFrame({ start: this.#start, end: thisEnd, }));
 			} else {
-				if (this.#end <= other.#end) {
+				if (thisEnd <= otherEnd) {
 					// Case 2
 					result.add(new SfmTimeFrame({ start: this.#start, end: other.#start, }));
 				} else {
 					// Case 3
 					result.add(new SfmTimeFrame({ start: this.#start, end: other.#start, }));
-					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+					result.add(new SfmTimeFrame({ start: otherEnd, end: thisEnd, }));
 				}
 			}
 		} else if (this.#start === other.#start) {
-			if (this.#end <= other.#end) {
+			if (thisEnd <= otherEnd) {
 				// Case 4: return an empty set
 				return result;
 			} else {
 				// Case 5
-				result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+				result.add(new SfmTimeFrame({ start: otherEnd, end: thisEnd, }));
 			}
 		} else {
 			// case where this.#start > other.#start
-			if (this.#start >= other.#end) {
+			if (this.#start >= otherEnd) {
 				// Case 6
-				result.add(new SfmTimeFrame({ start: this.#start, end: this.#end, }));
+				result.add(new SfmTimeFrame({ start: this.#start, end: thisEnd, }));
 			} else {
-				if (this.#end > other.#end) {
+				if (thisEnd > otherEnd) {
 					// Case 7
-					result.add(new SfmTimeFrame({ start: other.#end, end: this.#end, }));
+					result.add(new SfmTimeFrame({ start: otherEnd, end: thisEnd, }));
 				} else {
 					// Case 8
 				}
@@ -217,7 +233,7 @@ export class SfmTimeFrame extends Serializable {
 		const time = new SfmTimeFrame();
 
 		time.#start = this.#start;
-		time.#end = this.#end;
+		time.#duration = this.#duration;
 		time.#offset = this.#offset;
 
 		return time;
@@ -239,7 +255,7 @@ export class SfmTimeFrame extends Serializable {
 		const json = super.serialize();
 
 		json.start = this.#start;
-		json.duration = this.#end;
+		json.duration = this.#duration;
 		json.offset = this.#offset;
 
 		return json;
@@ -250,7 +266,7 @@ export class SfmTimeFrame extends Serializable {
 
 		// TODO: check json values
 		this.#start = json.start as number ?? 0;
-		this.#end = json.duration as number ?? 60;
+		this.#duration = json.duration as number ?? 60;
 		this.#offset = json.offset as number ?? 0;
 	}
 }
