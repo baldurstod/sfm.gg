@@ -37,19 +37,20 @@ export class ElementViewerPanel extends Panel {
 	setRootElement(element: Serializable | null): void {
 		this.#rootElement = element;
 
-		this.#treeRoot = this.#getTreeItem(element, '') //?? new TreeItem('', { childs: [] });
+		this.#treeRoot = this.#getTreeItem(element, '', '#session') //?? new TreeItem('', { childs: [] });
 		this.#htmlTree?.setRoot(this.#treeRoot);
 
 		this.refreshHTML();
 		this.#expandItem(this.#treeRoot);
 	}
 
-	#getTreeItem(element: Serializable | null, prefix: string): TreeItem {
+	#getTreeItem(element: Serializable | null, prefix: string, i18n: string): TreeItem {
 		if (element === null) {
 			return new TreeItem('', { childs: [] });
 		}
 		let item = this.#treeItems.get(element);
-		const name = prefix + (element.constructor as typeof Serializable).getTypeName() + element.getName();
+		//const name = prefix + (element.constructor as typeof Serializable).getTypeName() + element.getName();
+		const name = i18n//prefix + (element.constructor as typeof Serializable).getTypeName() + element.getName();
 		if (!item) {
 			item = new TreeItem(name, { childs: [] });
 		} else {
@@ -124,7 +125,7 @@ export class ElementViewerPanel extends Panel {
 
 			if (value instanceof Serializable) {
 
-				const item = this.#getTreeItem(value, property.name);
+				const item = this.#getTreeItem(value, property.name, property.i18n);
 				childs.add(item);
 
 				/*
@@ -144,7 +145,7 @@ export class ElementViewerPanel extends Panel {
 
 					if (v instanceof Serializable) {
 
-						const item = this.#getTreeItem(v, property.name);
+						const item = this.#getTreeItem(v, property.name, property.i18n);
 						itemArray.childs.add(item);
 					} else {
 						const item = new TreeItem(property.name);//this.#getTreeItem(value, property.name);

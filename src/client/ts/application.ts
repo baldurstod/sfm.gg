@@ -79,8 +79,12 @@ class Application {
 
 		const handleTick = (event: Event) => {
 			WebGLStats.tick();
-			Graphics.renderMultiCanvas((event as CustomEvent<GraphicTickEvent>).detail.delta, /*TODO: add context*/{
+			Graphics.renderMultiCanvas((event as CustomEvent<GraphicTickEvent>).detail.delta, {
 				time: this.#player.getCurrentTime(),
+				timePerCanvas: {
+					// The character selector panel should have a regular time
+					CharacterSelectorPanel: null,
+				}
 			});
 		}
 

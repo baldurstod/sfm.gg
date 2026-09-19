@@ -1,4 +1,4 @@
-import { Serializable, SerializableParameters, SerializableProperty, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { RenderSettingsParameters, SfmRenderSettings } from './rendersettings';
 
@@ -42,25 +42,23 @@ export class SfmSessionSettings extends Serializable {
 	}
 
 	override getProperties(): SerializableProperty[] {
-		throw new Error("TODO");
 		return [
-			/*
 			{
-				name: 'activeClip',
-				i18n: '#active_clip',
-				//type: typeof SfmFilmClip,
-				settable: true,
-			},
-			*/
-			/*
-			{
-				name: 'film',
-				i18n: '#film',
-				//type: typeof SfmFilmClip,
+				name: 'renderSettings',
+				i18n: '#render_settings',
+				type: 'element',
 				settable: false,
 			},
-			*/
 		];
+	}
+
+	override getProperty(name: string): SerializablePropertyValue {
+		switch (name) {
+			case 'renderSettings':
+				return this.#renderSettings;
+			default:
+				throw new Error("do me " + name);
+		}
 	}
 }
 

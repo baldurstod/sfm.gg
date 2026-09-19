@@ -39,24 +39,13 @@ export class SfmRenderSettings extends Serializable {
 	}
 
 	override getProperties(): SerializableProperty[] {
-		throw new Error("TODO");
 		return [
-			/*
 			{
 				name: 'frameRate',
 				i18n: '#frame_rate',
-				//type: typeof SfmFilmClip,
+				type: 'integer',
 				settable: true,
 			},
-			*/
-			/*
-			{
-				name: 'film',
-				i18n: '#film',
-				//type: typeof SfmFilmClip,
-				settable: false,
-			},
-			*/
 		];
 	}
 

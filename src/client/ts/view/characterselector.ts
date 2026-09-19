@@ -36,7 +36,15 @@ export class CharacterSelectorPanel extends Panel {
 		if (this.panel) {
 			return;
 		}
-		super.initPanel({ size: 3, layout: 'row', floating: true, titleI18n: '#character_selector', adoptStyle: characterSelectorCSS });
+		super.initPanel({
+			size: 3,
+			layout: 'row',
+			floating: true,
+			width: 80,
+			height: 80,
+			titleI18n: '#character_selector',
+			adoptStyle: characterSelectorCSS,
+		});
 
 		// Create canvas container
 		createElement('div', {
