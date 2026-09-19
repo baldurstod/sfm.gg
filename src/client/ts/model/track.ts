@@ -75,10 +75,13 @@ export class SfmTrack extends Serializable implements Undoable {
 		return this.#trackType;
 	}
 
-	getGaps(start: number = -Infinity, end: number = Infinity): Set<SfmTimeFrame> {
+	getGaps(start: number = -Infinity, end: number = Infinity, excludedClips?: Set<SfmClip>): Set<SfmTimeFrame> {
 		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
 
 		for (const clip of this.#clips) {
+			if (excludedClips?.has(clip)) {
+				continue;
+			}
 			for (const gap of gaps) {
 				const overlap = clip.overlapTimeFrame(gap);
 				if (!overlap) {

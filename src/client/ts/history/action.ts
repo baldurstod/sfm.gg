@@ -47,6 +47,7 @@ export class Action {
 
 	do(element: Serializable, command: 'set-name', params: string): boolean;
 	do(element: SfmOperatorClip, command: 'add-operator', params: SfmOperator): boolean;
+	do(element: SfmClip, command: 'move-start', params: number): boolean;
 	do(element: SfmClip, command: 'set-end', params: number): boolean;
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
 	do(element: SfmFilmClip, command: 'add-light', params: SfmLightType): boolean;

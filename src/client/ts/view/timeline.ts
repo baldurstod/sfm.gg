@@ -409,36 +409,68 @@ export class TimelinePanel extends Panel {
 			}
 
 			// Get other clip from this film track
-			const clips = draggedClip.track?.getClips();
-			if (clips) {
-				const draggedTimeFrame = new SfmTimeFrame({ start: newStart, end: newEnd });//draggedClip.getTimeFrame();
-				const overlapping = new Set<SfmClip>();
-				// Prevent film clips from overlapping
-				for (const clip of clips) {
-					if (clip === draggedClip) {
+			const track = draggedClip.track;
+			if (!track) {
+				return;
+			}
+
+			const clips = track.getClips();
+			const draggedTimeFrame = new SfmTimeFrame({ start: newStart, end: newEnd });//draggedClip.getTimeFrame();
+			const overlapping = new Set<SfmClip>();
+			// Prevent film clips from overlapping
+			for (const clip of clips) {
+				if (clip === draggedClip) {
+					continue;
+				}
+
+				const clipTimeFrame = clip.getTimeFrame();
+
+				//console.info(delta, draggedTimeFrame.getStart(), draggedTimeFrame.getEnd(), clipTimeFrame.getStart(), clipTimeFrame.getEnd());
+
+				if (clipTimeFrame.overlap(draggedTimeFrame)) {
+					//console.info(clip);
+					//return;
+					overlapping.add(clip);
+				}
+			}
+
+			let best = +Infinity;
+			let bestTimeFrame: SfmTimeFrame | undefined;
+			if (overlapping.size > 0) {
+				const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
+				if (!timeFrame) {
+					return;
+				}
+
+				const gaps = track.getGaps(timeFrame.getStart(), timeFrame.getEnd(), new Set([draggedClip]));
+				//console.info(gaps);
+				for (const gap of gaps) {
+					const a = new SfmTimeFrame({ start: newStart, end: newEnd });
+					const t = a.relocate(gap);
+					if (t === null) {
 						continue;
 					}
 
-					const clipTimeFrame = clip.getTimeFrame();
-
-					console.info(delta, draggedTimeFrame.getStart(), draggedTimeFrame.getEnd(), clipTimeFrame.getStart(), clipTimeFrame.getEnd());
-
-					if (clipTimeFrame.overlap(draggedTimeFrame)) {
-						console.info(clip);
-						//return;
-						overlapping.add(clip);
+					const absT = Math.abs(t);
+					if (absT < best) {
+						best = absT;
+						bestTimeFrame = a;
 					}
 				}
 
-				if (overlapping.size > 0) {
+				if (!bestTimeFrame) {
 					return;
 				}
+
+				newStart = bestTimeFrame.getStart();
+				//newEnd = bestTimeFrame.getEnd();
 			}
 		}
 
 		//console.info(this.#dragStart, this.#dragEnd);
-		this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', newStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
-		this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', newEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+		//this.#dragAction.do(this.#dragElement as SfmClip, 'set-start', newStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
+		//this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', newEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
+		this.#dragAction.do(this.#dragElement as SfmClip, 'move-start', newStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
 		Controller.dispatchEvent('updateactiveclips');
 
 	}

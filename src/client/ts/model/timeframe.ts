@@ -28,24 +28,23 @@ export class SfmTimeFrame extends Serializable {
 		}
 
 		if (params.start !== undefined) {
-			this.#start = params.start;
+			this.#setStart(params.start);
 			if (params.end !== undefined) {
-				this.#duration = params.end - params.start;
+				this.#setDuration(params.end - params.start);
 			} else {// params.end is undefined
-				this.#duration = params.duration ?? 60;
+				this.#setDuration(params.duration ?? 60);
 			}
 		} else {// params.start is undefined
 			if (params.end !== undefined) {
 				if (params.duration !== undefined) {
-					this.#start = params.end - params.duration;
-					this.#duration = params.duration;
+					this.#setStart(params.end - params.duration);
+					this.#setDuration(params.duration);
 				} else {// params.duration is undefined
-					this.#duration = params.end;
+					this.#setDuration(params.end);
 				}
 			} else {// params.end is undefined
-				//this.#duration = 60;
 				if (params.duration !== undefined) {
-					this.#duration = params.duration;
+					this.#setDuration(params.duration);
 				} else {// params.duration is undefined
 					// Nothing to do
 				}
@@ -79,8 +78,8 @@ export class SfmTimeFrame extends Serializable {
 			return;
 		}
 
-		this.#start = start;
-		this.#duration = end - start;
+		this.#setStart(start);
+		this.#setDuration(end - start);
 	}
 
 	/**
@@ -88,7 +87,15 @@ export class SfmTimeFrame extends Serializable {
 	 * @param delta The time amount to move
 	 */
 	move(delta: number): void {
-		this.#start += delta;
+		this.#setStart(this.#start + delta);
+	}
+
+	/**
+	 * Move the time frame. The duration is not changed.
+	 * @param start The time to move to
+	 */
+	moveTo(start: number): void {
+		this.#setStart(start);
 	}
 
 	/**
@@ -102,7 +109,7 @@ export class SfmTimeFrame extends Serializable {
 		if (end <= start) {
 			return;
 		}
-		this.#duration = end - start;
+		this.#setDuration(end - start);
 	}
 
 	/**
@@ -229,6 +236,44 @@ export class SfmTimeFrame extends Serializable {
 		return result;
 	}
 
+	/**
+	 * Try to relocate this timeframe into the other timeframe
+	 * @param other Timeframe to relocate into
+	 * @returns The amount of time this timeframe was moved, or null if the operation failed
+	 */
+	relocate(other: SfmTimeFrame): number | null {
+		const thisEnd = this.getEnd();
+		const otherEnd = other.getEnd();
+
+		if (this.#duration > other.#duration) {
+			return null;
+		}
+
+		if (this.#start >= other.#start && thisEnd <= otherEnd) {
+			return 0;
+		}
+
+		let delta = 0;
+		if (this.#start < other.#start) {
+			delta = other.#start - this.#start;
+		}
+
+		if (thisEnd > otherEnd) {
+			delta = otherEnd - thisEnd;
+		}
+
+		this.move(delta);
+		return delta;
+	}
+
+	#setStart(start: number): void {
+		this.#start = Number(start.toFixed(6));
+	}
+
+	#setDuration(duration: number): void {
+		this.#duration = Number(duration.toFixed(6));
+	}
+
 	clone(): SfmTimeFrame {
 		const time = new SfmTimeFrame();
 
@@ -265,8 +310,8 @@ export class SfmTimeFrame extends Serializable {
 		super.unserialize(json, context);
 
 		// TODO: check json values
-		this.#start = json.start as number ?? 0;
-		this.#duration = json.duration as number ?? 60;
+		this.#setStart(json.start as number ?? 0);
+		this.#setDuration(json.duration as number ?? 60);
 		this.#offset = json.offset as number ?? 0;
 	}
 }
