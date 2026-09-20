@@ -4,6 +4,8 @@ import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmLightType } from './model/lights/light';
+import { SfmModel } from './model/model';
+import { SfmNode } from './model/node';
 import { SfmOperator } from './model/operators/operator';
 import { SfmSession } from './model/session';
 import { SfmTrack } from './model/track';
@@ -53,6 +55,7 @@ export type ControllerEvent = 'setsession'
 	| 'userdeletetrack'
 	| 'userdeletetrackgroup'
 	| 'userdeleteoperator'
+	| 'userdeletecharacter'
 	| 'useraddcliptotrack'
 	| 'useraddtracktotrackgroup'
 	| 'useraddtrackgroup'
@@ -107,6 +110,7 @@ export class Controller {
 	static addEventListener(type: 'userdeletetrack', callback: (evt: CustomEvent<SfmTrack>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeletetrackgroup', callback: (evt: CustomEvent<SfmTrackGroup>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeleteoperator', callback: (evt: CustomEvent<DeleteOperator>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userdeletecharacter', callback: (evt: CustomEvent<DeleteCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'updateactiveclips', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddlight', callback: (evt: CustomEvent<AddLight>) => void, options?: AddEventListenerOptions | boolean): void;
 
@@ -152,6 +156,7 @@ export class Controller {
 	static dispatchEvent(type: 'userdeletetrack', options: ControllerEventInit<SfmTrack>): boolean;
 	static dispatchEvent(type: 'userdeletetrackgroup', options: ControllerEventInit<SfmTrackGroup>): boolean;
 	static dispatchEvent(type: 'userdeleteoperator', options: ControllerEventInit<DeleteOperator>): boolean;
+	static dispatchEvent(type: 'userdeletecharacter', options: ControllerEventInit<DeleteCharacter>): boolean;
 	static dispatchEvent(type: 'updateactiveclips', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useraddlight', options: ControllerEventInit<AddLight>): boolean;
 
@@ -213,6 +218,11 @@ export type AddTrack = {
 export type DeleteOperator = {
 	clip: SfmOperatorClip;
 	operator: SfmOperator;
+}
+
+export type DeleteCharacter = {
+	clip: SfmFilmClip;
+	character: SfmNode<SfmModel>;
 }
 
 export type SetName = {

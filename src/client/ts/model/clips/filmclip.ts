@@ -3,7 +3,9 @@ import { Action, Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
+import { SfmEntity } from '../entity';
 import { SfmOperatorContext } from '../interfaces/operator';
+import { SfmModel } from '../model';
 import { SfmNode } from '../node';
 import { SfmScene } from '../scene';
 import { SfmTrack } from '../track';
@@ -49,6 +51,37 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return this.#world?.getEntity();
 	}
 
+	getCharacters(): Set<SfmNode<SfmModel>> {
+		const characters = new Set<SfmNode<SfmModel>>();
+
+		if (!this.#scene) {
+			return characters;
+		}
+
+		let current: SfmNode<SfmEntity> = this.#scene;
+
+		const stack: SfmNode[] = [this.#scene];
+		for (; ;) {
+			let current = stack.pop();
+			if (!current) {
+				break;
+			}
+
+			stack.push(...current.getChildren());
+
+			const entity = current.getEntity();
+			if (!entity) {
+				continue;
+			}
+
+			if ((entity as SfmModel).isSfmModel && entity.getMetadata('type') === 'character') {
+				characters.add(current as SfmNode<SfmModel>);
+			}
+		}
+
+		return characters;
+	}
+
 	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
 		this.#trackGroups.add(group);
 		group.parentClip = this;
@@ -68,7 +101,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		this.#scene = scene;
 
 		const action = new Action();
-		action.do(this.#sceneWithWorld, 'remove-children');
+		action.do(this.#sceneWithWorld, 'delete-children');
 		if (scene) {
 			action.do(this.#sceneWithWorld, 'add-child', scene);
 		}
@@ -240,6 +273,16 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				command.undoParams = this.#scene;
 				this.#setScene(command.params);
 				return true;
+				/*
+			case 'delete-character':
+				//TODO: check if it's actually an operator
+				if (!this.#operators.has(command.params)) {
+					return false;
+				}
+				command.undoParams = command.params;
+				this.#operators.delete(command.params);
+				return true;
+				*/
 			default:
 				return super.do(command);
 		}

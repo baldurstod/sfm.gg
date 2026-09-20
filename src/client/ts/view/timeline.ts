@@ -2,12 +2,14 @@ import { ShortcutHandler } from 'harmony-browser-utils';
 import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { AddLight, Controller, ControllerEventInit, DeleteOperator, SelectCharacter, SetSelectedClip } from '../controller';
+import { AddLight, Controller, ControllerEventInit, DeleteCharacter, DeleteOperator, SelectCharacter, SetSelectedClip } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip, SfmClipType } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmOperatorClip } from '../model/clips/operatorclip';
+import { SfmModel } from '../model/model';
+import { SfmNode } from '../model/node';
 import { SfmOperator } from '../model/operators/operator';
 import { SfmTimeFrame } from '../model/timeframe';
 import { SfmTrack } from '../model/track';
@@ -218,9 +220,28 @@ export class TimelinePanel extends Panel {
 					html.append(createElement('span', {
 						class: `world`,
 						innerText: world.getName(),
-						//$contextmenu: (event: MouseEvent) => this.#displayOperatorContextMenu(event, clip as SfmOperatorClip, operator),
 					}));
+				}
 
+				const characterNodes = (clip as SfmFilmClip).getCharacters();
+				if (characterNodes.size) {
+					const htmlCharacters = createElement('span', {
+						class: `characters`,
+					});
+					html.append(htmlCharacters);
+
+					for (const characterNode of characterNodes) {
+						const character = characterNode.getEntity();
+						if (!character) {
+							continue;
+						}
+						createElement('span', {
+							class: `character`,
+							innerText: character.getMetadata('character') as string ?? character.getName(),
+							parent: htmlCharacters,
+							$contextmenu: (event: MouseEvent) => this.#displayCharacterContextMenu(event, clip as SfmFilmClip, characterNode),
+						});
+					}
 				}
 				break;
 		}
@@ -704,6 +725,29 @@ export class TimelinePanel extends Panel {
 			},
 		};
 		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, operator);
+
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	#displayCharacterContextMenu(event: MouseEvent, clip: SfmFilmClip, character: SfmNode<SfmModel>): void {
+		if (event.shiftKey || !this.#htmlContextMenu) {
+			return;
+		}
+
+		const contextMenu: HarmonyMenuItemsDict = {
+			delete_character: {
+				i18n: '#delete_character', f: (): void => {
+					Controller.dispatchEvent('userdeletecharacter', {
+						detail: {
+							clip,
+							character,
+						} as DeleteCharacter,
+					})
+				},
+			},
+		};
+		this.#htmlContextMenu.showContextual(contextMenu, event.clientX, event.clientY, character);
 
 		event.preventDefault();
 		event.stopPropagation();

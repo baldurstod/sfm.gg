@@ -202,10 +202,10 @@ export class ViewportPanel extends Panel {
 
 			const stack: SfmNode[] = [current];
 			// TODO: improve this: this run every frame
-			do {
+			for (; ;) {
 				let current = stack.pop();
 				if (!current) {
-					continue;
+					break;
 				}
 
 				stack.push(...current.getChildren());
@@ -220,7 +220,7 @@ export class ViewportPanel extends Panel {
 				}
 				parentEntity.addChild(currentEntity);
 				this.#setParentEntity(parentEntity, currentEntity);
-			} while (stack.length);
+			}
 		}
 		//clips.forEach(clip => ViewportPanel.#scene.addChild(clip.scene?.getEntity()?.getEngineEntity()));
 	}

@@ -9,7 +9,7 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddTrack, Controller, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
@@ -145,6 +145,7 @@ class Application {
 		Controller.addEventListener('userdeletetrack', (event) => this.#deleteTrack(event.detail));
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
+		Controller.addEventListener('userdeletecharacter', (event) => this.#deleteCharacter(event.detail));
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
 		Controller.addEventListener('useraddlight', (event) => {
 			const detail = event.detail;
@@ -271,12 +272,23 @@ class Application {
 			entity: new SfmModel({
 				repository: 'tf2',
 				path: 'models/player/sniper',
+				metadatas: {
+					game: 'tf2',
+					type: 'character',
+					character: 'sniper',
+				},
 			}),
 		});
 		const itemNode = new SfmNode({
 			entity: new SfmModel({
 				repository: 'tf2',
 				path: 'models/workshop/weapons/c_models/c_sydney_sleeper/c_sydney_sleeper',
+				metadatas: {
+					game: 'tf2',
+					item_id: '230',
+					item_style: '0',
+					type: 'item',
+				},
 			}),
 		});
 
@@ -432,7 +444,7 @@ class Application {
 						game: detail.character.game,
 						type: 'character',
 						character: detail.character.name,
-					}
+					},
 				}),
 			})
 			action.do(sceneNode, 'add-child', characterNode);
@@ -448,7 +460,7 @@ class Application {
 							item_id: item.id,
 							item_style: item.style,
 							type: 'item',
-						}
+						},
 					}),
 				});
 				action.do(characterNode, 'add-child', itemNode);
@@ -457,6 +469,7 @@ class Application {
 		History.commit(action);
 
 		this.#setActiveFilmClips();
+		Controller.dispatchEvent('refreshtimeline');
 	}
 
 	static #userPreviousFrame(): void {
@@ -863,6 +876,20 @@ class Application {
 		action.do(detail.clip, 'delete-operator', detail.operator);
 		History.commit(action);
 
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static #deleteCharacter(detail: DeleteCharacter): void {
+		const parent = detail.character.getParent();
+		if (!parent) {
+			return;
+		}
+
+		const action = History.startAction();
+		action.do(parent, 'delete-child', detail.character);
+		History.commit(action);
+
+		this.#setActiveFilmClips();
 		Controller.dispatchEvent('refreshtimeline');
 	}
 
