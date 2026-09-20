@@ -9,11 +9,11 @@ import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
-import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOperator, SelectCharacter, SetName, SetSelectedClip } from './controller';
+import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOperator, EditCharacter, SelectCharacter, SetName, SetSelectedClip, UpdateCharacter } from './controller';
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { getTf2Characters } from './misc/character';
+import { GameList, getCharacter, getItem, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
@@ -35,6 +35,7 @@ import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
 import { Player } from './player';
 import { JSONFile, SfmSerializer } from './serialize/serializer';
+import { isCharacter, isItem } from './utils/models';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
@@ -117,9 +118,10 @@ class Application {
 
 		Controller.addEventListener('useropenadvancedoptions', () => OptionsManager.showOptionsManager());
 		Controller.addEventListener('useraddmodel', () => this.#userAddModel());
-		Controller.addEventListener('userselectcharacter', (event) => this.#userselectCharacter(event.detail));
+		Controller.addEventListener('userselectcharacter', (event) => this.#userSelectCharacter(event.detail));
 		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
+		Controller.addEventListener('userupdatecharacter', (event) => this.#userUpdateCharacter(event.detail));
 		Controller.addEventListener('usergotopreviousframe', () => this.#userPreviousFrame());
 		Controller.addEventListener('usergotonextframe', () => this.#userNextFrame());
 		Controller.addEventListener('usergotopreviousclip', () => this.#userPreviousClip());
@@ -146,6 +148,7 @@ class Application {
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
 		Controller.addEventListener('userdeletecharacter', (event) => this.#deleteCharacter(event.detail));
+		Controller.addEventListener('usereditcharacter', (event) => this.#editCharacter(event.detail));
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
 		Controller.addEventListener('useraddlight', (event) => {
 			const detail = event.detail;
@@ -288,6 +291,7 @@ class Application {
 					item_id: '230',
 					item_style: '0',
 					type: 'item',
+					slot: 'weapon',
 				},
 			}),
 		});
@@ -363,7 +367,7 @@ class Application {
 		this.#modelSelectorPanel.open();
 	}
 
-	static #userselectCharacter(detail: SelectCharacter | void): void {
+	static #userSelectCharacter(detail: SelectCharacter | void): void {
 		let primary: SfmClip | undefined;
 		let selected: Set<SfmClip>;
 		if (detail) {
@@ -403,11 +407,11 @@ class Application {
 		}
 	}
 
-	static async #userAddCharacter(detail: AddCharacter): Promise<void> {
+	static async #userAddCharacter(detail: AddCharacter, action?: Action): Promise<void> {
 		const scenes = new Set<SfmNode<SfmScene>>();
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
-		const action = History.startAction();
+		const addCharacterAction = action ?? History.startAction();
 
 		// Make a scene list. Note that different clips can use the same scene. A set prevents duplicates
 		for (const clip of detail.clips) {
@@ -447,7 +451,7 @@ class Application {
 					},
 				}),
 			})
-			action.do(sceneNode, 'add-child', characterNode);
+			addCharacterAction.do(sceneNode, 'add-child', characterNode);
 
 			for (const item of detail.character.items) {
 				const itemNode = new SfmNode({
@@ -460,12 +464,33 @@ class Application {
 							item_id: item.id,
 							item_style: item.style,
 							type: 'item',
+							slot: item.slotName,
 						},
 					}),
 				});
-				action.do(characterNode, 'add-child', itemNode);
+				addCharacterAction.do(characterNode, 'add-child', itemNode);
 			}
 		}
+		if (!action) {
+			History.commit(addCharacterAction);
+		}
+
+		this.#setActiveFilmClips();
+		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static async #userUpdateCharacter(detail: UpdateCharacter): Promise<void> {
+		console.info(detail);
+
+		const action = History.startAction();
+		const characterNode = detail.characterNode;
+		const parentNode = characterNode.getParent();
+		if (parentNode) {
+			action.do(parentNode, 'delete-child', characterNode);
+		}
+
+		this.#userAddCharacter({ character: detail.character, clips: detail.clips }, action);
+
 		History.commit(action);
 
 		this.#setActiveFilmClips();
@@ -880,17 +905,53 @@ class Application {
 	}
 
 	static #deleteCharacter(detail: DeleteCharacter): void {
-		const parent = detail.character.getParent();
+		const parent = detail.characterNode.getParent();
 		if (!parent) {
 			return;
 		}
 
 		const action = History.startAction();
-		action.do(parent, 'delete-child', detail.character);
+		action.do(parent, 'delete-child', detail.characterNode);
 		History.commit(action);
 
 		this.#setActiveFilmClips();
 		Controller.dispatchEvent('refreshtimeline');
+	}
+
+	static async #editCharacter(detail: EditCharacter): Promise<void> {
+		const characterNode = detail.characterNode;
+		const characterEntity = characterNode.getEntity();
+		if (!characterEntity || !isCharacter(characterNode)) {
+			return;
+		}
+
+		const itemNodes = new Set<SfmNode<SfmModel>>();
+		for (const child of characterNode.getChildren()) {
+			if (isItem(child)) {
+				itemNodes.add(child as SfmNode<SfmModel>);
+			}
+		}
+
+		const game = characterEntity.getMetadata('game') as GameList;
+		const characterName = characterEntity.getMetadata('character') as string;
+		const character = getCharacter(game, characterName);
+		if (!character) {
+			return;
+		}
+
+		for (const itemNode of itemNodes) {
+			const itemEntity = itemNode.getEntity();
+			if (!itemEntity) {
+				continue;
+			}
+
+			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string,);
+			if (item) {
+				character.items.add(item);
+			}
+		}
+
+		this.#getCharacterSelectorPanel().editCharacter(detail.clip, character, characterNode);
 	}
 
 	static #addLight(type: SfmLightType, scene: SfmNode<SfmScene>, action?: Action): void {

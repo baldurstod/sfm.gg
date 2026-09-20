@@ -29,6 +29,7 @@ export type ControllerEvent = 'setsession'
 	| 'userselectcharacter'
 	| 'userselectcharacterselectapp'
 	| 'useraddcharacter'
+	| 'userupdatecharacter'
 	| 'viewelement'
 	// Playback controls
 	| 'usersetplaying'
@@ -56,6 +57,7 @@ export type ControllerEvent = 'setsession'
 	| 'userdeletetrackgroup'
 	| 'userdeleteoperator'
 	| 'userdeletecharacter'
+	| 'usereditcharacter'
 	| 'useraddcliptotrack'
 	| 'useraddtracktotrackgroup'
 	| 'useraddtrackgroup'
@@ -89,6 +91,7 @@ export class Controller {
 	static addEventListener(type: 'userselectcharacter', callback: (evt: CustomEvent<SelectCharacter | void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<AddCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userupdatecharacter', callback: (evt: CustomEvent<UpdateCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersetplaying', callback: (evt: CustomEvent<boolean>) => void, options?: AddEventListenerOptions | boolean): void;
 	//static addEventListener(type: 'userpause', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -111,6 +114,7 @@ export class Controller {
 	static addEventListener(type: 'userdeletetrackgroup', callback: (evt: CustomEvent<SfmTrackGroup>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeleteoperator', callback: (evt: CustomEvent<DeleteOperator>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userdeletecharacter', callback: (evt: CustomEvent<DeleteCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'usereditcharacter', callback: (evt: CustomEvent<EditCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'updateactiveclips', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddlight', callback: (evt: CustomEvent<AddLight>) => void, options?: AddEventListenerOptions | boolean): void;
 
@@ -135,6 +139,7 @@ export class Controller {
 	static dispatchEvent(type: 'userselectcharacter', options?: CustomEventInit<SelectCharacter>): boolean;
 	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<AddCharacter>): boolean;
+	static dispatchEvent(type: 'userupdatecharacter', options: ControllerEventInit<UpdateCharacter>): boolean;
 	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
 	static dispatchEvent(type: 'usersetplaying', options: ControllerEventInit<boolean>): boolean;
 	//static dispatchEvent(type: 'userpause', options?: EventInit): boolean;
@@ -157,6 +162,7 @@ export class Controller {
 	static dispatchEvent(type: 'userdeletetrackgroup', options: ControllerEventInit<SfmTrackGroup>): boolean;
 	static dispatchEvent(type: 'userdeleteoperator', options: ControllerEventInit<DeleteOperator>): boolean;
 	static dispatchEvent(type: 'userdeletecharacter', options: ControllerEventInit<DeleteCharacter>): boolean;
+	static dispatchEvent(type: 'usereditcharacter', options: ControllerEventInit<EditCharacter>): boolean;
 	static dispatchEvent(type: 'updateactiveclips', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useraddlight', options: ControllerEventInit<AddLight>): boolean;
 
@@ -203,6 +209,12 @@ export type AddCharacter = {
 	clips: Set<SfmFilmClip>;
 }
 
+export type UpdateCharacter = {
+	character: Character;
+	clips: Set<SfmFilmClip>;
+	characterNode: SfmNode<SfmModel>;
+}
+
 export type AddClip = {
 	/** Track to add the clip into */
 	track: SfmTrack;
@@ -222,8 +234,10 @@ export type DeleteOperator = {
 
 export type DeleteCharacter = {
 	clip: SfmFilmClip;
-	character: SfmNode<SfmModel>;
+	characterNode: SfmNode<SfmModel>;
 }
+
+export type EditCharacter = DeleteCharacter;
 
 export type SetName = {
 	element: Serializable;

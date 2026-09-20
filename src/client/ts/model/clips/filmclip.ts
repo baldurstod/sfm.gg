@@ -2,6 +2,7 @@ import { errorOnce } from 'harmony-utils';
 import { Action, Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { isCharacter } from '../../utils/models';
 import { SfmCamera } from '../camera';
 import { SfmEntity } from '../entity';
 import { SfmOperatorContext } from '../interfaces/operator';
@@ -69,12 +70,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 			stack.push(...current.getChildren());
 
-			const entity = current.getEntity();
-			if (!entity) {
-				continue;
-			}
-
-			if ((entity as SfmModel).isSfmModel && entity.getMetadata('type') === 'character') {
+			if (isCharacter(current)) {
 				characters.add(current as SfmNode<SfmModel>);
 			}
 		}
@@ -273,7 +269,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				command.undoParams = this.#scene;
 				this.#setScene(command.params);
 				return true;
-				/*
+			/*
 			case 'delete-character':
 				//TODO: check if it's actually an operator
 				if (!this.#operators.has(command.params)) {

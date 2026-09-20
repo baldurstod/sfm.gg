@@ -3,10 +3,12 @@ import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
 import icon440 from '../../img/icons/steam_icon_440.png';
-import { Controller } from '../controller';
+import { Controller, UpdateCharacter } from '../controller';
 import { Character, CharacterSlot, characterToModel, getItems, Item, itemToModel } from '../misc/character';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
+import { SfmModel } from '../model/model';
+import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
 export class CharacterSelectorPanel extends Panel {
@@ -18,6 +20,7 @@ export class CharacterSelectorPanel extends Panel {
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlAddPrimaryClip?: HTMLButtonElement;
 	#htmlAddSelectedClips?: HTMLButtonElement;
+	#htmlUpdateCharacter?: HTMLButtonElement;
 	#canvasAttributes: CanvasAttributes | null = null;
 	#camera?: Camera;
 	#cameraControl?: OrbitControl;
@@ -25,12 +28,14 @@ export class CharacterSelectorPanel extends Panel {
 	#group?: Group;
 	#selectedCharacter?: Character;
 	readonly #selectedSlot = new Map<Character, CharacterSlot>();//?: CharacterSlot;
-	readonly #equipedItems = new Map2<Character, CharacterSlot, Item[]>();
+	readonly #equipedItems = new Map2<Character, string, Item[]>();
 	#items: Item[] = [];
 	#characterModels = new Map<Character, Source1ModelInstance>();
 	#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
 	#primarySelectedClip?: SfmClip;
 	#selectedClips?: Set<SfmClip>;
+	#editCharacterClip?: SfmFilmClip | null;
+	#editCharacterNode?: SfmNode<SfmModel> | null;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -83,8 +88,6 @@ export class CharacterSelectorPanel extends Panel {
 						// Slots
 						this.#htmlSlots = createElement('div', {
 							class: 'slots',
-							childs: [
-							]
 						}),
 						// Items selector
 						this.#htmlItemsContainer = createElement('div', {
@@ -102,9 +105,13 @@ export class CharacterSelectorPanel extends Panel {
 					i18n: '#add_to_all_selected_clips',
 					$click: () => this.#addCurrentCharacter(false),
 				}) as HTMLButtonElement,
+				this.#htmlUpdateCharacter = createElement('button', {
+					i18n: '#update_character',
+					hidden: true,
+					$click: () => this.#updateCharacter(),
+				}) as HTMLButtonElement,
 			],
 		});
-
 
 		this.#htmlItemsContainer.addEventListener('scroll', () => this.#handleItemsScroll(), { passive: true });
 
@@ -319,10 +326,15 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	selectCharacter(primarySelectedClip: SfmClip, selectedClips: Set<SfmClip>): void {
+		this.#editCharacterClip = null;
+		this.#editCharacterNode = null;
 		this.#primarySelectedClip = primarySelectedClip;
 		this.#selectedClips = selectedClips;
 		this.initPanel();
 		this.panel!.open();
+		hide(this.#htmlUpdateCharacter);
+		show(this.#htmlAddPrimaryClip);
+		show(this.#htmlAddSelectedClips);
 	}
 
 	#addCurrentCharacter(primaryClipOnly: boolean): void {
@@ -359,6 +371,61 @@ export class CharacterSelectorPanel extends Panel {
 		});
 	}
 
+	async editCharacter(clip: SfmFilmClip, character: Character, characterNode: SfmNode<SfmModel>): Promise<void> {
+		this.#editCharacterClip = clip;
+		this.#editCharacterNode = characterNode;
+
+		this.initPanel();
+		this.panel!.open();
+
+		show(this.#htmlUpdateCharacter);
+		hide(this.#htmlAddPrimaryClip);
+		hide(this.#htmlAddSelectedClips);
+
+		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440 });
+
+
+		this.setCharacters([character]);
+		await this.#selectCharacter(character);
+
+		//this.#equipedItems.getMap().delete(character);
+
+		// Remove existing items
+		const equipedItems = new Map(this.#equipedItems.getSubMap(character));
+		for (const [slot, items] of equipedItems) {
+			for (const item of items) {
+				this.#unEquipItem(character, item);
+			}
+		}
+		this.#equipedItems.getSubMap(character)?.clear();
+
+		// Add new items
+		for (const item of character.items) {
+			console.log(item);
+			await this.#equipItem(character, item);
+
+			let items = this.#equipedItems.get(character, item.slotName) ?? [];
+			items.push(item);
+			this.#equipedItems.set(character, item.slotName, items);
+		}
+	}
+
+	#updateCharacter(): void {
+		if (!this.#editCharacterNode) {
+			return;
+		}
+
+		this.panel?.close();
+
+		Controller.dispatchEvent('userupdatecharacter', {
+			detail: {
+				character: this.#selectedCharacter,
+				clips: new Set([this.#editCharacterClip]),
+				characterNode: this.#editCharacterNode,
+			} as UpdateCharacter,
+		});
+	}
+
 	async #itemClick(item: Item): Promise<void> {
 		if (!this.#selectedCharacter) {
 			return;
@@ -371,30 +438,30 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
-		let items = this.#equipedItems.get(this.#selectedCharacter, selectedSlot);
+		let items = this.#equipedItems.get(this.#selectedCharacter, selectedSlot.name);
 		if (items) {
 			// An equipped item is clicked again: remove it and exit
 			const itemIndex = items.indexOf(item);
 			if (items.indexOf(item) !== -1) {
 				items.splice(itemIndex, 1);
-				this.#unEquipItem(this.#selectedCharacter, selectedSlot, item);
+				this.#unEquipItem(this.#selectedCharacter, item);
 				return;
 			}
 
 			// Unequip the first item if we hit the items limit
 			if (items.length && items.length >= (selectedSlot.limit ?? Infinity)) {
-				this.#unEquipItem(this.#selectedCharacter, selectedSlot, items.pop()!);
+				this.#unEquipItem(this.#selectedCharacter, items.pop()!);
 			}
 		} else {
 			// Create the item array
 			items = [];
-			this.#equipedItems.set(this.#selectedCharacter, selectedSlot, items);
+			this.#equipedItems.set(this.#selectedCharacter, selectedSlot.name, items);
 		}
 		items.push(item);
-		await this.#equipItem(this.#selectedCharacter, selectedSlot, item);
+		await this.#equipItem(this.#selectedCharacter, item);
 	}
 
-	async #equipItem(character: Character, slot: CharacterSlot, item: Item): Promise<void> {
+	async #equipItem(character: Character, item: Item): Promise<void> {
 		//this.#equipedItems.set(character, slot, item);
 		const characterModel = this.#characterModels.get(character);
 		if (!characterModel) {
@@ -416,7 +483,7 @@ export class CharacterSelectorPanel extends Panel {
 		this.#itemsModels.set(character, item, itemModel);
 	}
 
-	#unEquipItem(character: Character, slot: CharacterSlot, item: Item): void {
+	#unEquipItem(character: Character, item: Item): void {
 		character.items.delete(item);
 		const itemModel = this.#itemsModels.get(character, item);
 		if (itemModel) {

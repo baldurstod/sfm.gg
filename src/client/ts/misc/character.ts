@@ -38,6 +38,8 @@ export type Character = {
 export type Item = {
 	game: GameList;
 	id: string;
+	slot: string;
+	slotName: string;
 	style: string;
 	name: string;
 	icon: string;
@@ -58,42 +60,53 @@ const tf2Characters: PartialBy<Character, 'game' | 'items'>[] = [
 	{ name: 'engineer', icon: engineer, modelPath: 'models/player/engineer', },
 ]
 
+/**
+ * Fill the game, animation and slots character properties
+ * @param character The character to update
+ */
+function populateTf2Character(character: Character): void {
+	character.game = 'tf2';
+	character.animation = 'stand_secondary';
+	character.slots = [
+		{
+			character,
+			name: 'weapon',
+			slots: ['primary', 'secondary', 'melee'],
+			limit: 1,
+		},
+		{
+			character,
+			name: 'hat',
+			slots: ['head'],
+		},
+		{
+			character,
+			name: 'misc',
+			slots: ['misc'],
+		},
+	];
+}
+
 export function getTf2Characters(): PartialBy<Character, 'items'>[] {
 	const characters = structuredClone(tf2Characters) as Character[];
 
 	for (const character of characters) {
-		character.game = 'tf2';
-		character.animation = 'stand_secondary';
-		character.slots = [
-			{
-				character,
-				name: 'weapon',
-				slots: ['primary', 'secondary', 'melee'],
-				limit: 1,
-			},
-			{
-				character,
-				name: 'hat',
-				slots: ['head'],
-			},
-			{
-				character,
-				name: 'misc',
-				slots: ['misc'],
-			},
-
-		]
+		populateTf2Character(character);
 	}
 
 	return characters;
-	/*
-	slots: [
-		{
-			name: 'weapon',
-			limit: 1,
-		}
-	],
-	*/
+}
+
+export function getTf2Character(name: string): Character | null {
+	const partialCharacter = tf2Characters.find((element) => element.name === name);
+	if (!partialCharacter) {
+		return null;
+	}
+
+	const character = structuredClone(partialCharacter) as Character;
+	populateTf2Character(character);
+	character.items = new Set<Item>();
+	return character;
 }
 
 
@@ -160,20 +173,54 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 				skin = item.skin_red as string;
 			}
 
-
-
 			result.push({
 				id: item.defindex as string,
+				slot: item.item_slot as string,
+				slotName: slot.name,
 				style: item.style as string,
 				game: slot.character.game,
 				name: item.name as string,
 				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
-				modelPath: getTf2ModelPath(slot, item),//item.model_player as string,// TODO: use model_player_per_class
+				modelPath: getTf2ModelPath(slot.character.name, item),//item.model_player as string,// TODO: use model_player_per_class
 				skin,
 			});
 		}
 	}
 	return result;
+}
+
+async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string): Promise<Item | null> {
+	console.info('item style ', style);
+	const items = await getTf2ItemList();
+	if (!items) {
+		return null;
+	}
+	console.log(items);
+
+	const result: Item[] = []
+	for (const index in items.items as JSONObject) {
+		const item = (items.items as JSONObject)[index] as JSONObject;
+
+		if (item.defindex === id && item.style === style) {
+			let skin: string | undefined;
+			if (item.skin_red !== undefined) {
+				skin = item.skin_red as string;
+			}
+
+			return {
+				id: item.defindex as string,
+				slot: item.item_slot as string,
+				slotName: itemSlot,
+				style: item.style as string,
+				game: 'tf2',
+				name: item.name as string,
+				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
+				modelPath: getTf2ModelPath(characterName, item),//item.model_player as string,// TODO: use model_player_per_class
+				skin,
+			}
+		}
+	}
+	return null;
 }
 
 let tf2Items: Promise<JSONObject | null>;
@@ -194,7 +241,7 @@ async function getTf2ItemList(): Promise<JSONObject | null> {
 	return tf2Items;
 }
 
-function getTf2ModelPath(slot: CharacterSlot, item: JSONObject): string {
+function getTf2ModelPath(characterName: string, item: JSONObject): string {
 	function convertDemo(npc: string): string {
 		if (npc == 'demoman') {
 			return 'demo';
@@ -202,22 +249,20 @@ function getTf2ModelPath(slot: CharacterSlot, item: JSONObject): string {
 			return npc;
 		}
 	}
-	//let modelPlayer = '';
-	const characterId = slot.character.name;
 
 	const modelPlayerPerClass = item.model_player_per_class as Record<string, string>/*TODO: improve type*/;
 
 	if (modelPlayerPerClass) {
-		if (modelPlayerPerClass[characterId]) {
-			return modelPlayerPerClass[characterId];
+		if (modelPlayerPerClass[characterName]) {
+			return modelPlayerPerClass[characterName];
 		}
 
 		const basename = modelPlayerPerClass['basename'];
 		if (basename) {
 			const usedByClasses = item.used_by_classes as Record<string, string>/*TODO: improve type*/;
 			if (usedByClasses) {
-				if (usedByClasses[characterId] == '1') {
-					return basename.replace(/%s/g, convertDemo(characterId));
+				if (usedByClasses[characterName] == '1') {
+					return basename.replace(/%s/g, convertDemo(characterName));
 				} else {
 					const arr = Object.keys(usedByClasses);
 					if (arr.length > 0) {
@@ -253,3 +298,21 @@ function getTf2ModelPath(slot: CharacterSlot, item: JSONObject): string {
 
 //https://tf2content.loadout.tf/generated/items/items_english.json?t=1787917844858
 //?t=${new Date().getTime()
+
+export function getCharacter(game: GameList, name: string): Character | null {
+	switch (game) {
+		case 'tf2':
+			return getTf2Character(name);
+		default:
+			return null;
+	}
+}
+
+export async function getItem(game: GameList, characterName: string, itemId: string, itemSlot: string, itemStyle: string): Promise<Item | null> {
+	switch (game) {
+		case 'tf2':
+			return getTf2Item(characterName, itemId, itemSlot, itemStyle);
+		default:
+			return null;
+	}
+}

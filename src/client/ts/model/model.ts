@@ -69,6 +69,10 @@ export class SfmModel extends SfmEntity {
 			json.path = this.#path;
 		}
 
+		if (this.#skin) {
+			json.skin = this.#skin;
+		}
+
 		if (this.#bones.length) {
 			json.bones = [...this.#bones];
 		}
@@ -81,6 +85,7 @@ export class SfmModel extends SfmEntity {
 
 		this.#repository = json.repository as string;//TODO: check value
 		this.#path = json.path as string;//TODO: check value
+		this.#skin = json.skin as string;//TODO: check value
 
 		this.#bones.length = 0;
 		const bones = json.bones as string[];
