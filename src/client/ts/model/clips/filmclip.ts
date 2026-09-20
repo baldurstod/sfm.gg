@@ -1,5 +1,5 @@
 import { errorOnce } from 'harmony-utils';
-import { Command, Undoable } from '../../history/action';
+import { Action, Command, Undoable } from '../../history/action';
 import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmCamera } from '../camera';
@@ -19,7 +19,8 @@ export interface FilmClipParameters extends ClipParameters {
 
 export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly isSfmFilmClip = true as const;
-	scene?: SfmNode<SfmScene>;
+	readonly #sceneWithWorld = new SfmNode<SfmScene>({ entity: new SfmScene() });
+	#scene?: SfmNode<SfmScene>;
 	readonly #cameras = new Set<SfmCamera>();
 	activeCamera?: SfmCamera;
 	readonly #trackGroups = new Set<SfmTrackGroup>();
@@ -27,17 +28,25 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	#primarySelectedClip?: SfmClip;
 	readonly #selectedClips = new Set<SfmClip>();
 	type: SfmClipType = 'film' as const;
-	#world?: SfmWorld;
+	#world?: SfmNode<SfmWorld>;
 
 	constructor(params: FilmClipParameters = {}) {
 		super(params);
 
-		this.scene = params.scene;
+		this.#setScene(params.scene);
 		this.activeCamera = params.camera;
 	}
 
+	getScene(): SfmNode<SfmScene> | undefined {
+		return this.#scene;
+	}
+
+	getSceneWithWorld(): SfmNode<SfmScene> | undefined {
+		return this.#sceneWithWorld;
+	}
+
 	getWorld(): SfmWorld | undefined {
-		return this.#world;
+		return this.#world?.getEntity();
 	}
 
 	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
@@ -55,14 +64,23 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return [...this.#trackGroups];
 	}
 
-	setScene(scene: SfmNode<SfmScene>): void {//TODO: remove: create do action
-		this.scene = scene;
+	#setScene(scene: SfmNode<SfmScene> | undefined): void {
+		this.#scene = scene;
+
+		const action = new Action();
+		action.do(this.#sceneWithWorld, 'remove-children');
+		if (scene) {
+			action.do(this.#sceneWithWorld, 'add-child', scene);
+		}
+		if (this.#world) {
+			action.do(this.#sceneWithWorld, 'add-child', this.#world);
+		}
 	}
 
 	addCamera(camera: SfmCamera): void {//TODO: remove: create do action
 		this.#cameras.add(camera);
 
-		this.scene?.getEntity()?.getEngineEntity().addChild(camera.getEngineEntity());
+		this.#scene?.getEntity()?.getEngineEntity().addChild(camera.getEngineEntity());
 	}
 
 	setActiveCamera(camera: SfmCamera): void {//TODO: remove: create do action
@@ -218,6 +236,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				command.undoParams = this.#world;
 				this.#world = command.params;
 				return true;
+			case 'set-scene':
+				command.undoParams = this.#scene;
+				this.#setScene(command.params);
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -250,6 +272,9 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			case 'set-world':
 				this.#world = command.undoParams;
 				return true;
+			case 'set-scene':
+				this.#setScene(command.undoParams);
+				return true;
 			default:
 				return super.undo(command);
 		}
@@ -266,7 +291,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
-		json.scene = this.scene;
+		json.scene = this.#scene;
 
 		if (this.activeCamera) {
 			json.active_camera = this.activeCamera;
@@ -306,7 +331,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		if (json.scene) {
 			const scene = elements.get(json.scene as string) as SfmNode<SfmScene> | undefined; // TODO: check if it's actually a scene
 			if (scene) {
-				this.scene = scene;
+				this.#scene = scene;
 			}
 		}
 
@@ -383,7 +408,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'scene':
-				return this.scene;
+				return this.#scene;
 			case 'activeCamera':
 				return this.activeCamera;
 			case 'trackGroups':

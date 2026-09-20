@@ -148,7 +148,7 @@ class Application {
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
 		Controller.addEventListener('useraddlight', (event) => {
 			const detail = event.detail;
-			const scene = detail.clip.scene;
+			const scene = detail.clip.getScene();
 			if (scene) {
 				this.#addLight(detail.type, scene);
 			}
@@ -216,10 +216,11 @@ class Application {
 
 		const box = new SfmPrimitiveBox();
 		const node = new SfmNode({ entity: box });
-		action.do(clip.scene!, 'add-child', node);//clip.scene!.addChild(node)//!.#entity = new SfmPrimitiveBox();
+		const clipScene = clip.getScene()!;
+		action.do(clipScene, 'add-child', node);//clip.scene!.addChild(node)//!.#entity = new SfmPrimitiveBox();
 		//action.do(node, 'set-entity', new SfmPrimitiveBox());
 		const cameraNode = new SfmNode({ entity: workCamera });
-		action.do(clip.scene!, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
+		action.do(clipScene, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		const filmTrackGroup = new SfmTrackGroup({ name: 'Film', order: film.getNextTrackGroupOrder(), });
 		action.do(film, 'add-track-group', filmTrackGroup);
@@ -398,7 +399,7 @@ class Application {
 
 		// Make a scene list. Note that different clips can use the same scene. A set prevents duplicates
 		for (const clip of detail.clips) {
-			const sceneNode = clip.scene;
+			const sceneNode = clip.getScene();
 			if (sceneNode) {
 				scenes.add(sceneNode);
 

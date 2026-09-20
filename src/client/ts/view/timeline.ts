@@ -212,6 +212,17 @@ export class TimelinePanel extends Panel {
 					}));
 				}
 				break;
+			case (clip as SfmFilmClip).isSfmFilmClip:
+				const world = (clip as SfmFilmClip).getWorld();
+				if (world) {
+					html.append(createElement('span', {
+						class: `world`,
+						innerText: world.getName(),
+						//$contextmenu: (event: MouseEvent) => this.#displayOperatorContextMenu(event, clip as SfmOperatorClip, operator),
+					}));
+
+				}
+				break;
 		}
 	}
 
@@ -658,7 +669,7 @@ export class TimelinePanel extends Panel {
 
 		const contextMenu: HarmonyMenuItemsDict = {
 			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } as SelectCharacter }) }, } },
-			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).scene) && {
+			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).getScene()) && {
 				add_light: {
 					i18n: '#add_light', submenu: [
 						{ i18n: '#add_ambient_light', f: (): void => { Controller.dispatchEvent('useraddlight', { detail: { clip, type: 'ambient', } as AddLight }) }, },

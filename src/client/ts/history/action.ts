@@ -57,6 +57,7 @@ export class Action {
 	do(element: SfmFilmClip, command: 'delete-track-group', params: SfmTrackGroup): boolean;
 	do(element: SfmFilmClip, command: 'set-selected-clip', params: SfmClip): boolean;
 	do(element: SfmNode, command: 'add-child', params: SfmNode): boolean;
+	do(element: SfmNode, command: 'remove-children'): boolean;
 	do(element: SfmNode, command: 'set-entity', params: SfmEntity): boolean;
 	do(element: SfmNode, command: 'set-parent', params: SfmNode): boolean;
 	do(element: SfmOperatorClip, command: 'delete-operator', params: SfmOperator): boolean;
@@ -65,7 +66,7 @@ export class Action {
 	do(element: SfmTrackGroup, command: 'add-track', params: SfmTrack): boolean;
 	do(element: SfmTrackGroup, command: 'delete-track', params: SfmTrack): boolean;
 
-	do(element: Undoable, command: string, params: any): boolean {
+	do(element: Undoable, command: string, params?: any): boolean {
 		const operation = new Command(element, command, params);
 		const result = element.do(operation);
 		if (!result) {

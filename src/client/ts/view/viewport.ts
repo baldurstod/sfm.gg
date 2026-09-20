@@ -1,4 +1,4 @@
-import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene } from 'harmony-3d';
+import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
 import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
@@ -27,7 +27,7 @@ export class ViewportPanel extends Panel {
 	static nextId = 0;
 	#id = ++ViewportPanel.nextId;
 	#titleI18n?: string;
-	static #scene = new Scene();
+	static #scene = new Scene({ name: 'Viewports scene' });
 	#addedChilds = new Map<Entity, Set<Entity>>();
 
 	constructor(titleI18n?: string) {
@@ -189,11 +189,16 @@ export class ViewportPanel extends Panel {
 		this.#removeChilds();
 
 		for (const clip of clips) {
-			let current: SfmNode<SfmEntity> | undefined = clip.scene;
+			let current: SfmNode<SfmEntity> | undefined = clip.getSceneWithWorld();
 			if (!current) {
 				continue;
 			}
-			ViewportPanel.#scene.addChild(await current.getEntity()?.getEngineEntityAsync());
+
+			const scene = await current.getEntity()?.getEngineEntityAsync();
+			if (scene) {
+				ViewportPanel.#scene.addChild(scene);
+				new SceneExplorer().setScene(scene as Scene);
+			}
 
 			const stack: SfmNode[] = [current];
 			// TODO: improve this: this run every frame
