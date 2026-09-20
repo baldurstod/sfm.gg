@@ -8,6 +8,7 @@ import { SfmNode } from '../node';
 import { SfmScene } from '../scene';
 import { SfmTrack } from '../track';
 import { SfmTrackGroup } from '../trackgroup';
+import { SfmWorld } from '../world/world';
 import { ClipParameters, SfmClip, SfmClipType } from './clip';
 
 export interface FilmClipParameters extends ClipParameters {
@@ -26,12 +27,17 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	#primarySelectedClip?: SfmClip;
 	readonly #selectedClips = new Set<SfmClip>();
 	type: SfmClipType = 'film' as const;
+	#world?: SfmWorld;
 
 	constructor(params: FilmClipParameters = {}) {
 		super(params);
 
 		this.scene = params.scene;
 		this.activeCamera = params.camera;
+	}
+
+	getWorld(): SfmWorld | undefined {
+		return this.#world;
 	}
 
 	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
@@ -208,6 +214,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#selectedClips.add(command.params);
 				this.#primarySelectedClip = command.params;
 				return true;
+			case 'set-world':
+				command.undoParams = this.#world;
+				this.#world = command.params;
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -236,6 +246,9 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#selectedClips.clear();
 				this.#primarySelectedClip = command.undoParams[0];
 				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
+				return true;
+			case 'set-world':
+				this.#world = command.undoParams;
 				return true;
 			default:
 				return super.undo(command);
