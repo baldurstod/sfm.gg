@@ -2,7 +2,7 @@ import { ShortcutHandler } from 'harmony-browser-utils';
 import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { AddLight, Controller, ControllerEventInit, DeleteOperator, SelectCharacter, SetSelectedClip } from '../controller';
+import { AddLight, Controller, DeleteOperator, SelectCharacter } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip, SfmClipType } from '../model/clips/clip';
@@ -108,11 +108,15 @@ export class TimelinePanel extends Panel {
 	}
 
 	#addSelectedClip(clip: SfmClip): void {
-		Controller.dispatchEvent('useraddselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('useraddselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } });
+		}
 	}
 
 	#setSelectedClip(clip: SfmClip): void {
-		Controller.dispatchEvent('usersetselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } } as ControllerEventInit<SetSelectedClip>);
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('usersetselectedclip', { detail: { topClip: this.#topFilmClip, selected: clip } });
+		}
 	}
 
 	protected refreshHTML(): void {
@@ -679,7 +683,7 @@ export class TimelinePanel extends Panel {
 
 		const clips = new Set<SfmClip>();
 		if (this.#topFilmClip) {
-			Controller.dispatchEvent('useraddprimaryselectedclip', {
+			Controller.dispatchEvent('usersetselectedclip', {
 				detail: {
 					topClip: this.#topFilmClip,
 					selected: clip,
@@ -712,6 +716,15 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('usersetselectedclip', {
+				detail: {
+					topClip: this.#topFilmClip,
+					selected: clip,
+				}
+			});
+		}
+
 		const contextMenu: HarmonyMenuItemsDict = {
 			delete_operator: {
 				i18n: '#delete_operator', f: (): void => {
@@ -733,6 +746,15 @@ export class TimelinePanel extends Panel {
 	#displayCharacterContextMenu(event: MouseEvent, clip: SfmFilmClip, character: SfmNode<SfmModel>): void {
 		if (event.shiftKey || !this.#htmlContextMenu) {
 			return;
+		}
+
+		if (this.#topFilmClip) {
+			Controller.dispatchEvent('usersetselectedclip', {
+				detail: {
+					topClip: this.#topFilmClip,
+					selected: clip,
+				}
+			});
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {

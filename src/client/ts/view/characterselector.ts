@@ -21,6 +21,7 @@ export class CharacterSelectorPanel extends Panel {
 	#htmlAddPrimaryClip?: HTMLButtonElement;
 	#htmlAddSelectedClips?: HTMLButtonElement;
 	#htmlUpdateCharacter?: HTMLButtonElement;
+	#htmlClose?: HTMLButtonElement;
 	#canvasAttributes: CanvasAttributes | null = null;
 	#camera?: Camera;
 	#cameraControl?: OrbitControl;
@@ -109,6 +110,10 @@ export class CharacterSelectorPanel extends Panel {
 					i18n: '#update_character',
 					hidden: true,
 					$click: () => this.#updateCharacter(),
+				}) as HTMLButtonElement,
+				this.#htmlClose = createElement('button', {
+					i18n: '#close',
+					$click: () => this.panel?.close(),
 				}) as HTMLButtonElement,
 			],
 		});
