@@ -464,7 +464,7 @@ class Application {
 							item_id: item.id,
 							item_style: item.style,
 							type: 'item',
-							slot: item.slotName,
+							slot: item.slot,
 						},
 					}),
 				});

@@ -4,7 +4,7 @@ import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
 import icon440 from '../../img/icons/steam_icon_440.png';
 import { Controller, UpdateCharacter } from '../controller';
-import { Character, CharacterSlot, characterToModel, getItems, Item, itemToModel } from '../misc/character';
+import { Character, CharacterSlot, characterToModel, getCharacterSlot, getItems, Item, itemToModel } from '../misc/character';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmModel } from '../model/model';
@@ -28,10 +28,10 @@ export class CharacterSelectorPanel extends Panel {
 	#group?: Group;
 	#selectedCharacter?: Character;
 	readonly #selectedSlot = new Map<Character, CharacterSlot>();//?: CharacterSlot;
-	readonly #equipedItems = new Map2<Character, string, Item[]>();
+	readonly #equipedItems = new Map2<Character, CharacterSlot, Item[]>();
 	#items: Item[] = [];
 	#characterModels = new Map<Character, Source1ModelInstance>();
-	#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
+	#itemsModels = new Map2<Character, string, Source1ModelInstance>();
 	#primarySelectedClip?: SfmClip;
 	#selectedClips?: Set<SfmClip>;
 	#editCharacterClip?: SfmFilmClip | null;
@@ -404,9 +404,14 @@ export class CharacterSelectorPanel extends Panel {
 			console.log(item);
 			await this.#equipItem(character, item);
 
-			let items = this.#equipedItems.get(character, item.slotName) ?? [];
+			const characterSlot = getCharacterSlot(character, item.slot);
+			if (!characterSlot) {
+				continue;
+			}
+
+			let items = this.#equipedItems.get(character, characterSlot) ?? [];
 			items.push(item);
-			this.#equipedItems.set(character, item.slotName, items);
+			this.#equipedItems.set(character, characterSlot, items);
 		}
 	}
 
@@ -438,11 +443,11 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
-		let items = this.#equipedItems.get(this.#selectedCharacter, selectedSlot.name);
+		let items = this.#equipedItems.get(this.#selectedCharacter, selectedSlot);
 		if (items) {
 			// An equipped item is clicked again: remove it and exit
-			const itemIndex = items.indexOf(item);
-			if (items.indexOf(item) !== -1) {
+			const itemIndex = items.findIndex(element => element.id === item.id && element.style === item.style);
+			if (itemIndex !== -1) {
 				items.splice(itemIndex, 1);
 				this.#unEquipItem(this.#selectedCharacter, item);
 				return;
@@ -455,7 +460,7 @@ export class CharacterSelectorPanel extends Panel {
 		} else {
 			// Create the item array
 			items = [];
-			this.#equipedItems.set(this.#selectedCharacter, selectedSlot.name, items);
+			this.#equipedItems.set(this.#selectedCharacter, selectedSlot, items);
 		}
 		items.push(item);
 		await this.#equipItem(this.#selectedCharacter, item);
@@ -480,12 +485,12 @@ export class CharacterSelectorPanel extends Panel {
 		characterModel.addChild(itemModel);
 
 		//#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
-		this.#itemsModels.set(character, item, itemModel);
+		this.#itemsModels.set(character, `${item.id}\0${item.style}`, itemModel);
 	}
 
 	#unEquipItem(character: Character, item: Item): void {
 		character.items.delete(item);
-		const itemModel = this.#itemsModels.get(character, item);
+		const itemModel = this.#itemsModels.get(character, `${item.id}\0${item.style}`);
 		if (itemModel) {
 			itemModel.remove();
 		}

@@ -31,7 +31,7 @@ export type Character = {
 	modelPath: string;
 	animation?: string;
 	keywords?: string[];
-	slots?: CharacterSlot[];
+	slots: CharacterSlot[];
 	items: Set<Item>;
 }
 
@@ -39,7 +39,6 @@ export type Item = {
 	game: GameList;
 	id: string;
 	slot: string;
-	slotName: string;
 	style: string;
 	name: string;
 	icon: string;
@@ -48,7 +47,7 @@ export type Item = {
 	keywords?: string[];
 }
 
-const tf2Characters: PartialBy<Character, 'game' | 'items'>[] = [
+const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots'>[] = [
 	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
 	{ name: 'sniper', icon: sniper, modelPath: 'models/player/sniper', },
 	{ name: 'soldier', icon: soldier, modelPath: 'models/player/soldier', },
@@ -176,7 +175,6 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 			result.push({
 				id: item.defindex as string,
 				slot: item.item_slot as string,
-				slotName: slot.name,
 				style: item.style as string,
 				game: slot.character.game,
 				name: item.name as string,
@@ -210,7 +208,6 @@ async function getTf2Item(characterName: string, id: string, itemSlot: string, s
 			return {
 				id: item.defindex as string,
 				slot: item.item_slot as string,
-				slotName: itemSlot,
 				style: item.style as string,
 				game: 'tf2',
 				name: item.name as string,
@@ -314,5 +311,13 @@ export async function getItem(game: GameList, characterName: string, itemId: str
 			return getTf2Item(characterName, itemId, itemSlot, itemStyle);
 		default:
 			return null;
+	}
+}
+
+export function getCharacterSlot(character: Character, itemSlot: string): CharacterSlot | undefined {
+	for (const slot of character.slots) {
+		if (slot.slots.indexOf(itemSlot) !== -1) {
+			return slot;
+		}
 	}
 }
