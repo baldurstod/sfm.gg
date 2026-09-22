@@ -1,3 +1,4 @@
+import { Command } from '../history/action';
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilmClip } from './clips/filmclip';
@@ -6,25 +7,44 @@ import { SessionSettingsParameters, SfmSessionSettings } from './settings/sessio
 
 export interface SessionParameters extends SerializableParameters {
 	settings?: SessionSettingsParameters;
+	clip?: SfmFilmClip;
 }
 
 
 export class SfmSession extends Serializable {
 	readonly isSfmSession = true as const;
-	#topClip?: SfmFilmClip;
+	#filmClip?: SfmFilmClip;
 	#settings: SfmSessionSettings;
 
 	constructor(params: SessionParameters = {}) {
 		super(params);
 		this.#settings = new SfmSessionSettings(params.settings);
+		this.#filmClip = params.clip;
 	}
 
-	setTopFilmClip(clip: SfmFilmClip): void {
-		this.#topClip = clip;
+	getFilmClip(): SfmFilmClip | undefined {
+		return this.#filmClip;
 	}
 
-	getTopFilmClip(): SfmFilmClip | undefined {
-		return this.#topClip;
+	do(command: Command): boolean {
+		switch (command.command) {
+			case 'set-film-clip':
+				command.undoParams = this.#filmClip;
+				this.#filmClip = command.params;//TODO: check this is an SfmFilmClip
+				return true;
+			default:
+				return super.do(command);
+		}
+	}
+
+	undo(command: Command): boolean {
+		switch (command.command) {
+			case 'set-film-clip':
+				this.#filmClip = command.undoParams;
+				return true;
+			default:
+				return super.undo(command);
+		}
 	}
 
 	static override getTypeName(): string {
@@ -38,8 +58,8 @@ export class SfmSession extends Serializable {
 	override serialize(): JSONSerializable {
 		const json = super.serialize();
 
-		if (this.#topClip) {
-			json.top_clip = this.#topClip;
+		if (this.#filmClip) {
+			json.top_clip = this.#filmClip;
 		}
 
 		if (this.#settings) {
@@ -71,9 +91,9 @@ export class SfmSession extends Serializable {
 		this.#clips.clear();
 		*/
 
-		this.#topClip = undefined;
+		this.#filmClip = undefined;
 		if (json.top_clip) {
-			this.#topClip = elements.get(json.top_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
+			this.#filmClip = elements.get(json.top_clip as string) as SfmFilmClip | undefined; // TODO: check if it's actually a film clip
 		}
 
 		if (json.settings) {
@@ -105,8 +125,8 @@ export class SfmSession extends Serializable {
 	override getProperties(): SerializableProperty[] {
 		return [
 			{
-				name: 'topClip',
-				i18n: '#top_clip',
+				name: 'filmClip',
+				i18n: '#film_clip',
 				type: 'element',
 				settable: true,
 			},
@@ -121,8 +141,8 @@ export class SfmSession extends Serializable {
 
 	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
-			case 'topClip':
-				return this.#topClip;
+			case 'filmClip':
+				return this.#filmClip;
 			case 'settings':
 				return this.#settings;
 			default:

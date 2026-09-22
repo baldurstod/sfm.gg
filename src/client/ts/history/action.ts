@@ -6,6 +6,7 @@ import { SfmLightType } from '../model/lights/light';
 import { SfmModel } from '../model/model';
 import { SfmNode } from '../model/node';
 import { SfmOperator } from '../model/operators/operator';
+import { SfmSession } from '../model/session';
 import { SfmTrack } from '../model/track';
 import { SfmTrackGroup } from '../model/trackgroup';
 import { Serializable } from '../serialize/serializable';
@@ -64,6 +65,7 @@ export class Action {
 	do(element: SfmNode, command: 'set-entity', params: SfmEntity): boolean;
 	do(element: SfmNode, command: 'set-parent', params: SfmNode): boolean;
 	do(element: SfmOperatorClip, command: 'delete-operator', params: SfmOperator): boolean;
+	do(element: SfmSession, command: 'set-film-clip', params: SfmFilmClip): boolean;
 	do(element: SfmTrack, command: 'add-clip', params: SfmClip): boolean;
 	do(element: SfmTrack, command: 'delete-clip', params: SfmClip): boolean;
 	do(element: SfmTrackGroup, command: 'add-track', params: SfmTrack): boolean;

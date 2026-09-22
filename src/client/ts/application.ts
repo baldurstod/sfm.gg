@@ -1,5 +1,5 @@
-import { ContextType, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
-import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
+import { ContextType, Graphics, GraphicsEvents, GraphicTickEvent, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
+import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import { errorOnce } from 'harmony-utils';
@@ -105,7 +105,7 @@ class Application {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
 		Controller.addEventListener('usersavesession', () => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
-			const clip = this.#session.getTopFilmClip();
+			const clip = this.#session.getFilmClip();
 			if (!clip) {
 				return;
 			}
@@ -182,7 +182,7 @@ class Application {
 	}
 
 	static #addCamera(source: SfmCamera | null): void {
-		const clip = this.#session.getTopFilmClip();
+		const clip = this.#session.getFilmClip();
 		if (!clip) {
 			return;
 		}
@@ -220,7 +220,7 @@ class Application {
 		this.#session = new SfmSession({ name: 'session' });
 
 		const film = new SfmFilmClip({ name: 'Film' });
-		this.#session.setTopFilmClip(film);
+		action.do(this.#session, 'set-film-clip', film);
 
 		const sceneNode = new SfmNode<SfmScene>({ entity: new SfmScene() });
 		const clip = new SfmFilmClip({ name: 'shot1', scene: sceneNode, timeFrame: { start: 0, end: 15 }, });
@@ -382,7 +382,7 @@ class Application {
 			primary = detail.primary;
 			selected = detail.clips;
 		} else {
-			const topClip = this.#session.getTopFilmClip();
+			const topClip = this.#session.getFilmClip();
 			if (!topClip) {
 				return;
 			}
@@ -536,7 +536,7 @@ class Application {
 	}
 
 	static #userPreviousOrNextClip(delta: number): void {
-		const topClip = this.#session.getTopFilmClip();
+		const topClip = this.#session.getFilmClip();
 		if (!topClip) {
 			return;
 		}
@@ -569,7 +569,7 @@ class Application {
 	}
 
 	static #userFirstFrame(): void {
-		const topClip = this.#session.getTopFilmClip();
+		const topClip = this.#session.getFilmClip();
 		if (!topClip) {
 			return;
 		}
@@ -582,7 +582,7 @@ class Application {
 	}
 
 	static #userLastFrame(): void {
-		const topClip = this.#session.getTopFilmClip();
+		const topClip = this.#session.getFilmClip();
 		if (!topClip) {
 			return;
 		}
@@ -608,7 +608,7 @@ class Application {
 	}
 
 	static #setActiveFilmClips(): void {
-		const top = this.#session.getTopFilmClip();
+		const top = this.#session.getFilmClip();
 		if (top) {
 			const clips = top.getSubClipsAtTime(this.#player.getCurrentTime(), 'film');
 			Controller.dispatchEvent('setactivefilmclips', { detail: clips });
@@ -616,7 +616,7 @@ class Application {
 	}
 
 	static #updateClips(time: number): void {
-		const topClip = this.#session.getTopFilmClip();
+		const topClip = this.#session.getFilmClip();
 		if (!topClip) {
 			return;
 		}
