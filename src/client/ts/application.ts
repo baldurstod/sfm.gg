@@ -1,5 +1,5 @@
-import { Graphics, GraphicsEvents, GraphicTickEvent, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
-import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
+import { ContextType, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
+import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import { errorOnce } from 'harmony-utils';
@@ -68,10 +68,17 @@ class Application {
 		this.#updateCurrentTime();
 	}
 
-	static #initGraphics(): void {
-		Graphics.initCanvas({
+	static async #initGraphics(): Promise<void> {
+		let contextType = ContextType.WebGL;
+		const url = new URL(document.URL);
+		if (url.hash.substring(1) == 'webgpu') {
+			contextType = ContextType.WebGPU;
+		}
+
+		await Graphics.initCanvas({
 			useOffscreenCanvas: true,
 			autoResize: false,
+			type: contextType,
 			webGL: {
 				alpha: true,
 				preserveDrawingBuffer: true,
