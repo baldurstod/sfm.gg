@@ -4,7 +4,7 @@ import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
 import icon440 from '../../img/icons/steam_icon_440.png';
 import { Controller, UpdateCharacter } from '../controller';
-import { Character, CharacterSlot, characterToModel, getCharacterSlot, getItems, Item, itemToModel } from '../misc/character';
+import { Character, CharacterSlot, characterToModel, getCharacterSlot, getItemIdStyle, getItems, Item, itemToModel } from '../misc/character';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmModel } from '../model/model';
@@ -32,7 +32,7 @@ export class CharacterSelectorPanel extends Panel {
 	readonly #equipedItems = new Map2<Character, CharacterSlot, Item[]>();
 	#items: Item[] = [];
 	#characterModels = new Map<Character, Source1ModelInstance>();
-	#itemsModels = new Map2<Character, string, Source1ModelInstance>();
+	#itemsModels = new Map2<Character, string, Source1ModelInstance[]>();
 	#primarySelectedClip?: SfmClip;
 	#selectedClips?: Set<SfmClip>;
 	#editCharacterClip?: SfmFilmClip | null;
@@ -165,7 +165,7 @@ export class CharacterSelectorPanel extends Panel {
 
 		for (const character of characters) {
 			const c = structuredClone(character) as Character;
-			c.items = new Set();
+			c.items = new Map<string, Item>();
 			createElement('img', {
 				parent: this.#htmlCharacters,
 				class: 'character',
@@ -405,7 +405,7 @@ export class CharacterSelectorPanel extends Panel {
 		this.#equipedItems.getSubMap(character)?.clear();
 
 		// Add new items
-		for (const item of character.items) {
+		for (const [, item] of character.items) {
 			console.log(item);
 			await this.#equipItem(character, item);
 
@@ -479,25 +479,28 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
-		const itemModel = await itemToModel(item);
-		if (!itemModel) {
+		const itemModels = await itemToModel(item);
+		if (!itemModels) {
 			BugReporter.reportBug('debug', `Missing model for item ${JSON.stringify(item)}`);
 			return;
 		}
 
-		character.items.add(item);
+		character.items.set(getItemIdStyle(item), item);
 
-		characterModel.addChild(itemModel);
+		for (const itemModel of itemModels) {
+			characterModel.addChild(itemModel);
+		}
 
 		//#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
-		this.#itemsModels.set(character, `${item.id}\0${item.style}`, itemModel);
+		this.#itemsModels.set(character, getItemIdStyle(item), itemModels);
 	}
 
 	#unEquipItem(character: Character, item: Item): void {
-		character.items.delete(item);
-		const itemModel = this.#itemsModels.get(character, `${item.id}\0${item.style}`);
-		if (itemModel) {
-			itemModel.remove();
+		const itemHash = getItemIdStyle(item);
+		character.items.delete(itemHash);
+		const itemModels = this.#itemsModels.get(character, itemHash);
+		if (itemModels) {
+			itemModels.forEach(itemModel => itemModel.remove());
 		}
 		//this.#equipedItems.delete(character, slot);
 	}

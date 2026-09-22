@@ -13,7 +13,7 @@ import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOpe
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { GameList, getCharacter, getItem, getTf2Characters } from './misc/character';
+import { GameList, getCharacter, getItem, getItemIdStyle, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
@@ -35,6 +35,7 @@ import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
 import { Player } from './player';
 import { JSONFile, SfmSerializer } from './serialize/serializer';
+import { getItemNodes } from './utils/items';
 import { isCharacter, isItem } from './utils/models';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
@@ -408,6 +409,7 @@ class Application {
 	}
 
 	static async #userAddCharacter(detail: AddCharacter, action?: Action): Promise<void> {
+		console.info('userAddCharacter', detail.character)
 		const scenes = new Set<SfmNode<SfmScene>>();
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
@@ -453,22 +455,9 @@ class Application {
 			})
 			addCharacterAction.do(sceneNode, 'add-child', characterNode);
 
-			for (const item of detail.character.items) {
-				const itemNode = new SfmNode({
-					entity: new SfmModel({
-						repository: item.game,
-						path: item.modelPath,
-						skin: item.skin,
-						metadatas: {
-							game: item.game,
-							item_id: item.id,
-							item_style: item.style,
-							type: 'item',
-							slot: item.slot,
-						},
-					}),
-				});
-				addCharacterAction.do(characterNode, 'add-child', itemNode);
+			for (const [, item] of detail.character.items) {
+				const itemNodes = getItemNodes(item);
+				itemNodes.forEach(itemNode => addCharacterAction.do(characterNode, 'add-child', itemNode));
 			}
 		}
 		if (!action) {
@@ -947,7 +936,7 @@ class Application {
 
 			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string,);
 			if (item) {
-				character.items.add(item);
+				character.items.set(getItemIdStyle(item), item);
 			}
 		}
 

@@ -32,7 +32,7 @@ export type Character = {
 	animation?: string;
 	keywords?: string[];
 	slots: CharacterSlot[];
-	items: Set<Item>;
+	items: Map<string, Item>;
 }
 
 export type Item = {
@@ -43,8 +43,14 @@ export type Item = {
 	name: string;
 	icon: string;
 	modelPath: string;
+	attachedModel?: string;
+	extraWearable?: string;
 	skin?: string;
 	keywords?: string[];
+}
+
+export function getItemIdStyle(item: Item): string {
+	return `${item.id}\0${item.style}`;
 }
 
 const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots'>[] = [
@@ -104,7 +110,7 @@ export function getTf2Character(name: string): Character | null {
 
 	const character = structuredClone(partialCharacter) as Character;
 	populateTf2Character(character);
-	character.items = new Set<Item>();
+	character.items = new Map<string, Item>();
 	return character;
 }
 
@@ -131,14 +137,35 @@ export async function characterToModel(character: Character): Promise<Source1Mod
 	return model;
 }
 
-export async function itemToModel(item: Item): Promise<Source1ModelInstance | null> {
-	let model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
+export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
+	const models: Source1ModelInstance[] = [];
+	console.info('itemToModel', item);
+	const model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
 	if (item.skin) {
 		model?.setSkin(item.skin);
 	}
 
-	return model;
+	if (model) {
+		models.push(model);
+	}
+
+	if (item.attachedModel) {
+		const attachedModel = await Source1ModelManager.createInstance(item.game, item.attachedModel, true);
+		attachedModel?.playSequence('ref');
+		model?.addChild(attachedModel);
+	}
+
+	if (item.extraWearable) {
+		const extraWearable = await Source1ModelManager.createInstance(item.game, item.extraWearable, true);
+		extraWearable?.playSequence('ref');
+		//model?.addChild(attachedModel);
+		if (extraWearable) {
+			models.push(extraWearable);
+		}
+	}
+
+	return models;
 }
 
 export async function getItems(slot: CharacterSlot): Promise<Item[]> {
@@ -149,6 +176,29 @@ export async function getItems(slot: CharacterSlot): Promise<Item[]> {
 			const error = `code getItems for game ${slot.character.game}`;
 			BugReporter.reportBug('error', error)
 			throw new Error(error);
+	}
+}
+
+function tf2ItemToItem(item: JSONObject, characterName: string): Item {
+	let skin: string | undefined;
+	if (item.skin_red !== undefined) {
+		skin = item.skin_red as string;
+	}
+
+	let attachedModel = item.attached_models as string;
+	let extraWearable = item.extra_wearable as string;
+
+	return {
+		id: item.defindex as string,
+		slot: item.item_slot as string,
+		style: item.style as string,
+		game: 'tf2',
+		name: item.name as string,
+		icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
+		modelPath: getTf2ModelPath(characterName, item),//item.model_player as string,// TODO: use model_player_per_class
+		attachedModel,
+		extraWearable,
+		skin,
 	}
 }
 
@@ -172,16 +222,7 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 				skin = item.skin_red as string;
 			}
 
-			result.push({
-				id: item.defindex as string,
-				slot: item.item_slot as string,
-				style: item.style as string,
-				game: slot.character.game,
-				name: item.name as string,
-				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
-				modelPath: getTf2ModelPath(slot.character.name, item),//item.model_player as string,// TODO: use model_player_per_class
-				skin,
-			});
+			result.push(tf2ItemToItem(item, slot.character.name));
 		}
 	}
 	return result;
@@ -205,16 +246,7 @@ async function getTf2Item(characterName: string, id: string, itemSlot: string, s
 				skin = item.skin_red as string;
 			}
 
-			return {
-				id: item.defindex as string,
-				slot: item.item_slot as string,
-				style: item.style as string,
-				game: 'tf2',
-				name: item.name as string,
-				icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
-				modelPath: getTf2ModelPath(characterName, item),//item.model_player as string,// TODO: use model_player_per_class
-				skin,
-			}
+			return tf2ItemToItem(item, characterName);
 		}
 	}
 	return null;
