@@ -6,6 +6,7 @@
 	display: flex;
 	flex: 1;
 	position: relative;
+	min-height: 10px;
 }
 
 .canvas-container canvas {

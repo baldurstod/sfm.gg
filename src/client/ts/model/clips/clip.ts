@@ -4,6 +4,7 @@ import { JSONSerializable } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmTimeFrame, TimeFrameParameters } from '../timeframe';
 import { SfmTrack } from '../track';
+import { SfmFilmClip } from './filmclip';
 
 export type SfmClipType = 'sound' | 'effect' | 'film' | 'operator';
 
@@ -50,6 +51,14 @@ export abstract class SfmClip extends Serializable implements Undoable {
 
 	overlapTimeFrame(other: SfmTimeFrame): SfmTimeFrame | null {
 		return this.#timeFrame.overlap(other);
+	}
+
+	/**
+	 * Get the film clip this clip belongs to
+	 * @returns The parent film clip or null
+	 */
+	getParentFilmClip(): SfmFilmClip | null {
+		return this.track?.trackGroup?.parentClip ?? null;
 	}
 
 	abstract update(context: SfmOperatorContext): void;

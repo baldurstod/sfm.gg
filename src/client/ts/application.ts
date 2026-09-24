@@ -1,8 +1,8 @@
-import { ContextType, Graphics, GraphicsEvents, GraphicTickEvent, Repositories, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
-import { OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
+import { Camera, ContextType, FullScreenQuad, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, Scene, ShaderMaterial, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
+import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
-import { errorOnce } from 'harmony-utils';
+import { errorOnce, setTimeoutPromise } from 'harmony-utils';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
@@ -40,6 +40,7 @@ import { isCharacter, isItem } from './utils/models';
 import { AppPanel } from './view/app';
 import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
+import { RenderPanel } from './view/render';
 
 documentStyle(htmlCSS);
 documentStyle(varsCSS);
@@ -50,7 +51,9 @@ class Application {
 	static #translations = new Map<string, I18nTranslation>();
 	static #modelSelectorPanel?: ModelSelectorPanel;
 	static #characterSelectorPanel?: CharacterSelectorPanel;
+	static #renderPanel?: RenderPanel;
 	static #player = new Player();
+	static #raytracer = new Raytracer();
 
 	static {
 		I18n.setOptions({ translations: [english, french] });
@@ -83,6 +86,16 @@ class Application {
 				alpha: true,
 				preserveDrawingBuffer: true,
 				premultipliedAlpha: false,
+			},
+			webGPU: {
+				configuration: {
+					alphaMode: 'premultiplied',
+				},
+				requiredLimits: {
+					maxStorageBufferBindingSize: 2147483644,
+					maxBufferSize: 4294967292,
+					maxStorageBuffersPerShaderStage: 16,
+				}
 			}
 		});
 
@@ -165,6 +178,9 @@ class Application {
 				this.#addLight(detail.type, scene);
 			}
 		});
+		Controller.addEventListener('userrenderpicture', () => this.#renderPicture());
+		Controller.addEventListener('userpauserender', () => this.#raytracer.pause());
+		Controller.addEventListener('userresumerender', () => this.#raytracer.play());
 
 		//Controller.dispatchEvent('userselectcharacter');
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440, });
@@ -972,6 +988,78 @@ class Application {
 
 		Controller.dispatchEvent('refreshtimeline');
 		this.#setActiveFilmClips();
+	}
+
+	static async  #renderPicture(): Promise<void> {
+		// TODO: remove notifications and prevent them to happen
+		if (!Graphics.isWebGPU) {
+			addNotification(I18n.getString('#failed_to_render_no_webgpu'), NotificationType.Info, 15);
+			return;
+		}
+
+		const filmClip = this.#session.getFilmClip();
+		if (!filmClip) {
+			addNotification(I18n.getString('#no_film_clip_to_render'), NotificationType.Info, 15);
+			return;
+		}
+
+		const clips = filmClip.getSubClipsAtTime(this.#player.getCurrentTime(), 'film');
+		if (clips.size === 0) {
+			addNotification(I18n.getString('#no_film_clip_at_the_current_time'), NotificationType.Info, 15);
+			return;
+		}
+
+		// TODO: we need to do that for several clips with compositing
+		const clip = clips.values().next().value!;
+		const activeCamera = clip.activeCamera ?? clip.getParentFilmClip()?.activeCamera
+		const camera = activeCamera?.getEngineEntity();
+		if (!camera) {
+			addNotification(I18n.getString('#no_active_camera_for_clip'), NotificationType.Info, 15);
+			return;
+		}
+
+		const scene = clip.getScene()?.getEntity()?.getEngineEntity();
+		if (!scene) {
+			addNotification(I18n.getString('#no_scene_to_render'), NotificationType.Info, 15);
+			return;
+		}
+
+		await this.#raytracer.configure(scene, camera, 800, 600)
+
+		this.#raytracer.play();
+
+		const presentationScene = new Scene({ camera: new Camera() });
+
+		const raytracerMat = new ShaderMaterial({
+			shaderSource: 'presentation',
+			uniforms: {
+				inTexture: this.#raytracer.getOutputTexture(),
+			},
+		});
+
+
+		new FullScreenQuad({ parent: presentationScene, material: raytracerMat, });
+
+		const rtCanvas = Graphics.addCanvas({
+			name: `rt_canvas_test`,
+			scene: presentationScene,
+			autoResize: false,
+			width: 800,
+			height: 600,
+		});
+
+		if (!rtCanvas) {
+			return;
+		}
+
+		this.#getRenderPanel().setCanvas(rtCanvas.canvas);
+	}
+
+	static #getRenderPanel(): RenderPanel {
+		if (!this.#renderPanel) {
+			this.#renderPanel = new RenderPanel();
+		}
+		return this.#renderPanel;
 	}
 }
 

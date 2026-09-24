@@ -1,4 +1,4 @@
-import { addSVG, fileOpenSVG, manufacturingSVG, redoSVG, saveSVG, settingsSVG, undoSVG } from 'harmony-svg';
+import { addSVG, fileOpenSVG, manufacturingSVG, photoSVG, redoSVG, saveSVG, settingsSVG, undoSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import toolbarCSS from '../../css/toolbar.css';
 import { Controller, RefreshToolbar } from '../controller';
@@ -74,6 +74,12 @@ export class Toolbar extends Panel {
 					disabled: true,
 					$click: () => {
 						Controller.dispatchEvent('userredolastaction');
+					},
+				}) as HTMLButtonElement,
+				createElement('button', {
+					innerHTML: photoSVG,
+					$click: () => {
+						Controller.dispatchEvent('userrenderpicture');
 					},
 				}) as HTMLButtonElement,
 			],
