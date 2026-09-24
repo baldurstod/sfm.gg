@@ -9,6 +9,16 @@ export class Panel {
 			return;
 		}
 		this.panel = new HarmonyPanel(params);
+
+		const callback: IntersectionObserverCallback = (entries, observer) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					this.activated();
+					observer.unobserve(entry.target);
+				}
+			});
+		};
+		new IntersectionObserver(callback).observe(this.panel.getHtml());
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -30,6 +40,8 @@ export class Panel {
 	show(): void {
 		//show(this.shadowRoot?.host as HTMLElement);
 	}
+
+	activated(): void { };
 
 	isVisible(): boolean {
 		//return isVisible(this.shadowRoot?.host as HTMLElement);
