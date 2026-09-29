@@ -1,4 +1,4 @@
-import { Entity, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
+import { Entity, Graphics, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
 import { SerializableParameters, SerializableProperty, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
@@ -31,6 +31,7 @@ export class SfmModel extends SfmEntity {
 
 	override async getEngineEntityAsync(): Promise<Entity | null> {
 		if (this.#model === undefined) {
+			await Graphics.ready;
 			this.#model = Promise.resolve(null);
 
 			if (this.#repository && this.#path) {

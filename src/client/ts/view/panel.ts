@@ -1,4 +1,4 @@
-import { HarmonyPanel, HarmonyPanelParams } from 'harmony-ui';
+import { HarmonyPanel, HarmonyPanelParams, show } from 'harmony-ui';
 
 export class Panel {
 	//protected shadowRoot?: ShadowRoot;
@@ -31,6 +31,7 @@ export class Panel {
 
 	open(): void {
 		this.getPanel();
+		show(this.panel!.getHtml() as HTMLElement);
 	}
 
 	hide(): void {
