@@ -41,6 +41,7 @@ export class TimelinePanel extends Panel {
 	#elementsOuter = new Map<Serializable, HTMLElement>();
 	#elementsTitle = new Map<Serializable, HTMLElement>();
 	#elementsInner = new Map<Serializable, HTMLElement>();
+	#potentialDragOperation: DragOperation | null = null;
 	#dragOperation: DragOperation | null = null;
 	#dragElement: Serializable | null = null;
 	#dragAction: Action | null = null;
@@ -296,6 +297,7 @@ export class TimelinePanel extends Panel {
 						}),
 						inner = createElement('div', {
 							class: 'clip-container',
+							$mousemove: (event: MouseEvent) => this.#hoverTrack((element as SfmTrack), event, outer!),
 						}),
 					],
 					$contextmenu: (event: MouseEvent) => this.#displayTrackContextMenu(event, element as SfmTrack),
@@ -309,6 +311,9 @@ export class TimelinePanel extends Panel {
 							class: 'clip-header',
 							child: title = createTitle(element),
 							$mousedown: (event: MouseEvent) => {
+								if (this.#potentialDragOperation) {
+									return;
+								}
 								this.#startDragOperation('moveclip', element);
 								this.#dragTime = this.#getTimeFromMouseEvent(event);
 								this.#dragStart = (element as SfmClip).getStart();
@@ -317,16 +322,6 @@ export class TimelinePanel extends Panel {
 						}),
 						inner = createElement('div', {
 							class: 'clip-content',
-						}),
-						createElement('div', {
-							class: 'resize-clip resize-clip-start',
-							//style: `cursor: url('data:image/svg+xml,${encodeURIComponent(arrowMenuCloseSVG)}')12 12, col-resize;`,
-							$mousedown: () => this.#startDragClipStart(element),
-						}),
-						createElement('div', {
-							class: 'resize-clip resize-clip-end',
-							//style: `cursor: url('data:image/svg+xml,${encodeURIComponent(arrowMenuOpenSVG)}')12 12, col-resize;`,
-							$mousedown: () => this.#startDragClipEnd(element),
 						}),
 					],
 					$click: (event: MouseEvent) => {
@@ -350,6 +345,55 @@ export class TimelinePanel extends Panel {
 		return [outer, inner];
 	}
 
+	#hoverTrack(track: SfmTrack, event: MouseEvent, trackElement: HTMLElement): void {
+		this.#potentialDragOperation = null;
+		if (this.#dragOperation) {
+			return;
+		}
+
+		const time = this.#getTimeFromMouseEvent(event);
+		const clips = track.getClips();
+
+		let nearest = +Infinity;
+		let nearestClip: SfmClip | null = null;
+		let nearestType: 'start' | 'end' | null = null;
+
+		for (const clip of clips) {
+			const deltaStart = Math.abs(clip.getStart() - time);
+			if (deltaStart < nearest) {
+				nearest = deltaStart;
+				nearestClip = clip;
+				nearestType = 'start';
+			}
+
+			const deltaEnd = Math.abs(clip.getEnd() - time);
+			if (deltaEnd < nearest) {
+				nearest = deltaEnd;
+				nearestClip = clip;
+				nearestType = 'end';
+			}
+		}
+
+		if (nearest < 0.5 && nearestClip) {
+			const rect = this.#getSerializableElement(nearestClip)[0].getBoundingClientRect();
+			if (event.clientY < rect.top || event.clientY > rect.bottom) {
+				this.#potentialDragOperation = null;
+				trackElement.classList.remove('resize');
+				return;
+			}
+			trackElement.classList.add('resize');
+			this.#potentialDragOperation = 'clipstart';
+			if (nearestType === 'start') {
+				this.#startDragClipStart(nearestClip);
+			} else {
+				this.#startDragClipEnd(nearestClip);
+			}
+		} else {
+			this.#potentialDragOperation = null;
+			trackElement.classList.remove('resize');
+		}
+	}
+
 	#clipMouseDownOrClick(event: MouseEvent, element: Serializable): void {
 		console.info(event.target);
 		if (event.ctrlKey) {
@@ -357,7 +401,6 @@ export class TimelinePanel extends Panel {
 		} else {
 			this.#setSelectedClip(element as SfmClip);
 		}
-
 	}
 
 	#startDragClipStart(element: Serializable): void {
@@ -393,7 +436,6 @@ export class TimelinePanel extends Panel {
 		for (const gap of gaps) {
 			if (gap.contains((element as SfmFilmClip).getTimeFrame())) {
 				this.#dragAllowedTimeFrame.copy(gap);
-				console.info(this.#dragAllowedTimeFrame);
 				return;
 			}
 		}
@@ -422,7 +464,7 @@ export class TimelinePanel extends Panel {
 	}
 
 	#timeClick(event: PointerEvent): void {
-		const time = (event.offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
+		const time = this.#getTimeFromMouseEvent(event);//(event.offsetX / (this.#timeUnit * this.#timeScale)) - this.#timeOffset;
 		this.#setPlayPos(time);
 	}
 

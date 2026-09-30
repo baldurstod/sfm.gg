@@ -59,7 +59,7 @@ export class SfmTimeFrame extends Serializable {
 	}
 
 	getEnd(): number {
-		return this.#start + this.#duration;
+		return Number((this.#start + this.#duration).toFixed(6));
 	}
 
 	getDuration(): number {

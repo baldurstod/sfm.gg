@@ -141,7 +141,11 @@
 	top: calc(var(--track)* var(--track-height));
 }
 
-.track-header{
+.track.resize {
+	cursor: col-resize;
+}
+
+.track-header {
 	cursor: pointer;
 }
 
@@ -173,23 +177,6 @@
 
 .operator-clip {
 	background-color: rgb(212, 149, 13);
-}
-
-.resize-clip {
-	position: absolute;
-	top: 0;
-	height: 100%;
-	width: 1rem;
-	max-width: 50%;
-	cursor: col-resize;
-}
-
-.resize-clip-start {
-	left: 0;
-}
-
-.resize-clip-end {
-	right: 0;
 }
 
 .clip-header {
