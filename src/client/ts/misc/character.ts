@@ -143,7 +143,7 @@ export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
 	const model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
 	if (item.skin) {
-		model?.setSkin(item.skin);
+		model?.setSkinId(Number(item.skin));
 	}
 
 	if (model) {

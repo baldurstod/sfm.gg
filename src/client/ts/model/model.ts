@@ -39,7 +39,7 @@ export class SfmModel extends SfmEntity {
 				this.#model.then(model => {
 					(model as Source1ModelInstance)?.playSequence('ref')
 					if (this.#skin !== undefined) {
-						model?.setSkin(this.#skin);
+						model?.setSkinName(this.#skin);
 					}
 				});
 			}
