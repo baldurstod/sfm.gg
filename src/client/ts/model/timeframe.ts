@@ -122,9 +122,36 @@ export class SfmTimeFrame extends Serializable {
 	}
 
 	/**
+	 * Clamp a time to the timeframe, bounds included.
+	 * @param time The time to clamp
+	 * @returns The time clamped to the time frame
+	 */
+	clampTime(time: number): number {
+		if (time <= this.#start) {
+			return this.#start;
+		}
+
+		const end = this.getEnd();
+		if (time >= end) {
+			return end;
+		}
+
+		return time;
+	}
+
+	/**
+	 * Check if the other time frame is fully included in this one, bounds included
+	 * @param other The other timeframe to check for
+	 * @returns True if the other time frame is a subset of this one, false otherwise
+	 */
+	contains(other: SfmTimeFrame): boolean {
+		return this.#start <= other.#start && this.getEnd() >= other.getEnd();
+	}
+
+	/**
 	 * Test if 2 timeframes overlap
 	 * @param other The other timeframe
-	 * @returns A timeframe containing the overlaping part of both timeframes, or null if there is no overlap
+	 * @returns A timeframe containing the overlapping part of both timeframes, or null if there is no overlap
 	 */
 	overlap(other: SfmTimeFrame): SfmTimeFrame | null {
 		let a: SfmTimeFrame = this;
@@ -272,6 +299,16 @@ export class SfmTimeFrame extends Serializable {
 
 	#setDuration(duration: number): void {
 		this.#duration = Number(duration.toFixed(6));
+	}
+
+	/**
+	 * Copy the othertime frame
+	 * @param other The time frame to copy from
+	 */
+	copy(other: SfmTimeFrame): void {
+		this.#start = other.#start;
+		this.#duration = other.#duration;
+		this.#offset = other.#offset;
 	}
 
 	clone(): SfmTimeFrame {

@@ -47,6 +47,8 @@ export class TimelinePanel extends Panel {
 	#dragTime = 0;
 	#dragStart = 0;
 	#dragEnd = 0;
+	// For film clips, the time frame the dragged clip is allowed to move in
+	#dragAllowedTimeFrame = new SfmTimeFrame();
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -360,10 +362,41 @@ export class TimelinePanel extends Panel {
 
 	#startDragClipStart(element: Serializable): void {
 		this.#startDragOperation('clipstart', element);
+		this.#setAllowedTimeFrame(element);
 	}
 
 	#startDragClipEnd(element: Serializable): void {
 		this.#startDragOperation('clipend', element);
+		this.#setAllowedTimeFrame(element);
+	}
+
+	/**
+	 * For elements of type film clip, set the allowed time frame. Do nothing for other elements
+	 * @param element The element to check for
+	 */
+	#setAllowedTimeFrame(element: Serializable): void {
+		if (!(element as SfmFilmClip).isSfmFilmClip) {
+			return;
+		}
+
+		const track = (element as SfmFilmClip).track;
+		if (!track) {
+			return;
+		}
+
+		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
+		if (!timeFrame) {
+			return;
+		}
+
+		const gaps = track.getGaps(timeFrame.getStart(), timeFrame.getEnd(), new Set([(element as SfmFilmClip)]));
+		for (const gap of gaps) {
+			if (gap.contains((element as SfmFilmClip).getTimeFrame())) {
+				this.#dragAllowedTimeFrame.copy(gap);
+				console.info(this.#dragAllowedTimeFrame);
+				return;
+			}
+		}
 	}
 
 	#mouseWheel(event: WheelEvent): void {
@@ -542,6 +575,10 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
+		if ((this.#dragElement as SfmFilmClip).isSfmFilmClip) {
+			time = this.#dragAllowedTimeFrame.clampTime(time);
+		}
+
 		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-start', time);//(this.#dragElement as SfmClip).setStart(time);
 
 		this.refreshHTML();
@@ -551,6 +588,10 @@ export class TimelinePanel extends Panel {
 		//Controller.dispatchEvent('usersetcurrenttime', { detail: time, });
 		if (!this.#dragElement || !(this.#dragElement as SfmClip).isSfmClip) {
 			return;
+		}
+
+		if ((this.#dragElement as SfmFilmClip).isSfmFilmClip) {
+			time = this.#dragAllowedTimeFrame.clampTime(time);
 		}
 
 		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-end', time);//(this.#dragElement as SfmClip).setEnd(time);
