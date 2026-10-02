@@ -2,6 +2,9 @@
 import { PartialBy, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
 import { BugReporter, setTimeoutPromise } from 'harmony-utils';
+import icon440 from '../../img/icons/steam_icon_440.png';
+import teamBlu from '../../img/tf2/logo_blue_white.png';
+import teamRed from '../../img/tf2/logo_red_white.png';
 import demoman from '../../img/tf2/class/demoman.png';
 import engineer from '../../img/tf2/class/engineer.png';
 import heavy from '../../img/tf2/class/heavy.png';
@@ -24,8 +27,39 @@ export type CharacterSlot = {
 
 export type GameList = 'tf2';
 
+export type Tf2Team = 'blu' | 'red';
+
+export type Game = {
+	name: string;
+	icon: string;
+	teams?: GameTeam[];
+}
+
+export const Games: Game[] = [
+	{
+		name: 'tf2',
+		icon: icon440,
+		teams: [
+			{
+				name: 'red',
+				icon: teamRed,
+			},
+			{
+				name: 'blu',
+				icon: teamBlu,
+			},
+		],
+	},
+]
+
+export type GameTeam = {
+	name: string;
+	icon: string;
+}
+
 export type Character = {
 	game: GameList;
+	team?: Tf2Team;
 	name: string;
 	icon: string;
 	modelPath: string;
@@ -53,7 +87,7 @@ export function getItemIdStyle(item: Item): string {
 	return `${item.id}\0${item.style}`;
 }
 
-const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots'>[] = [
+const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots' | 'team'>[] = [
 	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
 	{ name: 'sniper', icon: sniper, modelPath: 'models/player/sniper', },
 	{ name: 'soldier', icon: soldier, modelPath: 'models/player/soldier', },
@@ -71,6 +105,7 @@ const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots'>[] = [
  */
 function populateTf2Character(character: Character): void {
 	character.game = 'tf2';
+	character.team = 'red';
 	character.animation = 'stand_secondary';
 	character.slots = [
 		{
@@ -139,7 +174,6 @@ export async function characterToModel(character: Character): Promise<Source1Mod
 
 export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
 	const models: Source1ModelInstance[] = [];
-	console.info('itemToModel', item);
 	const model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
 	if (item.skin) {
@@ -168,10 +202,10 @@ export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
 	return models;
 }
 
-export async function getItems(slot: CharacterSlot): Promise<Item[]> {
+export async function getItems(slot: CharacterSlot, team?: string): Promise<Item[]> {
 	switch (slot.character.game) {
 		case 'tf2':
-			return getItemsTf2(slot);
+			return getItemsTf2(slot, team as Tf2Team | undefined ?? 'red');
 		default:
 			const error = `code getItems for game ${slot.character.game}`;
 			BugReporter.reportBug('error', error)
@@ -179,10 +213,17 @@ export async function getItems(slot: CharacterSlot): Promise<Item[]> {
 	}
 }
 
-function tf2ItemToItem(item: JSONObject, characterName: string): Item {
-	let skin: string | undefined;
-	if (item.skin_red !== undefined) {
-		skin = item.skin_red as string;
+function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): Item {
+	//let skin: string | undefined;
+	//if (item.skin_red !== undefined) {
+	//skin = item.skin_red as string;
+	//}
+
+	let skin: string;
+	skin = item.skin_red as string | undefined ?? '0';
+
+	if (team === 'blu') {
+		skin = item.skin_blu as string | undefined ?? '1';
 	}
 
 	let attachedModel = item.attached_models as string;
@@ -202,12 +243,11 @@ function tf2ItemToItem(item: JSONObject, characterName: string): Item {
 	}
 }
 
-async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
+async function getItemsTf2(slot: CharacterSlot, team: Tf2Team): Promise<Item[]> {
 	const items = await getTf2ItemList();
 	if (!items) {
 		return [];
 	}
-	console.log(items);
 
 	const result: Item[] = []
 	for (const index in items.items as JSONObject) {
@@ -217,18 +257,13 @@ async function getItemsTf2(slot: CharacterSlot): Promise<Item[]> {
 				continue;
 			}
 
-			let skin: string | undefined;
-			if (item.skin_red !== undefined) {
-				skin = item.skin_red as string;
-			}
-
-			result.push(tf2ItemToItem(item, slot.character.name));
+			result.push(tf2ItemToItem(item, slot.character.name, team));
 		}
 	}
 	return result;
 }
 
-async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string): Promise<Item | null> {
+async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string, team: Tf2Team): Promise<Item | null> {
 	console.info('item style ', style);
 	const items = await getTf2ItemList();
 	if (!items) {
@@ -246,7 +281,7 @@ async function getTf2Item(characterName: string, id: string, itemSlot: string, s
 				skin = item.skin_red as string;
 			}
 
-			return tf2ItemToItem(item, characterName);
+			return tf2ItemToItem(item, characterName, team);
 		}
 	}
 	return null;
@@ -337,10 +372,10 @@ export function getCharacter(game: GameList, name: string): Character | null {
 	}
 }
 
-export async function getItem(game: GameList, characterName: string, itemId: string, itemSlot: string, itemStyle: string): Promise<Item | null> {
+export async function getItem(game: GameList, characterName: string, itemId: string, itemSlot: string, itemStyle: string, team: string): Promise<Item | null> {
 	switch (game) {
 		case 'tf2':
-			return getTf2Item(characterName, itemId, itemSlot, itemStyle);
+			return getTf2Item(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
 		default:
 			return null;
 	}

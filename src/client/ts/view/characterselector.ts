@@ -2,9 +2,8 @@ import { AmbientLight, Camera, CanvasAttributes, Graphics, GraphicsEvents, Graph
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
-import icon440 from '../../img/icons/steam_icon_440.png';
 import { Controller, UpdateCharacter } from '../controller';
-import { Character, CharacterSlot, characterToModel, getCharacterSlot, getItemIdStyle, getItems, Item, itemToModel } from '../misc/character';
+import { Character, CharacterSlot, characterToModel, Game, GameTeam, getCharacterSlot, getItemIdStyle, getItems, Item, itemToModel } from '../misc/character';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmModel } from '../model/model';
@@ -12,7 +11,9 @@ import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
 export class CharacterSelectorPanel extends Panel {
+	#htmlGames?: HTMLElement;
 	#htmlCharacters?: HTMLElement;
+	#htmlTeams?: HTMLElement;
 	#htmlSlots?: HTMLElement;
 	#htmlItemsContainer?: HTMLElement;
 	#htmlItemsContainerSpacer?: HTMLElement;
@@ -37,6 +38,8 @@ export class CharacterSelectorPanel extends Panel {
 	#selectedClips?: Set<SfmClip>;
 	#editCharacterClip?: SfmFilmClip | null;
 	#editCharacterNode?: SfmNode<SfmModel> | null;
+	#currentTeam?: GameTeam | null;
+	#currentSlot?: CharacterSlot | null;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -68,18 +71,18 @@ export class CharacterSelectorPanel extends Panel {
 					class: 'characters-selector',
 					childs: [
 						// App selector
-						createElement('div', {
-							class: 'apps',
-							childs: [
-								createElement('img', {
-									src: icon440,
-									$click: () => Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440 }),
-								}),
-							]
+						this.#htmlGames = createElement('div', {
+							class: 'games',
 						}),
 						// Character selector
 						this.#htmlCharacters = createElement('div', {
 							class: 'characters',
+						}),
+						// Team selector
+						this.#htmlTeams = createElement('div', {
+							class: 'teams',
+							hidden: true,
+							innerText: 'teams',
 						}),
 					]
 				}),
@@ -158,6 +161,67 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
+	setGames(games: Game[]): void {
+		this.initPanel();
+		for (const game of games) {
+			createElement('img', {
+				src: game.icon,
+				parent: this.#htmlGames,
+				$click: () => this.#selectGame(game),
+			});
+		}
+	}
+
+	#selectGame(game: Game): void {
+		Controller.dispatchEvent('userselectcharacterselectapp', { detail: game.name });
+		hide(this.#htmlTeams);
+
+		this.#currentTeam = null;
+
+		if (game.teams) {
+			show(this.#htmlTeams);
+			for (const team of game.teams) {
+				createElement('img', {
+					src: team.icon,
+					parent: this.#htmlTeams,
+					$click: () => this.#selectTeam(team),
+				});
+			}
+		}
+	}
+
+	async #selectTeam(team: GameTeam): Promise<void> {
+		this.#currentTeam = team;
+		console.info(this.#currentTeam);
+
+		if (this.#selectedCharacter) {
+			const equippedItems: string[] = [];
+			this.#selectedCharacter.team = team.name as any;
+			const items = new Map(this.#selectedCharacter.items);
+			if (items) {
+				for (const item of items) {
+					equippedItems.push(getItemIdStyle(item[1]));
+					await this.#itemClick(item[1]);
+				}
+			}
+
+			// Reselect the slot to refresh item list
+			const slot = this.#selectedSlot.get(this.#selectedCharacter);
+			if (slot) {
+				await this.#selectSlot(slot);
+			}
+
+			for (const equippedItem of equippedItems) {
+				const item = this.#items.find(element => equippedItem === getItemIdStyle(element));
+				if (!item) {
+					continue;
+				}
+
+				await this.#itemClick(item);
+			}
+		}
+	}
+
 	setCharacters(characters: PartialBy<Character, 'items'>[]): void {
 		this.#selectedCharacter = undefined;
 		this.initPanel();
@@ -213,8 +277,9 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	async #selectSlot(slot: CharacterSlot): Promise<void> {
+		this.#currentSlot = slot;
 		this.#selectedSlot.set(slot.character, slot);
-		const items = await getItems(slot);
+		const items = await getItems(slot, slot.character.team);
 
 		for (const [, htmlItem] of this.#htmlItems) {
 			htmlItem.remove();

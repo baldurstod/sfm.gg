@@ -13,7 +13,7 @@ import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOpe
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { GameList, getCharacter, getItem, getItemIdStyle, getTf2Characters } from './misc/character';
+import { GameList, Games, getCharacter, getItem, getItemIdStyle, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
@@ -250,7 +250,7 @@ class Application {
 		const cameraNode = new SfmNode({ entity: workCamera });
 		action.do(clipScene, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
 
-		const filmTrackGroup = new SfmTrackGroup({ name: 'Film', order: film.getNextTrackGroupOrder(), });
+		const filmTrackGroup = new SfmTrackGroup({ name: 'Picture', order: film.getNextTrackGroupOrder(), });
 		action.do(film, 'add-track-group', filmTrackGroup);
 		const filmTrack = new SfmTrack({ name: 'Film 1', trackType: 'film', order: filmTrackGroup.getNextTrackOrder(), });
 		action.do(filmTrackGroup, 'add-track', filmTrack);
@@ -303,6 +303,7 @@ class Application {
 					game: 'tf2',
 					type: 'character',
 					character: 'sniper',
+					team: 'red',
 				},
 			}),
 		});
@@ -416,16 +417,17 @@ class Application {
 	static #getCharacterSelectorPanel(): CharacterSelectorPanel {
 		if (!this.#characterSelectorPanel) {
 			this.#characterSelectorPanel = new CharacterSelectorPanel();
+
+			this.#characterSelectorPanel.setGames(Games);
 		}
 		return this.#characterSelectorPanel;
 	}
 
-	static #userSelectCharacterSelectApp(appId: number): void {
+	static #userSelectCharacterSelectApp(appId: string): void {
 		switch (appId) {
-			case 440:
+			case 'tf2':
 				this.#getCharacterSelectorPanel().setCharacters(getTf2Characters());
 				break;
-
 			default:
 				throw new Error(`Unknown app id ${appId}`);
 		}
@@ -463,7 +465,7 @@ class Application {
 
 		// Add the character to the scenes
 		for (const sceneNode of scenes) {
-			const children = new Set<SfmNode>();
+			const team = detail.character.team;
 
 			const characterNode = new SfmNode({
 				entity: new SfmModel({
@@ -473,6 +475,7 @@ class Application {
 						game: detail.character.game,
 						type: 'character',
 						character: detail.character.name,
+						...(team) && { team },
 					},
 				}),
 			})
@@ -946,6 +949,7 @@ class Application {
 
 		const game = characterEntity.getMetadata('game') as GameList;
 		const characterName = characterEntity.getMetadata('character') as string;
+		const characterTeam = characterEntity.getMetadata('team') as string;
 		const character = getCharacter(game, characterName);
 		if (!character) {
 			return;
@@ -957,7 +961,7 @@ class Application {
 				continue;
 			}
 
-			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string,);
+			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
 			if (item) {
 				character.items.set(getItemIdStyle(item), item);
 			}

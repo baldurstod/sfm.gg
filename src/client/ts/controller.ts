@@ -92,7 +92,8 @@ export class Controller {
 	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddmodel', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcharacter', callback: (evt: CustomEvent<SelectCharacter | void>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'userselectcharacterselectapp', callback: (evt: CustomEvent<string>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<AddCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userupdatecharacter', callback: (evt: CustomEvent<UpdateCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -143,7 +144,8 @@ export class Controller {
 	static dispatchEvent(type: 'useropenadvancedoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useraddmodel', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userselectcharacter', options?: CustomEventInit<SelectCharacter>): boolean;
-	static dispatchEvent(type: 'userselectcharacterselectapp' | 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
+	static dispatchEvent(type: 'userselectcharacterselectapp', options: ControllerEventInit<string>): boolean;
+	static dispatchEvent(type: 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<AddCharacter>): boolean;
 	static dispatchEvent(type: 'userupdatecharacter', options: ControllerEventInit<UpdateCharacter>): boolean;
 	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
