@@ -1,4 +1,4 @@
-import { Character } from './misc/character';
+import { Character } from './characters/character';
 import { SfmCamera } from './model/camera';
 import { SfmClip, SfmClipType } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';

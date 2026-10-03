@@ -3,8 +3,6 @@ import { PartialBy, Source1ModelInstance, Source1ModelManager } from 'harmony-3d
 import { JSONObject } from 'harmony-types';
 import { BugReporter, setTimeoutPromise } from 'harmony-utils';
 import icon440 from '../../img/icons/steam_icon_440.png';
-import teamBlu from '../../img/tf2/logo_blue_white.png';
-import teamRed from '../../img/tf2/logo_red_white.png';
 import demoman from '../../img/tf2/class/demoman.png';
 import engineer from '../../img/tf2/class/engineer.png';
 import heavy from '../../img/tf2/class/heavy.png';
@@ -14,10 +12,16 @@ import scout from '../../img/tf2/class/scout.png';
 import sniper from '../../img/tf2/class/sniper.png';
 import soldier from '../../img/tf2/class/soldier.png';
 import spy from '../../img/tf2/class/spy.png';
+import teamBlu from '../../img/tf2/logo_blue_white.png';
+import teamRed from '../../img/tf2/logo_red_white.png';
+import { Character, CharacterTemplate } from '../characters/character';
+import { ItemTemplate } from '../characters/item';
+import { Slot, SlotTemplate } from '../characters/slot';
+import { Tf2Character, Tf2ItemTemplate } from '../characters/tf2';
 
 
 export type CharacterSlot = {
-	character: Character;
+	character: CharacterTemplate;
 	name: string;
 	slots: string[];
 	//icon: string;
@@ -25,17 +29,18 @@ export type CharacterSlot = {
 	limit?: number;
 }
 
-export type GameList = 'tf2';
+export type Game = 'tf2';
 
 export type Tf2Team = 'blu' | 'red';
+export type GameTeam = Tf2Team;
 
-export type Game = {
+export type GameDefinition = {
 	name: string;
 	icon: string;
-	teams?: GameTeam[];
+	teams?: GameTeamDefinition[];
 }
 
-export const Games: Game[] = [
+export const Games: GameDefinition[] = [
 	{
 		name: 'tf2',
 		icon: icon440,
@@ -52,13 +57,14 @@ export const Games: Game[] = [
 	},
 ]
 
-export type GameTeam = {
-	name: string;
+export type GameTeamDefinition = {
+	name: GameTeam;
 	icon: string;
 }
 
-export type Character = {
-	game: GameList;
+/*
+export type CharacterTemplate = {
+	game: Game;
 	team?: Tf2Team;
 	name: string;
 	icon: string;
@@ -68,9 +74,12 @@ export type Character = {
 	slots: CharacterSlot[];
 	items: Map<string, Item>;
 }
+*/
 
+
+/*
 export type Item = {
-	game: GameList;
+	game: Game;
 	id: string;
 	slot: string;
 	style: string;
@@ -82,12 +91,13 @@ export type Item = {
 	skin?: string;
 	keywords?: string[];
 }
+*/
 
-export function getItemIdStyle(item: Item): string {
+export function getItemIdStyle(item: ItemTemplate): string {
 	return `${item.id}\0${item.style}`;
 }
 
-const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots' | 'team'>[] = [
+const tf2Characters: PartialBy<CharacterTemplate, 'game' | 'slots' | 'label'>[] = [
 	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
 	{ name: 'sniper', icon: sniper, modelPath: 'models/player/sniper', },
 	{ name: 'soldier', icon: soldier, modelPath: 'models/player/soldier', },
@@ -103,32 +113,28 @@ const tf2Characters: PartialBy<Character, 'game' | 'items' | 'slots' | 'team'>[]
  * Fill the game, animation and slots character properties
  * @param character The character to update
  */
-function populateTf2Character(character: Character): void {
+function populateTf2Character(character: CharacterTemplate): void {
 	character.game = 'tf2';
-	character.team = 'red';
 	character.animation = 'stand_secondary';
 	character.slots = [
 		{
-			character,
 			name: 'weapon',
 			slots: ['primary', 'secondary', 'melee'],
 			limit: 1,
 		},
 		{
-			character,
 			name: 'hat',
 			slots: ['head'],
 		},
 		{
-			character,
 			name: 'misc',
 			slots: ['misc'],
 		},
 	];
 }
 
-export function getTf2Characters(): PartialBy<Character, 'items'>[] {
-	const characters = structuredClone(tf2Characters) as Character[];
+export function getTf2Characters(): CharacterTemplate[] {
+	const characters = structuredClone(tf2Characters) as CharacterTemplate[];
 
 	for (const character of characters) {
 		populateTf2Character(character);
@@ -143,10 +149,10 @@ export function getTf2Character(name: string): Character | null {
 		return null;
 	}
 
-	const character = structuredClone(partialCharacter) as Character;
-	populateTf2Character(character);
-	character.items = new Map<string, Item>();
-	return character;
+	const characterTemplate = structuredClone(partialCharacter) as CharacterTemplate;
+	populateTf2Character(characterTemplate);
+	//character.items = new Map<string, Item>();
+	return new Tf2Character(characterTemplate);
 }
 
 
@@ -165,14 +171,14 @@ export function getTf2Character(name: string): Character | null {
 //]
 
 
-export async function characterToModel(character: Character): Promise<Source1ModelInstance | null> {
+export async function characterToModel(character: CharacterTemplate): Promise<Source1ModelInstance | null> {
 	let model = await Source1ModelManager.createInstance(character.game, character.modelPath, true);
 	model?.playSequence(character.animation ?? 'ref');
 
 	return model;
 }
 
-export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
+export async function itemToModel(item: ItemTemplate): Promise<Source1ModelInstance[]> {
 	const models: Source1ModelInstance[] = [];
 	const model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
@@ -202,18 +208,18 @@ export async function itemToModel(item: Item): Promise<Source1ModelInstance[]> {
 	return models;
 }
 
-export async function getItems(slot: CharacterSlot, team?: string): Promise<Item[]> {
-	switch (slot.character.game) {
+export async function getItems(slot: Slot, team?: string): Promise<ItemTemplate[]> {
+	switch (slot.getGame()) {
 		case 'tf2':
 			return getItemsTf2(slot, team as Tf2Team | undefined ?? 'red');
 		default:
-			const error = `code getItems for game ${slot.character.game}`;
+			const error = `code getItems for game ${slot.getGame()}`;
 			BugReporter.reportBug('error', error)
 			throw new Error(error);
 	}
 }
 
-function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): Item {
+function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): Tf2ItemTemplate {
 	//let skin: string | undefined;
 	//if (item.skin_red !== undefined) {
 	//skin = item.skin_red as string;
@@ -229,6 +235,13 @@ function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): 
 	let attachedModel = item.attached_models as string;
 	let extraWearable = item.extra_wearable as string;
 
+
+	let skinRed = Number(item.skin_red as string);
+	skinRed = isNaN(skinRed) ? 0 : skinRed;
+
+	let skinBlu = Number(item.skin_blu as string);
+	skinBlu = isNaN(skinBlu) ? 1 : skinBlu;
+
 	return {
 		id: item.defindex as string,
 		slot: item.item_slot as string,
@@ -240,30 +253,33 @@ function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): 
 		attachedModel,
 		extraWearable,
 		skin,
+		skinRed,
+		skinBlu,
 	}
 }
 
-async function getItemsTf2(slot: CharacterSlot, team: Tf2Team): Promise<Item[]> {
+async function getItemsTf2(slot: Slot, team: Tf2Team): Promise<Tf2ItemTemplate[]> {
 	const items = await getTf2ItemList();
 	if (!items) {
 		return [];
 	}
 
-	const result: Item[] = []
+	const result: Tf2ItemTemplate[] = [];
+	const slots = slot.getSlots();
 	for (const index in items.items as JSONObject) {
 		const item = (items.items as JSONObject)[index] as JSONObject;
-		if (slot.slots.includes(item.item_slot as string)) {
-			if (item.used_by_classes && (item.used_by_classes as JSONObject)[slot.character.name] != 1) {
+		if (slots.includes(item.item_slot as string)) {
+			if (item.used_by_classes && (item.used_by_classes as JSONObject)[slot.getOwner().getName()] != 1) {
 				continue;
 			}
 
-			result.push(tf2ItemToItem(item, slot.character.name, team));
+			result.push(tf2ItemToItem(item, slot.getOwner().getName(), team));
 		}
 	}
 	return result;
 }
 
-async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string, team: Tf2Team): Promise<Item | null> {
+async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string, team: Tf2Team): Promise<ItemTemplate | null> {
 	console.info('item style ', style);
 	const items = await getTf2ItemList();
 	if (!items) {
@@ -271,7 +287,7 @@ async function getTf2Item(characterName: string, id: string, itemSlot: string, s
 	}
 	console.log(items);
 
-	const result: Item[] = []
+	const result: ItemTemplate[] = []
 	for (const index in items.items as JSONObject) {
 		const item = (items.items as JSONObject)[index] as JSONObject;
 
@@ -363,7 +379,7 @@ function getTf2ModelPath(characterName: string, item: JSONObject): string {
 //https://tf2content.loadout.tf/generated/items/items_english.json?t=1787917844858
 //?t=${new Date().getTime()
 
-export function getCharacter(game: GameList, name: string): Character | null {
+export function getCharacter(game: Game, name: string): Character | null {
 	switch (game) {
 		case 'tf2':
 			return getTf2Character(name);
@@ -372,7 +388,7 @@ export function getCharacter(game: GameList, name: string): Character | null {
 	}
 }
 
-export async function getItem(game: GameList, characterName: string, itemId: string, itemSlot: string, itemStyle: string, team: string): Promise<Item | null> {
+export async function getItem(game: Game, characterName: string, itemId: string, itemSlot: string, itemStyle: string, team: string): Promise<ItemTemplate | null> {
 	switch (game) {
 		case 'tf2':
 			return getTf2Item(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
@@ -381,7 +397,7 @@ export async function getItem(game: GameList, characterName: string, itemId: str
 	}
 }
 
-export function getCharacterSlot(character: Character, itemSlot: string): CharacterSlot | undefined {
+export function getCharacterSlot(character: CharacterTemplate, itemSlot: string): SlotTemplate | undefined {
 	for (const slot of character.slots) {
 		if (slot.slots.indexOf(itemSlot) !== -1) {
 			return slot;

@@ -1,5 +1,5 @@
+import { Item } from '../characters/item';
 import { Action } from '../history/action';
-import { Item } from '../misc/character';
 import { SfmModel } from '../model/model';
 import { SfmNode } from '../model/node';
 
@@ -7,36 +7,42 @@ export function getItemNodes(item: Item): SfmNode<SfmModel>[] {
 	const nodes: SfmNode<SfmModel>[] = [];
 	const action = new Action();
 
+	const itemGame = item.getGame();
+	const itemId = item.getId();
+	const itemStyle = item.getStyle();
+	const itemSkin = item.getSkin();
+
 	// Create the item main model
 	const itemNode = new SfmNode({
 		entity: new SfmModel({
-			repository: item.game,
-			path: item.modelPath,
-			skin: item.skin,
+			repository: itemGame,
+			path: item.getModelPath(),
+			skin: itemSkin,
 			metadatas: {
-				game: item.game,
-				item_id: item.id,
-				item_style: item.style,
+				game: itemGame,
+				item_id: itemId,
+				item_style: itemStyle,
 				type: 'item',
-				slot: item.slot,
+				slot: item.getSlot(),
 			},
 		}),
 	});
 	nodes.push(itemNode);
 
 	// Attach the model the item main model
-	if (item.attachedModel) {
+	const attachedModel = item.getAttachedModel();
+	if (attachedModel) {
 		const attachedNode = new SfmNode({
 			entity: new SfmModel({
-				repository: item.game,
-				path: item.attachedModel,
-				skin: item.skin,
+				repository: itemGame,
+				path: attachedModel,
+				skin: itemSkin,
 				metadatas: {
-					game: item.game,
-					item_id: item.id,
-					item_style: item.style,
+					game: itemGame,
+					item_id: itemId,
+					item_style: itemStyle,
 					type: 'attached_model',
-					slot: item.slot,
+					slot: item.getSlot(),
 				},
 			}),
 		});
@@ -44,18 +50,19 @@ export function getItemNodes(item: Item): SfmNode<SfmModel>[] {
 	}
 
 	// Add extra wearable to the character
-	if (item.extraWearable) {
+	const extraWearable = item.getExtraWearable();
+	if (extraWearable) {
 		const itemNode = new SfmNode({
 			entity: new SfmModel({
-				repository: item.game,
-				path: item.extraWearable,
-				skin: item.skin,
+				repository: itemGame,
+				path: extraWearable,
+				skin: itemSkin,
 				metadatas: {
-					game: item.game,
-					item_id: item.id,
-					item_style: item.style,
+					game: itemGame,
+					item_id: itemId,
+					item_style: itemStyle,
 					type: 'item',
-					slot: item.slot,
+					slot: item.getSlot(),
 				},
 			}),
 		});

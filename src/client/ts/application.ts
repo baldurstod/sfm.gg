@@ -13,7 +13,7 @@ import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOpe
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { GameList, Games, getCharacter, getItem, getItemIdStyle, getTf2Characters } from './misc/character';
+import { Game, Games, getCharacter, getItem, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
@@ -434,7 +434,8 @@ class Application {
 	}
 
 	static async #userAddCharacter(detail: AddCharacter, action?: Action): Promise<void> {
-		console.info('userAddCharacter', detail.character)
+		const character = detail.character;
+		console.info('userAddCharacter', character)
 		const scenes = new Set<SfmNode<SfmScene>>();
 		let isInClip = false;
 		const currentTime = this.#player.getCurrentTime();
@@ -465,23 +466,23 @@ class Application {
 
 		// Add the character to the scenes
 		for (const sceneNode of scenes) {
-			const team = detail.character.team;
+			const team = character.getTeam();
 
 			const characterNode = new SfmNode({
 				entity: new SfmModel({
-					repository: detail.character.game,
-					path: detail.character.modelPath,
+					repository: character.getGame(),
+					path: character.getModelPath(),
 					metadatas: {
-						game: detail.character.game,
+						game: character.getGame(),
 						type: 'character',
-						character: detail.character.name,
+						character: character.getName(),
 						...(team) && { team },
 					},
 				}),
 			})
 			addCharacterAction.do(sceneNode, 'add-child', characterNode);
 
-			for (const [, item] of detail.character.items) {
+			for (const [, item] of character.getItems()) {
 				const itemNodes = getItemNodes(item);
 				itemNodes.forEach(itemNode => addCharacterAction.do(characterNode, 'add-child', itemNode));
 			}
@@ -947,13 +948,20 @@ class Application {
 			}
 		}
 
-		const game = characterEntity.getMetadata('game') as GameList;
+		const game = characterEntity.getMetadata('game') as Game;
 		const characterName = characterEntity.getMetadata('character') as string;
 		const characterTeam = characterEntity.getMetadata('team') as string;
 		const character = getCharacter(game, characterName);
 		if (!character) {
 			return;
 		}
+
+		/*
+		const character = createCharacter(characterTemplate);
+		if (!character) {
+			return;
+		}
+		*/
 
 		for (const itemNode of itemNodes) {
 			const itemEntity = itemNode.getEntity();
@@ -963,7 +971,8 @@ class Application {
 
 			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
 			if (item) {
-				character.items.set(getItemIdStyle(item), item);
+				//characterTemplate.items.set(getItemIdStyle(item), item);
+				character.equipItem(item);
 			}
 		}
 

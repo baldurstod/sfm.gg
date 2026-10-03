@@ -1,9 +1,12 @@
-import { AmbientLight, Camera, CanvasAttributes, Graphics, GraphicsEvents, GraphicTickEvent, Group, OrbitControl, PartialBy, Scene, Source1ModelInstance } from 'harmony-3d';
+import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, GraphicTickEvent, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
+import { Character, CharacterTemplate, createCharacter } from '../characters/character';
+import { Item, ItemTemplate } from '../characters/item';
+import { Slot } from '../characters/slot';
 import { Controller, UpdateCharacter } from '../controller';
-import { Character, CharacterSlot, characterToModel, Game, GameTeam, getCharacterSlot, getItemIdStyle, getItems, Item, itemToModel } from '../misc/character';
+import { GameDefinition, GameTeamDefinition, getItems } from '../misc/character';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmModel } from '../model/model';
@@ -17,7 +20,7 @@ export class CharacterSelectorPanel extends Panel {
 	#htmlSlots?: HTMLElement;
 	#htmlItemsContainer?: HTMLElement;
 	#htmlItemsContainerSpacer?: HTMLElement;
-	#htmlItems = new Map<Item, HTMLElement>();
+	#htmlItems = new Map<ItemTemplate, HTMLElement>();
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlAddPrimaryClip?: HTMLButtonElement;
 	#htmlAddSelectedClips?: HTMLButtonElement;
@@ -29,17 +32,17 @@ export class CharacterSelectorPanel extends Panel {
 	#scene?: Scene;
 	#group?: Group;
 	#selectedCharacter?: Character;
-	readonly #selectedSlot = new Map<Character, CharacterSlot>();//?: CharacterSlot;
-	readonly #equipedItems = new Map2<Character, CharacterSlot, Item[]>();
-	#items: Item[] = [];
-	#characterModels = new Map<Character, Source1ModelInstance>();
+	readonly #selectedSlot = new Map<Character, Slot>();//?: CharacterSlot;
+	readonly #equipedItems = new Map2<Character, Slot, ItemTemplate[]>();
+	#items: ItemTemplate[] = [];
+	#characterModels = new Map<Character, Entity>();
 	#itemsModels = new Map2<Character, string, Source1ModelInstance[]>();
 	#primarySelectedClip?: SfmClip;
 	#selectedClips?: Set<SfmClip>;
 	#editCharacterClip?: SfmFilmClip | null;
 	#editCharacterNode?: SfmNode<SfmModel> | null;
-	#currentTeam?: GameTeam | null;
-	#currentSlot?: CharacterSlot | null;
+	#currentTeam?: GameTeamDefinition | null;
+	#currentSlot?: Slot | null;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -82,7 +85,6 @@ export class CharacterSelectorPanel extends Panel {
 						this.#htmlTeams = createElement('div', {
 							class: 'teams',
 							hidden: true,
-							innerText: 'teams',
 						}),
 					]
 				}),
@@ -161,7 +163,7 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
-	setGames(games: Game[]): void {
+	setGames(games: GameDefinition[]): void {
 		this.initPanel();
 		for (const game of games) {
 			createElement('img', {
@@ -172,7 +174,7 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
-	#selectGame(game: Game): void {
+	#selectGame(game: GameDefinition): void {
 		Controller.dispatchEvent('userselectcharacterselectapp', { detail: game.name });
 		hide(this.#htmlTeams);
 
@@ -190,13 +192,15 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
-	async #selectTeam(team: GameTeam): Promise<void> {
+	async #selectTeam(team: GameTeamDefinition): Promise<void> {
 		this.#currentTeam = team;
-		console.info(this.#currentTeam);
+
+		this.#selectedCharacter?.setTeam(team.name);
+		/*
 
 		if (this.#selectedCharacter) {
 			const equippedItems: string[] = [];
-			this.#selectedCharacter.team = team.name as any;
+			this.#selectedCharacter.setTeam(team.name);
 			const items = new Map(this.#selectedCharacter.items);
 			if (items) {
 				for (const item of items) {
@@ -220,21 +224,22 @@ export class CharacterSelectorPanel extends Panel {
 				await this.#itemClick(item);
 			}
 		}
+		*/
 	}
 
-	setCharacters(characters: PartialBy<Character, 'items'>[]): void {
+	setCharacters(characters: CharacterTemplate[]): void {
 		this.#selectedCharacter = undefined;
 		this.initPanel();
 		this.#htmlCharacters!.innerText = '';
 
-		for (const character of characters) {
-			const c = structuredClone(character) as Character;
-			c.items = new Map<string, Item>();
+		for (const characterTemplate of characters) {
+			const character = createCharacter(characterTemplate);
+			//c.items = new Map<string, Item>();
 			createElement('img', {
 				parent: this.#htmlCharacters,
 				class: 'character',
-				src: character.icon,
-				$click: () => this.#selectCharacter(c),
+				src: characterTemplate.icon,
+				$click: () => this.#selectCharacter(character),
 			});
 		}
 	}
@@ -246,13 +251,13 @@ export class CharacterSelectorPanel extends Panel {
 
 		this.#group?.removeChildren();
 
-		let model = await characterToModel(character);//await Source1ModelManager.createInstance(character.game, character.model, true);
+		let model = await character.getModel();//characterToModel(character);//await Source1ModelManager.createInstance(character.game, character.model, true);
 		if (model) {
 			this.#characterModels.set(character, model);
 		}
 		this.#group!.addChild(model);
 		this.#initSlots(character);
-		const slot = this.#selectedSlot.get(character) ?? character.slots?.[0];
+		const slot = this.#selectedSlot.get(character) ?? character.getSlots()?.[0];
 		if (slot) {
 			this.#selectSlot(slot);
 		} else {
@@ -262,24 +267,26 @@ export class CharacterSelectorPanel extends Panel {
 
 	#initSlots(character: Character): void {
 		this.#htmlSlots!.innerText = '';
+		/*
 		if (!character.slots) {
 			return;
 		}
+		*/
 
-		for (const slot of character.slots) {
+		for (const slot of character.getSlots()) {
 			createElement('div', {
 				parent: this.#htmlSlots,
 				class: 'slot',
-				innerText: slot.name,
+				innerText: slot.getName(),
 				$click: () => this.#selectSlot(slot),
 			});
 		}
 	}
 
-	async #selectSlot(slot: CharacterSlot): Promise<void> {
+	async #selectSlot(slot: Slot): Promise<void> {
 		this.#currentSlot = slot;
-		this.#selectedSlot.set(slot.character, slot);
-		const items = await getItems(slot, slot.character.team);
+		this.#selectedSlot.set(slot.getOwner(), slot);
+		const items = await getItems(slot, slot.getOwner().getTeam());
 
 		for (const [, htmlItem] of this.#htmlItems) {
 			htmlItem.remove();
@@ -389,6 +396,8 @@ export class CharacterSelectorPanel extends Panel {
 
 	setItems(items: Item[]): void {
 		console.info(items);
+		throw new Error("TODO: remove me");
+
 	}
 
 	override open(): void {
@@ -455,12 +464,13 @@ export class CharacterSelectorPanel extends Panel {
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440 });
 
 
-		this.setCharacters([character]);
+		this.setCharacters([character.getTemplate()]);
 		await this.#selectCharacter(character);
 
 		//this.#equipedItems.getMap().delete(character);
 
 		// Remove existing items
+		/*
 		const equipedItems = new Map(this.#equipedItems.getSubMap(character));
 		for (const [slot, items] of equipedItems) {
 			for (const item of items) {
@@ -468,7 +478,9 @@ export class CharacterSelectorPanel extends Panel {
 			}
 		}
 		this.#equipedItems.getSubMap(character)?.clear();
+		*/
 
+		/*
 		// Add new items
 		for (const [, item] of character.items) {
 			console.log(item);
@@ -483,6 +495,7 @@ export class CharacterSelectorPanel extends Panel {
 			items.push(item);
 			this.#equipedItems.set(character, characterSlot, items);
 		}
+		*/
 	}
 
 	#updateCharacter(): void {
@@ -501,13 +514,19 @@ export class CharacterSelectorPanel extends Panel {
 		});
 	}
 
-	async #itemClick(item: Item): Promise<void> {
+	async #itemClick(item: ItemTemplate): Promise<void> {
 		if (!this.#selectedCharacter) {
 			return;
 		}
 
 		console.info(item);
+		if (this.#selectedCharacter.hasItem(item)) {
+			this.#selectedCharacter.unequipItem(item);
+		} else {
+			this.#selectedCharacter.equipItem(item);
+		}
 
+		/*
 		const selectedSlot = this.#selectedSlot.get(this.#selectedCharacter);
 		if (!selectedSlot) {
 			return;
@@ -534,9 +553,11 @@ export class CharacterSelectorPanel extends Panel {
 		}
 		items.push(item);
 		await this.#equipItem(this.#selectedCharacter, item);
+		*/
 	}
 
 	async #equipItem(character: Character, item: Item): Promise<void> {
+		/*
 		//this.#equipedItems.set(character, slot, item);
 		const characterModel = this.#characterModels.get(character);
 		if (!characterModel) {
@@ -558,15 +579,20 @@ export class CharacterSelectorPanel extends Panel {
 
 		//#itemsModels = new Map2<Character, Item, Source1ModelInstance>();
 		this.#itemsModels.set(character, getItemIdStyle(item), itemModels);
+		*/
 	}
 
-	#unEquipItem(character: Character, item: Item): void {
+	#unEquipItem(character: Character, item: ItemTemplate): void {
+		character.unequipItem(item);
+
+		/*
 		const itemHash = getItemIdStyle(item);
 		character.items.delete(itemHash);
 		const itemModels = this.#itemsModels.get(character, itemHash);
 		if (itemModels) {
 			itemModels.forEach(itemModel => itemModel.remove());
 		}
+		*/
 		//this.#equipedItems.delete(character, slot);
 	}
 }
