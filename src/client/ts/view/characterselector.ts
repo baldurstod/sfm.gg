@@ -467,7 +467,6 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	*#getfilteredItems(): Generator<ItemTemplate, null | undefined, unknown> {
-		console.info(this.#items);
 		for (const item of this.#items) {
 			if (this.#matchFilter(item)) {
 				yield item;

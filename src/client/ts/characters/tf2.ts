@@ -1,5 +1,5 @@
 import { Material, Source1MaterialManager, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
-import { characterToModel, Game, getItemIdStyle, Tf2Team } from '../misc/character';
+import { Game } from '../misc/character';
 import { Character, CharacterTemplate } from './character';
 import { Item, ItemTemplate } from './item';
 import { Slot } from './slot';
@@ -135,6 +135,7 @@ export class Tf2Character implements Character {
 	}
 
 	async equipItem(itemTemplate: Tf2ItemTemplate): Promise<void> {
+		console.info(itemTemplate);
 		// If item is present, do nothing
 		if (this.hasItem(itemTemplate)) {
 			return;
@@ -234,7 +235,7 @@ export class Tf2Character implements Character {
 
 	async getModel(): Promise<Source1ModelInstance | null> {
 		if (!this.#model) {
-			this.#model = await characterToModel(this.#template);
+			this.#model = await tf2CharacterToModel(this.#template);
 		}
 		return this.#model;
 	}
@@ -421,3 +422,16 @@ export class Tf2Item implements Item {
 		return this.#template.skin ?? '0';//TODO: depend on team
 	}
 }
+
+async function tf2CharacterToModel(character: CharacterTemplate): Promise<Source1ModelInstance | null> {
+	let model = await Source1ModelManager.createInstance(character.game, character.modelPath, true);
+	model?.playSequence(character.animation ?? 'ref');
+
+	return model;
+}
+
+function getItemIdStyle(item: ItemTemplate): string {
+	return `${item.id}\0${item.style}`;
+}
+
+export type Tf2Team = 'blu' | 'red';

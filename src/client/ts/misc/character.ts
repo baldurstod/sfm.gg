@@ -17,7 +17,7 @@ import teamRed from '../../img/tf2/logo_red_white.png';
 import { Character, CharacterTemplate } from '../characters/character';
 import { ItemTemplate } from '../characters/item';
 import { Slot, SlotTemplate } from '../characters/slot';
-import { Tf2Character, Tf2ItemTemplate } from '../characters/tf2';
+import { Tf2Character, Tf2ItemTemplate, Tf2Team } from '../characters/tf2';
 
 
 export type CharacterSlot = {
@@ -31,7 +31,6 @@ export type CharacterSlot = {
 
 export type Game = 'tf2';
 
-export type Tf2Team = 'blu' | 'red';
 export type GameTeam = Tf2Team;
 
 export type GameDefinition = {
@@ -92,10 +91,6 @@ export type Item = {
 	keywords?: string[];
 }
 */
-
-export function getItemIdStyle(item: ItemTemplate): string {
-	return `${item.id}\0${item.style}`;
-}
 
 const tf2Characters: PartialBy<CharacterTemplate, 'game' | 'slots' | 'label'>[] = [
 	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
@@ -167,12 +162,6 @@ export function getTf2Character(name: string): Character | null {
 //]
 
 
-export async function characterToModel(character: CharacterTemplate): Promise<Source1ModelInstance | null> {
-	let model = await Source1ModelManager.createInstance(character.game, character.modelPath, true);
-	model?.playSequence(character.animation ?? 'ref');
-
-	return model;
-}
 
 export async function itemToModel(item: ItemTemplate): Promise<Source1ModelInstance[]> {
 	const models: Source1ModelInstance[] = [];
