@@ -53,7 +53,8 @@ export class Tf2Character implements Character {
 	#model?: Source1ModelInstance | null;
 	#isInvulnerable = false;
 	#extraModels = new Set<Source1ModelInstance>();
-	#showBodyParts = new Map<string, boolean>();
+	//#showBodyParts = new Map<string, boolean>();
+	#bodyParts = new Map<string, string | false>();
 
 	constructor(template: CharacterTemplate) {
 		this.#template = template;
@@ -181,6 +182,7 @@ export class Tf2Character implements Character {
 		let bodyGroupIndex: string;
 		let bodyGroup;
 		this.#renderBodyParts(true);
+		this.#bodyParts.clear();
 		//this.#model?.setVisible(this.#visible);s
 		this.#model?.resetBodyPartModels();
 
@@ -207,8 +209,8 @@ export class Tf2Character implements Character {
 		}
 	}
 
-	#renderBodyPart(bodyPart: string, render: boolean): void {
-		this.#showBodyParts.set(bodyPart, render);
+	#renderBodyPart(bodyPart: string, render: false): void {
+		this.#bodyParts.set(bodyPart, render);
 		this.#model?.renderBodyPart(bodyPart, render);
 	}
 
@@ -217,10 +219,12 @@ export class Tf2Character implements Character {
 	}
 
 	setBodyPartIdModel(bodyPartId: number, modelId: number): void {
+		this.#bodyParts.set(String(bodyPartId), String(modelId));
 		this.#model?.setBodyPartIdModel(bodyPartId, modelId);
 	}
 
 	setBodyPartModel(bodyPartId: string, modelId: number): void {
+		this.#bodyParts.set(bodyPartId, String(modelId));
 		this.#model?.setBodyPartModel(bodyPartId, modelId);
 	}
 
@@ -237,6 +241,11 @@ export class Tf2Character implements Character {
 
 	getModelPath(): string {
 		return this.#template.modelPath;
+	}
+
+	getBodyParts(): Map<string, string | false> {
+
+		return new Map(this.#bodyParts);
 	}
 
 	getSlots(): Slot[] {

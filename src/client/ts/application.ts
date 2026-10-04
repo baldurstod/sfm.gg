@@ -472,6 +472,7 @@ class Application {
 				entity: new SfmModel({
 					repository: character.getGame(),
 					path: character.getModelPath(),
+					bodyParts: character.getBodyParts(),
 					metadatas: {
 						game: character.getGame(),
 						type: 'character',

@@ -49,8 +49,8 @@ export interface Character {
 	getItems(): Map<string, Item>;
 
 	getModel(): Promise<Entity | null>;
-
 	getModelPath(): string;
+	getBodyParts(): Map<string, string | false>;
 
 	getSlots(): Slot[];
 
