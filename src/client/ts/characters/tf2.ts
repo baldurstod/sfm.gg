@@ -362,7 +362,14 @@ export class Tf2Item implements Item {
 			this.#model = await Source1ModelManager.createInstance(game, this.#template.modelPath, true);
 
 			if (this.#model) {
-				this.#model.playSequence(/*item.animation ?? */'ref');
+				//this.#model.playSequence(/*item.animation ?? */'ref');
+
+				const itemStartSeq = this.#model.sourceModel.mdl.getSequenceById(0);
+				if (itemStartSeq) {
+					this.#model.playSequence(itemStartSeq.name);
+					this.#model.setAnimation(0, itemStartSeq.name, 1);
+				}
+				this.#model.frame = 0.;
 
 				const attachedModelPath = this.#template.attachedModel;
 				if (this.#model && attachedModelPath && !this.#attachedModel) {

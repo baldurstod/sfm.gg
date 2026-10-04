@@ -43,6 +43,14 @@ export class SfmModel extends SfmEntity {
 				this.#model = Source1ModelManager.createInstance(this.#repository, this.#path, true);
 				this.#model.then(async model => {
 					(model as Source1ModelInstance)?.playSequence('ref')
+
+					const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
+					if (itemStartSeq) {
+						(model as Source1ModelInstance).playSequence(itemStartSeq.name);
+						(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
+					}
+					(model as Source1ModelInstance).frame = 0.;
+
 					if (this.#skin !== undefined) {
 						model?.setSkinName(this.#skin);
 					}
