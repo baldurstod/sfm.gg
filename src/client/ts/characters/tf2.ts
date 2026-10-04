@@ -197,6 +197,14 @@ export class Tf2Item implements Item {
 		return this.#template.slot;
 	}
 
+	getIcon(): string {
+		return this.#template.icon;
+	}
+
+	getTemplate(): ItemTemplate {
+		return this.#template;
+	}
+
 	setOwner(owner: Tf2Character): void {
 		this.#owner = owner;
 	}

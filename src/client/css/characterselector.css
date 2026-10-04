@@ -59,3 +59,12 @@ canvas {
 	position: absolute;
 	cursor: pointer;
 }
+
+.selected-items {
+	display: flex;
+}
+
+.selected-item img {
+	width: 4rem;
+	cursor: pointer;
+}

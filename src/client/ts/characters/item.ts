@@ -29,6 +29,8 @@ export interface Item {
 	getId(): string;
 	getStyle(): string;
 	getSlot(): string;
+	getIcon(): string;
+	getTemplate(): ItemTemplate;
 
 	setOwner(owner: Character): void;
 

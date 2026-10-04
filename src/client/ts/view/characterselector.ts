@@ -18,6 +18,7 @@ export class CharacterSelectorPanel extends Panel {
 	#htmlCharacters?: HTMLElement;
 	#htmlTeams?: HTMLElement;
 	#htmlSlots?: HTMLElement;
+	#htmlSelectedItems?: HTMLElement;
 	#htmlItemsContainer?: HTMLElement;
 	#htmlItemsContainerSpacer?: HTMLElement;
 	#htmlItems = new Map<ItemTemplate, HTMLElement>();
@@ -96,6 +97,10 @@ export class CharacterSelectorPanel extends Panel {
 						// Slots
 						this.#htmlSlots = createElement('div', {
 							class: 'slots',
+						}),
+						// Selected items
+						this.#htmlSelectedItems = createElement('div', {
+							class: 'selected-items',
 						}),
 						// Items selector
 						this.#htmlItemsContainer = createElement('div', {
@@ -277,6 +282,8 @@ export class CharacterSelectorPanel extends Panel {
 		} else {
 			BugReporter.reportBug('warning', `No slot found for character ${JSON.stringify(character)}`);
 		}
+
+		this.#updateEquippedItems();
 	}
 
 	#initSlots(character: Character): void {
@@ -544,6 +551,8 @@ export class CharacterSelectorPanel extends Panel {
 			this.#selectedCharacter.equipItem(item);
 		}
 
+		this.#updateEquippedItems();
+
 		/*
 		const selectedSlot = this.#selectedSlot.get(this.#selectedCharacter);
 		if (!selectedSlot) {
@@ -572,6 +581,23 @@ export class CharacterSelectorPanel extends Panel {
 		items.push(item);
 		await this.#equipItem(this.#selectedCharacter, item);
 		*/
+	}
+
+	#updateEquippedItems(): void {
+		this.#htmlSelectedItems?.replaceChildren();
+		if (!this.#selectedCharacter) {
+			return;
+		}
+		for (const [, item] of this.#selectedCharacter.getItems()) {
+			createElement('div', {
+				parent: this.#htmlSelectedItems,
+				class: 'selected-item',
+				child: createElement('img', {
+					src: item.getIcon(),
+				}),
+				$click: () => this.#itemClick(item.getTemplate()),
+			});
+		}
 	}
 
 	async #equipItem(character: Character, item: Item): Promise<void> {
