@@ -255,6 +255,8 @@ function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): 
 		skin,
 		skinRed,
 		skinBlu,
+		playerBodygroups: item.player_bodygroups as Record<string, string>,
+		wmBodygroupOverride: item.wm_bodygroup_override as Record<string, string>,
 	}
 }
 

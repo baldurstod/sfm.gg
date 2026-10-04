@@ -1,8 +1,13 @@
-import { Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
+import { Material, Source1MaterialManager, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
 import { characterToModel, Game, getItemIdStyle, Tf2Team } from '../misc/character';
 import { Character, CharacterTemplate } from './character';
 import { Item, ItemTemplate } from './item';
 import { Slot } from './slot';
+
+export const MATERIAL_INVULN_BLU = 'models/effects/invulnfx_blue.vmt';
+export const MATERIAL_INVULN_RED = 'models/effects/invulnfx_red.vmt';
+
+export const ClassRemovablePartsOff = ['heavy_hand_dex_bodygroup', 'robotarm_bodygroup', 'darts_bodygroup', 'spyMask', 'rocket', 'medal_bodygroup', 'demo_smiley'];
 
 /*
 export type CharacterTemplate = {
@@ -21,6 +26,9 @@ export type CharacterTemplate = {
 export interface Tf2ItemTemplate extends ItemTemplate {
 	skinRed: number;
 	skinBlu: number;
+
+	playerBodygroups: Record<string, string>;
+	wmBodygroupOverride: Record<string, string>;
 	/*
 	game: Game;
 	id: string;
@@ -43,6 +51,9 @@ export class Tf2Character implements Character {
 	#team: Tf2Team = 'red';
 	#items = new Map<string, Tf2Item>();
 	#model?: Source1ModelInstance | null;
+	#isInvulnerable = false;
+	#extraModels = new Set<Source1ModelInstance>();
+	#showBodyParts = new Map<string, boolean>();
 
 	constructor(template: CharacterTemplate) {
 		this.#template = template;
@@ -66,9 +77,52 @@ export class Tf2Character implements Character {
 			item.setTeam(team);
 		}
 
-		const skin = team === 'red' ? 0 : 1;
+		this.#updateSkin();
+	}
+
+	/**
+	 * Update the character skin
+	 */
+	async #updateSkin(): Promise<void> {
+		let zombieSkin = false;
+		for (const [, item] of this.#items) {
+			if (item.getTemplate().name.includes('Voodoo-Cursed')) {
+				zombieSkin = true;
+			}
+		}
+
+		// TODO: gold / ice ragdolls + invuln
+		const skin = this.#team === 'red' ? 0 : 1;
 
 		(await this.getModel())?.setSkinId(skin);
+
+
+		await this.#setMaterialOverride(null);
+		const zombieSkinOffset = (this.getName() == 'spy' ? 22 : 4);
+		if (this.#model) {
+			await this.#model.setSkinId(skin + (zombieSkin ? zombieSkinOffset : 0) + (this.#isInvulnerable ? 2 : 0));
+		}
+		for (const extraModel of this.#extraModels) {
+			if (this.#isInvulnerable) {
+				const materialOverride = this.#team ? MATERIAL_INVULN_BLU : MATERIAL_INVULN_RED;
+				const material = await Source1MaterialManager.getMaterial('tf2', materialOverride);
+				await extraModel.setMaterialOverride(material);
+			} else {
+				extraModel.setSkinId(skin);
+			}
+		}
+	}
+
+	async #setMaterialOverride(materialOverride: string | null): Promise<void> {
+		let material: Material | null = null;
+		if (materialOverride) {
+			material = await Source1MaterialManager.getMaterial('tf2', materialOverride);
+		}
+
+		await this.#model?.setMaterialOverride(material);
+		for (const extraModel of this.#extraModels) {
+			await extraModel.setMaterialOverride(material);
+		}
 	}
 
 	getTeam(): Tf2Team | undefined {
@@ -95,6 +149,8 @@ export class Tf2Character implements Character {
 			const models = await item.getModels();
 			models.forEach(model => characterModel.addChild(model));
 		}
+
+		this.#loadoutChanged();
 	}
 
 	async unequipItem(itemTemplate: Tf2ItemTemplate): Promise<void> {
@@ -109,6 +165,63 @@ export class Tf2Character implements Character {
 
 		const models = await item.getModels();
 		models.forEach(model => model.remove());
+
+		this.#loadoutChanged();
+	}
+
+	#loadoutChanged(): void {
+		//this.autoSelectAnim();TODO
+		this.#updateSkin();
+		this.#checkBodyGroups();
+	}
+
+	async #checkBodyGroups(): Promise<void> {
+		await this.getModel();
+
+		let bodyGroupIndex: string;
+		let bodyGroup;
+		this.#renderBodyParts(true);
+		//this.#model?.setVisible(this.#visible);s
+		this.#model?.resetBodyPartModels();
+
+		for (const classRemovableParts of ClassRemovablePartsOff) {
+			this.#renderBodyPart(classRemovableParts, false);
+		}
+
+		for (const [, item] of this.#items) {
+			const playerBodygroups = item.getTemplate().playerBodygroups;
+			if (playerBodygroups) {
+				for (bodyGroupIndex in playerBodygroups) {
+					bodyGroup = playerBodygroups[bodyGroupIndex];
+					this.setBodyPartModel(bodyGroupIndex, Number(bodyGroup));
+				}
+			}
+
+			const wmBodygroupOverride = item.getTemplate().wmBodygroupOverride;
+			if (wmBodygroupOverride) {
+				for (bodyGroupIndex in wmBodygroupOverride) {
+					bodyGroup = wmBodygroupOverride[bodyGroupIndex];
+					this.setBodyPartIdModel(Number(bodyGroupIndex), Number(bodyGroup));
+				}
+			}
+		}
+	}
+
+	#renderBodyPart(bodyPart: string, render: boolean): void {
+		this.#showBodyParts.set(bodyPart, render);
+		this.#model?.renderBodyPart(bodyPart, render);
+	}
+
+	#renderBodyParts(render: boolean): void {
+		this.#model?.renderBodyParts(render);
+	}
+
+	setBodyPartIdModel(bodyPartId: number, modelId: number): void {
+		this.#model?.setBodyPartIdModel(bodyPartId, modelId);
+	}
+
+	setBodyPartModel(bodyPartId: string, modelId: number): void {
+		this.#model?.setBodyPartModel(bodyPartId, modelId);
 	}
 
 	getItems(): Map<string, Tf2Item> {
@@ -201,7 +314,7 @@ export class Tf2Item implements Item {
 		return this.#template.icon;
 	}
 
-	getTemplate(): ItemTemplate {
+	getTemplate(): Tf2ItemTemplate {
 		return this.#template;
 	}
 
