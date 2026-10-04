@@ -123,12 +123,8 @@ function populateTf2Character(character: CharacterTemplate): void {
 			limit: 1,
 		},
 		{
-			name: 'hat',
-			slots: ['head'],
-		},
-		{
-			name: 'misc',
-			slots: ['misc'],
+			name: 'cosmetics',
+			slots: ['head', 'misc'],
 		},
 	];
 }

@@ -13,6 +13,12 @@ import { SfmModel } from '../model/model';
 import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
+interface ItemFilter {
+	name: string;
+}
+
+type ItemSortType = 'index' | 'name';
+
 export class CharacterSelectorPanel extends Panel {
 	#htmlGames?: HTMLElement;
 	#htmlCharacters?: HTMLElement;
@@ -46,6 +52,13 @@ export class CharacterSelectorPanel extends Panel {
 	#currentSlot?: Slot | null;
 	#games = new Map<string, GameDefinition>();
 	#selectedGame = '';
+	#filters: ItemFilter = { name: '' };
+	#sortingDirection = 1;
+
+	constructor() {
+		super();
+		this.#setSortingType('index');
+	}
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -94,9 +107,19 @@ export class CharacterSelectorPanel extends Panel {
 				createElement('div', {
 					class: 'items-selector',
 					childs: [
-						// Slots
-						this.#htmlSlots = createElement('div', {
-							class: 'slots',
+						createElement('div', {
+							class: 'filters',
+							childs: [
+								// Filter
+								createElement('input', {
+									class: 'filter-name',
+									$input: (event: Event) => this.#setNameFilter((event.target as HTMLInputElement).value),
+								}),
+								// Slots
+								this.#htmlSlots = createElement('div', {
+									class: 'slots',
+								}),
+							],
 						}),
 						// Selected items
 						this.#htmlSelectedItems = createElement('div', {
@@ -314,8 +337,8 @@ export class CharacterSelectorPanel extends Panel {
 		}
 		this.#htmlItems.clear();
 
-
-		this.#items = items;
+		this.#items.length = 0;
+		items.forEach(item => this.#items.push(item));
 		this.#refreshItems();
 	}
 
@@ -333,7 +356,7 @@ export class CharacterSelectorPanel extends Panel {
 
 		let row = 0;
 		let column = 0;
-		for (const item of this.#items) {
+		for (const item of this.#getfilteredItems()) {
 			let htmlItem = this.#htmlItems.get(item);
 			if (htmlItem) {
 				show(htmlItem);
@@ -372,7 +395,101 @@ export class CharacterSelectorPanel extends Panel {
 		this.#updateFilters();
 	}
 
+	#setSortingType(type: ItemSortType): void {
+		let sortingDirection: number = this.#sortingDirection;
+		/*
+		if (this.#filters.sfmWorkshop) {
+			sortingDirection = this.#sortingDirectionSfm;
+		}
+		*/
+
+		switch (type) {
+			case 'name':
+				this.#sortByName(sortingDirection);
+				break;
+			case 'index':
+				this.#sortByIndex(sortingDirection);
+				break;
+			/*
+			case 'slot':
+				this.#sortBySlot(sortingDirection);
+				break;
+			case 'subscriptions':
+				this.#sortBySubscriptions(sortingDirection);
+				break;
+			case 'updated':
+				this.#sortByLastUpdate(sortingDirection);
+				break;
+			case 'created':
+				this.#sortByCreationTime(sortingDirection);
+				break;
+			case 'random':
+				this.#sortRandom();
+				break;
+			*/
+			default: console.error(`unsupported field: ${type}`);
+				break;
+		}
+	}
+
+	#sortByName(sortingDirection: number): void {
+		const self = this;
+		this.#items[Symbol.iterator] = function* (): ArrayIterator<ItemTemplate> {
+			yield* [...this.values()].sort(
+				(a, b) => {
+					const aname = a.name.toLowerCase();
+					const bname = b.name.toLowerCase();
+					return aname < bname ? -sortingDirection : sortingDirection;
+				}
+			);
+		}
+	}
+
+	#sortByIndex(sortingDirection: number): void {
+		const self = this;
+		this.#items[Symbol.iterator] = function* (): ArrayIterator<ItemTemplate> {
+			yield* [...this.values()].sort(
+				(a, b) => {
+
+					const aname = a.id;
+					const bname = b.id;
+					const aId = parseInt(aname, 10);
+					const bId = parseInt(bname, 10);
+
+					if (aId == bId) {
+						return 0;
+					}
+
+					return aId < bId ? -sortingDirection : sortingDirection;
+				}
+			);
+		}
+	}
+
+	*#getfilteredItems(): Generator<ItemTemplate, null | undefined, unknown> {
+		console.info(this.#items);
+		for (const item of this.#items) {
+			if (this.#matchFilter(item)) {
+				yield item;
+			}
+		}
+		return null
+	}
+
+	#matchFilter(item: ItemTemplate): boolean {
+		//return Math.random() > 0.5;
+
+		const nameFilter = this.#filters.name;
+		const itemName = item.name;
+		if (nameFilter) {
+			return itemName.toLowerCase().includes(nameFilter);
+		}
+
+		return true;
+	}
+
 	#updateFilters(): void {
+
 		/*
 		const collections = ItemManager.getCollections();
 
@@ -638,5 +755,10 @@ export class CharacterSelectorPanel extends Panel {
 		}
 		*/
 		//this.#equipedItems.delete(character, slot);
+	}
+
+	#setNameFilter(name: string): void {
+		this.#filters.name = name;
+		this.#refreshItems();
 	}
 }
