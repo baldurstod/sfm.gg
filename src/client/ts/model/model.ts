@@ -36,8 +36,8 @@ export class SfmModel extends SfmEntity {
 
 	override async getEngineEntityAsync(): Promise<Entity | null> {
 		if (this.#model === undefined) {
-			await Graphics.ready;
 			this.#model = Promise.resolve(null);
+			await Graphics.ready;
 
 			if (this.#repository && this.#path) {
 				this.#model = Source1ModelManager.createInstance(this.#repository, this.#path, true);
