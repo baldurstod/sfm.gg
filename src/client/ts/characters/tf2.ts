@@ -1,5 +1,5 @@
-import { Source1ModelInstance } from 'harmony-3d';
-import { characterToModel, Game, getItemIdStyle, itemToModel, Tf2Team } from '../misc/character';
+import { Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
+import { characterToModel, Game, getItemIdStyle, Tf2Team } from '../misc/character';
 import { Character, CharacterTemplate } from './character';
 import { Item, ItemTemplate } from './item';
 import { Slot } from './slot';
@@ -65,7 +65,6 @@ export class Tf2Character implements Character {
 		for (const item of this.#items.values()) {
 			item.setTeam(team);
 		}
-		//throw new Error("TODO");
 
 		const skin = team === 'red' ? 0 : 1;
 
@@ -89,11 +88,12 @@ export class Tf2Character implements Character {
 		const item = new Tf2Item(itemTemplate, this);
 		this.#items.set(getItemIdStyle(itemTemplate), item);
 
-		item.setTeam(this.#team);
+		await item.setTeam(this.#team);
 
-		const model = await this.getModel();
-		if (model) {
-			model.addChild(await item.getModel());
+		const characterModel = await this.getModel();
+		if (characterModel) {
+			const models = await item.getModels();
+			models.forEach(model => characterModel.addChild(model));
 		}
 	}
 
@@ -107,14 +107,8 @@ export class Tf2Character implements Character {
 
 		this.#items.delete(id);
 
-		const itemModel = await item.getModel();
-		if (itemModel) {
-			itemModel.remove();
-		}
-
-		// TODO: remove extra wearables / attached models
-
-
+		const models = await item.getModels();
+		models.forEach(model => model.remove());
 	}
 
 	getItems(): Map<string, Tf2Item> {
@@ -178,6 +172,8 @@ export class Tf2Item implements Item {
 	#template: Tf2ItemTemplate;
 	#owner: Tf2Character;
 	#model?: Source1ModelInstance | null;
+	#attachedModel?: Source1ModelInstance | null;
+	#extraWearable?: Source1ModelInstance | null;
 	#team: Tf2Team = 'red';
 
 	constructor(template: Tf2ItemTemplate, owner: Tf2Character) {
@@ -207,34 +203,80 @@ export class Tf2Item implements Item {
 
 	async setTeam(team: Tf2Team): Promise<void> {
 		this.#team = team;
+		// Force models to spawn if they don't exist
+		await this.getModels();
 		this.#updateSkin();
 	}
 
+	/**
+	 * Update the skin of every models
+	 */
 	async #updateSkin(): Promise<void> {
-		const model = await this.getModel();
-		if (!model) {
-			return;
-		}
-
 		console.info(this.#template);
 
 		// TODO: use item template skin_red / skin_blu
 
 		const skin = this.#team === 'red' ? this.#template.skinRed : this.#template.skinBlu;
-		await model?.setSkinId(skin);
-
+		await this.#model?.setSkinId(skin);
+		await this.#attachedModel?.setSkinId(skin);
+		await this.#extraWearable?.setSkinId(skin);
 	}
 
-	async getModel(): Promise<Source1ModelInstance | null> {
+	async getModels(): Promise<Source1ModelInstance[]> {
+		const game = this.#template.game;
+		const models: Source1ModelInstance[] = [];
+
 		if (!this.#model) {
-			this.#model = (await itemToModel(this.#template))[0]!;
-			this.#updateSkin();
+			//this.#model = (await itemToModel(this.#template))[0];
+			this.#model = await Source1ModelManager.createInstance(game, this.#template.modelPath, true);
+
+			if (this.#model) {
+				this.#model.playSequence(/*item.animation ?? */'ref');
+
+				const attachedModelPath = this.#template.attachedModel;
+				if (this.#model && attachedModelPath && !this.#attachedModel) {
+					this.#attachedModel = await Source1ModelManager.createInstance(game, attachedModelPath, true);
+					this.#attachedModel?.playSequence('ref');
+					this.#model?.addChild(this.#attachedModel);
+				}
+			}
 		}
-		return this.#model;
+
+		if (!this.#extraWearable) {
+			const extraWearable = this.#template.extraWearable;
+			if (extraWearable) {
+				this.#extraWearable = await Source1ModelManager.createInstance(game, extraWearable, true);
+				//model?.addChild(attachedModel);
+				this.#extraWearable?.playSequence('ref');
+			}
+		}
+
+		this.#updateSkin();
+
+		if (this.#model) {
+			models.push(this.#model);
+		}
+		if (this.#extraWearable) {
+			models.push(this.#extraWearable);
+		}
+
+		return models;
 	}
 
 	getModelPath(): string {
 		return this.#template.modelPath;
+	}
+
+	getModelsPath(): string[] {
+		const paths: string[] = [];
+
+		paths.push(this.#template.modelPath);
+		const extraWearable = this.#template.extraWearable;
+		if (extraWearable) {
+			paths.push(extraWearable);
+		}
+
+		return paths;
 	}
 
 	getAttachedModel(): string | undefined {
@@ -242,7 +284,7 @@ export class Tf2Item implements Item {
 	}
 
 	getExtraWearable(): string | undefined {
-		return undefined;//TODO
+		return this.#template.extraWearable;
 	}
 
 	getSkin(): string {

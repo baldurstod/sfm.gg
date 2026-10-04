@@ -34,7 +34,8 @@ export interface Item {
 
 	setTeam(team: GameTeam): Promise<void>;
 
-	getModel(): Promise<Entity | null>;
+	/** Get every child model spawned by this item */
+	getModels(): Promise<Entity[]>;
 	getModelPath(): string;
 	getAttachedModel(): string | undefined;
 	getExtraWearable(): string | undefined;

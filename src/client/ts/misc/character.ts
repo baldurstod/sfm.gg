@@ -279,7 +279,7 @@ async function getItemsTf2(slot: Slot, team: Tf2Team): Promise<Tf2ItemTemplate[]
 	return result;
 }
 
-async function getTf2Item(characterName: string, id: string, itemSlot: string, style: string, team: Tf2Team): Promise<ItemTemplate | null> {
+async function getTf2ItemTemplate(characterName: string, id: string, itemSlot: string, style: string, team: Tf2Team): Promise<Tf2ItemTemplate | null> {
 	console.info('item style ', style);
 	const items = await getTf2ItemList();
 	if (!items) {
@@ -388,10 +388,10 @@ export function getCharacter(game: Game, name: string): Character | null {
 	}
 }
 
-export async function getItem(game: Game, characterName: string, itemId: string, itemSlot: string, itemStyle: string, team: string): Promise<ItemTemplate | null> {
+export async function getItemTemplate(game: Game, characterName: string, itemId: string, itemSlot: string, itemStyle: string, team: string): Promise<ItemTemplate | null> {
 	switch (game) {
 		case 'tf2':
-			return getTf2Item(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
+			return getTf2ItemTemplate(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
 		default:
 			return null;
 	}

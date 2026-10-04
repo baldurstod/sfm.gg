@@ -13,7 +13,7 @@ import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOpe
 import { workCamera } from './graphics/graphics';
 import { Action } from './history/action';
 import { History } from './history/history';
-import { Game, Games, getCharacter, getItem, getTf2Characters } from './misc/character';
+import { Game, Games, getCharacter, getItemTemplate, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
 import { SfmClip, SfmClipType } from './model/clips/clip';
@@ -950,7 +950,7 @@ class Application {
 
 		const game = characterEntity.getMetadata('game') as Game;
 		const characterName = characterEntity.getMetadata('character') as string;
-		const characterTeam = characterEntity.getMetadata('team') as string;
+		const characterTeam = (characterEntity.getMetadata('team') as string | undefined) ?? 'red';
 		const character = getCharacter(game, characterName);
 		if (!character) {
 			return;
@@ -969,10 +969,10 @@ class Application {
 				continue;
 			}
 
-			const item = await getItem(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
+			const item = await getItemTemplate(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
 			if (item) {
 				//characterTemplate.items.set(getItemIdStyle(item), item);
-				character.equipItem(item);
+				await character.equipItem(item);
 			}
 		}
 

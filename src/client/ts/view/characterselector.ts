@@ -43,6 +43,8 @@ export class CharacterSelectorPanel extends Panel {
 	#editCharacterNode?: SfmNode<SfmModel> | null;
 	#currentTeam?: GameTeamDefinition | null;
 	#currentSlot?: Slot | null;
+	#games = new Map<string, GameDefinition>();
+	#selectedGame = '';
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -161,26 +163,38 @@ export class CharacterSelectorPanel extends Panel {
 			view.camera = this.#camera;
 			view.scene = this.#scene;
 		}
+
+		//new SceneExplorer().setScene(this.#scene);
 	}
 
 	setGames(games: GameDefinition[]): void {
+		this.#games.clear();
 		this.initPanel();
 		for (const game of games) {
+			this.#games.set(game.name, game);
 			createElement('img', {
 				src: game.icon,
 				parent: this.#htmlGames,
-				$click: () => this.#selectGame(game),
+				$click: () => this.#selectGame(game.name),
 			});
 		}
 	}
 
-	#selectGame(game: GameDefinition): void {
+	#selectGame(name: string): void {
+		const game = this.#games.get(name);
+		if (!game) {
+			return;
+		}
+
+		this.#selectedGame = name;
+
 		Controller.dispatchEvent('userselectcharacterselectapp', { detail: game.name });
 		hide(this.#htmlTeams);
 
 		this.#currentTeam = null;
 
 		if (game.teams) {
+			this.#htmlTeams?.replaceChildren();
 			show(this.#htmlTeams);
 			for (const team of game.teams) {
 				createElement('img', {
@@ -410,6 +424,8 @@ export class CharacterSelectorPanel extends Panel {
 		this.#primarySelectedClip = primarySelectedClip;
 		this.#selectedClips = selectedClips;
 		this.initPanel();
+		// Forcefully reselect the game to reload characters
+		this.#selectGame(this.#selectedGame);
 		this.panel!.open();
 		hide(this.#htmlUpdateCharacter);
 		show(this.#htmlAddPrimaryClip);
@@ -463,7 +479,9 @@ export class CharacterSelectorPanel extends Panel {
 
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440 });
 
-
+		// Select the character game
+		this.#selectGame(character.getGame());
+		// Load only this character
 		this.setCharacters([character.getTemplate()]);
 		await this.#selectCharacter(character);
 
