@@ -1,4 +1,5 @@
-import { Entity, Graphics, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
+import { Entity, Graphics, Source1ModelInstance, Source1ModelManager, Source2ModelInstance, Source2ModelManager } from 'harmony-3d';
+import { errorOnce } from 'harmony-utils';
 import { SerializableParameters, SerializableProperty, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmEntity } from './entity';
@@ -17,7 +18,7 @@ export class SfmModel extends SfmEntity {
 	#repository?: string;
 	#path?: string;
 	#skin?: string;
-	#model?: Promise<Source1ModelInstance | null>;
+	#model?: Promise<Source1ModelInstance | Source2ModelInstance | null>;
 	#bodyParts = new Map<string, string | false>();
 
 	constructor(params: ModelParameters = {}) {
@@ -40,25 +41,63 @@ export class SfmModel extends SfmEntity {
 			await Graphics.ready;
 
 			if (this.#repository && this.#path) {
-				this.#model = Source1ModelManager.createInstance(this.#repository, this.#path, true);
-				this.#model.then(async model => {
-					(model as Source1ModelInstance)?.playSequence('ref')
-
-					const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
-					if (itemStartSeq) {
-						(model as Source1ModelInstance).playSequence(itemStartSeq.name);
-						(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
-					}
-					(model as Source1ModelInstance).frame = 0.;
-
-					if (this.#skin !== undefined) {
-						model?.setSkinName(this.#skin);
-					}
-					await this.#updateBodyParts();
-				});
+				await this.#getModel();
 			}
 		}
 		return this.#model;
+	}
+
+	async #getModel(): Promise<void> {
+		switch (this.#repository) {
+			case 'tf2':
+				await this.#getTf2Model();
+				break;
+			case 'dota2':
+				await this.#getDota2Model();
+				break;
+			default:
+				errorOnce(`Unknown repository in #getModel: ${this.#repository}`);
+		}
+	}
+
+	async #getTf2Model(): Promise<void> {
+		this.#model = Source1ModelManager.createInstance(this.#repository!, this.#path!, true);
+		this.#model.then(async model => {
+			(model as Source1ModelInstance)?.playSequence('ref')
+
+			const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
+			if (itemStartSeq) {
+				(model as Source1ModelInstance).playSequence(itemStartSeq.name);
+				(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
+			}
+			(model as Source1ModelInstance).frame = 0.;
+
+			if (this.#skin !== undefined) {
+				model?.setSkinName(this.#skin);
+			}
+			await this.#updateBodyParts();
+		});
+	}
+
+	async #getDota2Model(): Promise<void> {
+		this.#model = Source2ModelManager.createInstance(this.#repository!, this.#path!, true);
+		this.#model.then(async model => {
+			(model as Source2ModelInstance)?.playSequence('ref')
+
+			/*
+			const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
+			if (itemStartSeq) {
+				(model as Source1ModelInstance).playSequence(itemStartSeq.name);
+				(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
+			}
+			(model as Source1ModelInstance).frame = 0.;
+
+			if (this.#skin !== undefined) {
+				model?.setSkinName(this.#skin);
+			}
+			await this.#updateBodyParts();
+			*/
+		});
 	}
 
 	async setBodyParts(bodyParts: Map<string, string | false>): Promise<void> {
@@ -75,7 +114,7 @@ export class SfmModel extends SfmEntity {
 	}
 
 	async #updateBodyParts(): Promise<void> {
-		const model = await this.#model;
+		const model = await this.#model as Source1ModelInstance;
 		if (!model) {
 			return;
 		}

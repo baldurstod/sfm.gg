@@ -1,5 +1,6 @@
 import { Entity } from 'harmony-3d';
 import { Game, GameTeam } from '../misc/character';
+import { Dota2Character, Dota2CharacterTemplate } from './dota2';
 import { Item, ItemTemplate } from './item';
 import { Slot, SlotTemplate } from './slot';
 import { Tf2Character } from './tf2';
@@ -110,6 +111,8 @@ export function createCharacter(template: CharacterTemplate): Character {
 	switch (game) {
 		case 'tf2':
 			return new Tf2Character(template);
+		case 'dota2':
+			return new Dota2Character(template as Dota2CharacterTemplate);
 		default:
 			throw new Error(`Can't create character: unknown game ${game}`);
 	}

@@ -2,7 +2,8 @@
 import { PartialBy, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
 import { BugReporter, setTimeoutPromise } from 'harmony-utils';
-import icon440 from '../../img/icons/steam_icon_440.png';
+import iconTf2 from '../../img/icons/steam_icon_440.png';
+import iconDota2 from '../../img/icons/steam_icon_570.png';
 import demoman from '../../img/tf2/class/demoman.png';
 import engineer from '../../img/tf2/class/engineer.png';
 import heavy from '../../img/tf2/class/heavy.png';
@@ -29,7 +30,7 @@ export type CharacterSlot = {
 	limit?: number;
 }
 
-export type Game = 'tf2';
+export type Game = 'tf2' | 'dota2';
 
 export type GameTeam = Tf2Team;
 
@@ -42,7 +43,7 @@ export type GameDefinition = {
 export const Games: GameDefinition[] = [
 	{
 		name: 'tf2',
-		icon: icon440,
+		icon: iconTf2,
 		teams: [
 			{
 				name: 'red',
@@ -53,6 +54,10 @@ export const Games: GameDefinition[] = [
 				icon: teamBlu,
 			},
 		],
+	},
+	{
+		name: 'dota2',
+		icon: iconDota2,
 	},
 ]
 

@@ -8,6 +8,7 @@ import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
+import { getDota2Characters } from './characters/dota2';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOperator, EditCharacter, SelectCharacter, SetName, SetSelectedClip, UpdateCharacter } from './controller';
 import { workCamera } from './graphics/graphics';
@@ -423,10 +424,13 @@ class Application {
 		return this.#characterSelectorPanel;
 	}
 
-	static #userSelectCharacterSelectApp(appId: string): void {
+	static async #userSelectCharacterSelectApp(appId: string): Promise<void> {
 		switch (appId) {
 			case 'tf2':
 				this.#getCharacterSelectorPanel().setCharacters(getTf2Characters());
+				break;
+			case 'dota2':
+				this.#getCharacterSelectorPanel().setCharacters(await getDota2Characters());
 				break;
 			default:
 				throw new Error(`Unknown app id ${appId}`);
