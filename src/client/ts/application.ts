@@ -488,6 +488,9 @@ class Application {
 			addCharacterAction.do(sceneNode, 'add-child', characterNode);
 
 			for (const [, item] of character.getItems()) {
+				if (!item.isVisible()) {
+					continue;
+				}
 				const itemNodes = getItemNodes(item);
 				itemNodes.forEach(itemNode => addCharacterAction.do(characterNode, 'add-child', itemNode));
 			}

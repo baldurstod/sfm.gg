@@ -42,4 +42,7 @@ export interface Item {
 	getAttachedModel(): string | undefined;
 	getExtraWearable(): string | undefined;
 	getSkin(): string;
+
+	setVisible(visible: boolean ): Promise<void>;
+	isVisible(): boolean ;
 }

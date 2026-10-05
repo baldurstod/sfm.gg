@@ -16,6 +16,7 @@ import spy from '../../img/tf2/class/spy.png';
 import teamBlu from '../../img/tf2/logo_blue_white.png';
 import teamRed from '../../img/tf2/logo_red_white.png';
 import { Character, CharacterTemplate } from '../characters/character';
+import { Dota2Character, getItemsDota2 } from '../characters/dota2';
 import { ItemTemplate } from '../characters/item';
 import { Slot, SlotTemplate } from '../characters/slot';
 import { Tf2Character, Tf2ItemTemplate, Tf2Team } from '../characters/tf2';
@@ -202,6 +203,8 @@ export async function getItems(slot: Slot, team?: string): Promise<ItemTemplate[
 	switch (slot.getGame()) {
 		case 'tf2':
 			return getItemsTf2(slot, team as Tf2Team | undefined ?? 'red');
+		case 'dota2':
+			return getItemsDota2((slot.getOwner() as Dota2Character).getTemplate().id, slot);
 		default:
 			const error = `code getItems for game ${slot.getGame()}`;
 			BugReporter.reportBug('error', error)

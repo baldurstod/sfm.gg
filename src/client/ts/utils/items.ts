@@ -29,7 +29,7 @@ export function getItemNodes(item: Item): SfmNode<SfmModel>[] {
 	});
 	nodes.push(itemNode);
 
-	// Attach the model the item main model
+	// Attach the model to the item main model
 	const attachedModel = item.getAttachedModel();
 	if (attachedModel) {
 		const attachedNode = new SfmNode({

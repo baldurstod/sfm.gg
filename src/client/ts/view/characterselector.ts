@@ -305,6 +305,7 @@ export class CharacterSelectorPanel extends Panel {
 		} else {
 			BugReporter.reportBug('warning', `No slot found for character ${JSON.stringify(character)}`);
 		}
+		character.select();
 
 		this.#updateEquippedItems();
 	}

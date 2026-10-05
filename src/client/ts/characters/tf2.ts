@@ -263,6 +263,9 @@ export class Tf2Character implements Character {
 		return this.#template;
 	}
 
+	async select(): Promise<void> {
+
+	}
 
 	/*
 	// Game this character is part of
@@ -298,6 +301,7 @@ export class Tf2Item implements Item {
 	#attachedModel?: Source1ModelInstance | null;
 	#extraWearable?: Source1ModelInstance | null;
 	#team: Tf2Team = 'red';
+	#visible: boolean = true;
 
 	constructor(template: Tf2ItemTemplate, owner: Tf2Character) {
 		this.#template = template;
@@ -343,8 +347,6 @@ export class Tf2Item implements Item {
 	 * Update the skin of every models
 	 */
 	async #updateSkin(): Promise<void> {
-		console.info(this.#template);
-
 		// TODO: use item template skin_red / skin_blu
 
 		const skin = this.#team === 'red' ? this.#template.skinRed : this.#template.skinBlu;
@@ -428,6 +430,15 @@ export class Tf2Item implements Item {
 	getSkin(): string {
 		return this.#template.skin ?? '0';//TODO: depend on team
 	}
+
+	async setVisible(visible: boolean): Promise<void> {
+		this.#visible = visible;
+	}
+
+	isVisible(): boolean {
+		return this.#visible;
+	}
+
 }
 
 async function tf2CharacterToModel(character: CharacterTemplate): Promise<Source1ModelInstance | null> {

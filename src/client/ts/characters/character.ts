@@ -56,6 +56,8 @@ export interface Character {
 	getSlots(): Slot[];
 
 	getTemplate(): CharacterTemplate;
+
+	select(): Promise<void>
 }
 
 /*
