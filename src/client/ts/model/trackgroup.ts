@@ -58,19 +58,19 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-track':
-				command.undoParams = command.params.trackGroup;
-				this.#addTrack(command.params);
+				command.undoParams = (command.params as SfmTrack).trackGroup;
+				this.#addTrack(command.params as SfmTrack);
 				return true;
 			case 'delete-track':
-				if (!this.#tracks.has(command.params)) {
+				if (!this.#tracks.has(command.params as SfmTrack)) {
 					return false;
 				}
-				command.undoParams = command.params;
-				this.#deleteTrack(command.params);
+				command.undoParams = command.params as SfmTrack;
+				this.#deleteTrack(command.params as SfmTrack);
 				return true;
 			case 'set-order':
 				command.undoParams = this.#order;
-				this.#order = command.params;
+				this.#order = command.params as number;
 				return true;
 			default:
 				return super.do(command);
@@ -81,20 +81,20 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 		switch (command.command) {
 			case 'add-track':
 				// Delete the track from this group
-				this.#deleteTrack(command.params);
+				this.#deleteTrack(command.params as SfmTrack);
 
 				// Reattach the clip to the previous track, if any
 				const previousTrackGroup = command.undoParams as SfmTrackGroup;
 				if (previousTrackGroup) {
-					previousTrackGroup.#addTrack(command.params);
+					previousTrackGroup.#addTrack(command.params as SfmTrack);
 				}
 				return true;
 			case 'delete-track':
 				// Reattach the track
-				this.#addTrack(command.undoParams);
+				this.#addTrack(command.undoParams as SfmTrack);
 				return true;
 			case 'set-order':
-				this.#order = command.undoParams;
+				this.#order = command.undoParams as number;
 				return true;
 			default:
 				return super.undo(command);

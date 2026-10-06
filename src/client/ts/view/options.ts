@@ -30,7 +30,7 @@ export class OptionsPanel extends Panel {
 			]
 		});
 
-		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#htmlLanguageSelector!.value = (event as CustomEvent<OptionsManagerEvent<string>>).detail.value as string);
+		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#htmlLanguageSelector!.value = (event as CustomEvent<OptionsManagerEvent<string>>).detail.value);
 
 		this.#initLanguages();
 	}

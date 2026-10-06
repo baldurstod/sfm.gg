@@ -27,7 +27,7 @@ export class ElementViewerPanel extends Panel {
 		this.#htmlTree.addEventListener('itemclick', (event: Event) => {
 			const item = (event as CustomEvent<ItemClickEventData>).detail.item;
 
-			if (!this!.#htmlTree!.isExpanded(item)) {
+			if (!this.#htmlTree!.isExpanded(item)) {
 				this.#expandItem(item)
 			}
 		});

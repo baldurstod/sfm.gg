@@ -1,6 +1,3 @@
-import { Serializable } from '../../serialize/serializable';
-import { SfmSerializer } from '../../serialize/serializer';
-
 export type SfmChannelSource =
 	// SfmDataCurve
 	'curve'

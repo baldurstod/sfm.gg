@@ -4,7 +4,7 @@ import { ConcreteSerializable, Serializable } from './serializable';
 
 //export type SerializableValueSingle = string | number | Serializable;
 //export type SerializableValueArray = SerializableValueSingle[];
-export type JSONSerializable = { [Key: string]: JSONValue | Serializable | Serializable[] };
+export type JSONSerializable = Record<string, JSONValue | Serializable | Serializable[]>//{ [Key: string]: JSONValue | Serializable | Serializable[] };
 //
 //export type SFMFile = JSONSerializable[];
 
@@ -40,11 +40,13 @@ export class SfmSerializer {
 
 	static readonly #entities = new Map<string, ConcreteSerializable>();
 
-	static async unserializeJSON(file: JSONFile): Promise<SfmSession | null> {
-		let loadedResolve: Function = () => { };// Note: typescript falsely complains about loadedResolve not being assigned without this.
-		const loadedPromise = new Promise<void>(resolve => {
+	static unserializeJSON(file: JSONFile): SfmSession | null {
+		/*
+		let loadedResolve: (value: boolean) => void;
+		const loadedPromise = new Promise<boolean>(resolve => {
 			loadedResolve = resolve;
 		});
+		*/
 
 		let session: SfmSession | null = null;
 		const elements = new Map<string, Serializable>();
@@ -119,7 +121,7 @@ export class SfmSerializer {
 			session = elements.get(file.session) as SfmSession;
 		}
 
-		loadedResolve(true);
+		//loadedResolve!(true);
 		return session;
 	}
 
@@ -169,24 +171,31 @@ export class SfmSerializer {
 				}
 				json[key] = arr;
 			} else {
-				json[key] = value as JSONValue;
+				json[key] = value;
 			}
 		}
 	}
 
+	/*
 	static #checkJSON(json: JSONObject): boolean {
 		return true;
 	}
+	*/
 
 	static #getElement(json: JSONElement): Serializable | null {
-		const serializableType = this.#getSerializableClass(json.type as string);
+		const serializableType = this.#getSerializableClass(json.type);
 		if (!serializableType) {
 			console.error('Unknown constructor', json.type);
 			return null;
 		}
 
-		// We cast the type cause Serializable is abstract. However the actual class is guaranteed to be concrete: registerSerializable enforce this
-		return new (serializableType as any)({ name: json.name as string, id: json.id as string });
+		/* eslint-disable @typescript-eslint/no-explicit-any */
+		/* eslint-disable @typescript-eslint/no-unsafe-call */
+		// We cast the type because Serializable is abstract. However the actual class is guaranteed to be concrete: registerSerializable enforce this
+		return new (serializableType as any)({ name: json.name, id: json.id }) as Serializable;
+		/* eslint-enable @typescript-eslint/no-explicit-any */
+		/* eslint-enable @typescript-eslint/no-unsafe-call */
+
 	}
 
 	/**

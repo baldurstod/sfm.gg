@@ -1,4 +1,4 @@
-import { AmbientLight, PointLight } from 'harmony-3d';
+import { AmbientLight } from 'harmony-3d';
 import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmLight } from './light';

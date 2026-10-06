@@ -192,12 +192,13 @@ export abstract class Serializable implements Undoable {
 		} as JSONObject;
 
 		if (this.#metadatas?.size) {
-			json.metadatas = Object.fromEntries(this.#metadatas) as JSONObject;
+			json.metadatas = Object.fromEntries(this.#metadatas);
 		}
 
 		return json;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	unserialize(json: JSONSerializable, context: UnserializationContext): void {
 		this.#id = json.id as string;
 		this.#name = json.name as string;
@@ -213,10 +214,12 @@ export abstract class Serializable implements Undoable {
 
 	abstract getProperties(): SerializableProperty[];
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	getProperty(name: string): SerializablePropertyValue {// TODO: set abstract ?
 		return null;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	setProperty(name: string, value: SerializablePropertyValue): boolean {// TODO: set abstract ?
 		return false;
 	}
@@ -235,6 +238,8 @@ export abstract class Serializable implements Undoable {
 }
 
 /** Concrete subclasses of Serializable */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ConcreteSerializable = typeof Serializable & (new (...args: any[]) => Serializable);
 
 export type SetMetadata = {

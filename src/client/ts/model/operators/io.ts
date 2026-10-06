@@ -1,4 +1,3 @@
-import { quat, vec3 } from 'gl-matrix';
 import { SerializablePropertyValue } from '../../serialize/serializable';
 
 export type SfmOperatorType = 'null' | 'undefined' | 'number' | 'vec3' | 'quat';

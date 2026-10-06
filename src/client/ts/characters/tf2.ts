@@ -75,10 +75,10 @@ export class Tf2Character implements Character {
 	async setTeam(team: Tf2Team): Promise<void> {
 		this.#team = team;
 		for (const item of this.#items.values()) {
-			item.setTeam(team);
+			await item.setTeam(team);
 		}
 
-		this.#updateSkin();
+		await this.#updateSkin();
 	}
 
 	/**
@@ -95,7 +95,7 @@ export class Tf2Character implements Character {
 		// TODO: gold / ice ragdolls + invuln
 		const skin = this.#team === 'red' ? 0 : 1;
 
-		(await this.getModel())?.setSkinId(skin);
+		await (await this.getModel())?.setSkinId(skin);
 
 
 		await this.#setMaterialOverride(null);
@@ -109,7 +109,7 @@ export class Tf2Character implements Character {
 				const material = await Source1MaterialManager.getMaterial('tf2', materialOverride);
 				await extraModel.setMaterialOverride(material);
 			} else {
-				extraModel.setSkinId(skin);
+				await extraModel.setSkinId(skin);
 			}
 		}
 	}
@@ -152,7 +152,7 @@ export class Tf2Character implements Character {
 			models.forEach(model => characterModel.addChild(model));
 		}
 
-		this.#loadoutChanged();
+		await this.#loadoutChanged();
 	}
 
 	async unequipItem(itemTemplate: Tf2ItemTemplate): Promise<void> {
@@ -168,13 +168,13 @@ export class Tf2Character implements Character {
 		const models = await item.getModels();
 		models.forEach(model => model.remove());
 
-		this.#loadoutChanged();
+		await this.#loadoutChanged();
 	}
 
-	#loadoutChanged(): void {
+	async #loadoutChanged(): Promise<void> {
 		//this.autoSelectAnim();TODO
-		this.#updateSkin();
-		this.#checkBodyGroups();
+		await this.#updateSkin();
+		await this.#checkBodyGroups();
 	}
 
 	async #checkBodyGroups(): Promise<void> {
@@ -263,9 +263,8 @@ export class Tf2Character implements Character {
 		return this.#template;
 	}
 
-	async select(): Promise<void> {
-
-	}
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	async select(): Promise<void> { }
 
 	/*
 	// Game this character is part of
@@ -301,7 +300,7 @@ export class Tf2Item implements Item {
 	#attachedModel?: Source1ModelInstance | null;
 	#extraWearable?: Source1ModelInstance | null;
 	#team: Tf2Team = 'red';
-	#visible: boolean = true;
+	#visible = true;
 
 	constructor(template: Tf2ItemTemplate, owner: Tf2Character) {
 		this.#template = template;
@@ -340,7 +339,7 @@ export class Tf2Item implements Item {
 		this.#team = team;
 		// Force models to spawn if they don't exist
 		await this.getModels();
-		this.#updateSkin();
+		await this.#updateSkin();
 	}
 
 	/**
@@ -369,7 +368,7 @@ export class Tf2Item implements Item {
 				const itemStartSeq = this.#model.sourceModel.mdl.getSequenceById(0);
 				if (itemStartSeq) {
 					this.#model.playSequence(itemStartSeq.name);
-					this.#model.setAnimation(0, itemStartSeq.name, 1);
+					await this.#model.setAnimation(0, itemStartSeq.name, 1);
 				}
 				this.#model.frame = 0.;
 
@@ -391,7 +390,7 @@ export class Tf2Item implements Item {
 			}
 		}
 
-		this.#updateSkin();
+		await this.#updateSkin();
 
 		if (this.#model) {
 			models.push(this.#model);
@@ -431,6 +430,7 @@ export class Tf2Item implements Item {
 		return this.#template.skin ?? '0';//TODO: depend on team
 	}
 
+	// eslint-disable-next-line @typescript-eslint/require-await
 	async setVisible(visible: boolean): Promise<void> {
 		this.#visible = visible;
 	}
@@ -442,7 +442,7 @@ export class Tf2Item implements Item {
 }
 
 async function tf2CharacterToModel(character: CharacterTemplate): Promise<Source1ModelInstance | null> {
-	let model = await Source1ModelManager.createInstance(character.game, character.modelPath, true);
+	const model = await Source1ModelManager.createInstance(character.game, character.modelPath, true);
 	model?.playSequence(character.animation ?? 'ref');
 
 	return model;

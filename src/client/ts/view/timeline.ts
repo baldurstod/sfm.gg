@@ -2,7 +2,7 @@ import { ShortcutHandler } from 'harmony-browser-utils';
 import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
-import { AddLight, Controller, DeleteOperator, SelectCharacter } from '../controller';
+import { AddLight, Controller } from '../controller';
 import { Action } from '../history/action';
 import { History } from '../history/history';
 import { SfmClip, SfmClipType } from '../model/clips/clip';
@@ -70,7 +70,7 @@ export class TimelinePanel extends Panel {
 				innerHTML: '<ul class="ruler"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>',
 				$click: (event: PointerEvent) => this.#timeClick(event),
 				$mousemove: (event: MouseEvent) => this.#handleMouseMove(event),
-				$mousedown: (event: MouseEvent) => this.#dragOperation = 'time',
+				$mousedown: () => this.#dragOperation = 'time',
 			});
 		}
 
@@ -458,7 +458,7 @@ export class TimelinePanel extends Panel {
 		event.preventDefault();
 		event.stopPropagation();
 
-		const mul = Math.sign(deltaY!) < 0 ? 1.1 : 1 / 1.1;
+		const mul = Math.sign(deltaY) < 0 ? 1.1 : 1 / 1.1;
 
 		this.#setTimeScale(this.#timeScale * mul);
 	}
@@ -497,7 +497,7 @@ export class TimelinePanel extends Panel {
 				}
 				break;
 			default:
-				console.info('unsupported opertaion ' + this.#dragOperation);
+				console.info('unsupported operation ' + String(this.#dragOperation));
 				break;
 		}
 	}
@@ -776,7 +776,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
-			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } as SelectCharacter }) }, } },
+			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } }) }, } },
 			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).getScene()) && {
 				add_light: {
 					i18n: '#add_light', submenu: [
@@ -815,7 +815,7 @@ export class TimelinePanel extends Panel {
 						detail: {
 							clip,
 							operator,
-						} as DeleteOperator,
+						},
 					})
 				},
 			},
@@ -870,16 +870,16 @@ export class TimelinePanel extends Panel {
 }
 
 function createTitle(element: Serializable): HTMLElement {
-	function removeInput(event: Event, title: HTMLElement) {
+	function removeInput(event: Event, title: HTMLElement): void {
 		console.info(event);
 		try {
 			// safeguard for dom exception
 			(event.target as HTMLElement).parentElement?.replaceChild(
-				(title as HTMLElement),
+				title,
 				(event.target as HTMLElement),
 			);
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (e) { }
-
 	}
 
 	return createElement('span', {

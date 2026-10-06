@@ -4,7 +4,6 @@ import { SerializableProperty, SerializablePropertyValue, UnserializationContext
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { isCharacter } from '../../utils/models';
 import { SfmCamera } from '../camera';
-import { SfmEntity } from '../entity';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmModel } from '../model';
 import { SfmNode } from '../node';
@@ -19,6 +18,8 @@ export interface FilmClipParameters extends ClipParameters {
 	camera?: SfmCamera;
 	//trackGroups?: SfmTrackGroup[];
 }
+
+type AddSelectedClipUndoParam = [SfmClip | undefined, Set<SfmClip>];
 
 export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly isSfmFilmClip = true as const;
@@ -59,11 +60,11 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			return characters;
 		}
 
-		let current: SfmNode<SfmEntity> = this.#scene;
+		//let current: SfmNode<SfmEntity> = this.#scene;
 
 		const stack: SfmNode[] = [this.#scene];
 		for (; ;) {
-			let current = stack.pop();
+			const current = stack.pop();
 			if (!current) {
 				break;
 			}
@@ -158,7 +159,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return 'film';
 	}
 
-	getSubClipsAtTime(time: number, type?: SfmClipType | undefined): Set<SfmFilmClip> {
+	getSubClipsAtTime(time: number, type?: SfmClipType): Set<SfmFilmClip> {
 		const clips = new Set<SfmFilmClip>();
 		for (const trackGroup of this.#trackGroups) {
 			for (const track of trackGroup.getTracks()) {
@@ -181,7 +182,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return clips;
 	}
 
-	getSubClips(type?: SfmClipType | undefined): Set<SfmFilmClip> {
+	getSubClips(type?: SfmClipType): Set<SfmFilmClip> {
 		const clips = new Set<SfmFilmClip>();
 
 		for (const trackGroup of this.#trackGroups) {
@@ -218,7 +219,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	}
 
 	override update(context: SfmOperatorContext): void {
-		errorOnce('code me');
+		errorOnce('code me' + JSON.stringify(context));
 	}
 
 	override do(command: Command): boolean {
@@ -228,46 +229,46 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				this.#addTrackGroup(command.params as SfmTrackGroup);
 				return true;
 			case 'delete-track-group':
-				if (!this.#trackGroups.has(command.params)) {
+				if (!this.#trackGroups.has(command.params as SfmTrackGroup)) {
 					return false;
 				}
-				command.undoParams = command.params;
-				this.#deleteTrackGroup(command.params);
+				command.undoParams = command.params as SfmClip;
+				this.#deleteTrackGroup(command.params as SfmTrackGroup);
 				return true;
 			// Add a clip to selection and set it primary if no primary clip exist
 			case 'add-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
-				this.#selectedClips.add(command.params);
+				this.#selectedClips.add(command.params as SfmClip);
 				if (!this.#primarySelectedClip) {
-					this.#primarySelectedClip = command.params;
+					this.#primarySelectedClip = command.params as SfmClip;
 				}
 				return true;
 			// Add a clip to selection and set it primary
 			case 'add-primary-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
-				this.#selectedClips.add(command.params);
-				this.#primarySelectedClip = command.params;
+				this.#selectedClips.add(command.params as SfmClip);
+				this.#primarySelectedClip = command.params as SfmClip;
 				return true;
 			case 'remove-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
-				this.#selectedClips.delete(command.params);
-				if (this.#primarySelectedClip === command.params) {
+				this.#selectedClips.delete(command.params as SfmClip);
+				if (this.#primarySelectedClip === command.params as SfmClip) {
 					this.#primarySelectedClip = undefined;
 				}
 				return true;
 			case 'set-selected-clip':
 				command.undoParams = [this.#primarySelectedClip, new Set<SfmClip>(this.#selectedClips)];
 				this.#selectedClips.clear();
-				this.#selectedClips.add(command.params);
-				this.#primarySelectedClip = command.params;
+				this.#selectedClips.add(command.params as SfmClip);
+				this.#primarySelectedClip = command.params as SfmClip;
 				return true;
 			case 'set-world':
 				command.undoParams = this.#world;
-				this.#world = command.params;
+				this.#world = command.params as SfmNode<SfmWorld> | undefined;
 				return true;
 			case 'set-scene':
 				command.undoParams = this.#scene;
-				this.#setScene(command.params);
+				this.#setScene(command.params as SfmNode<SfmScene>);// TODO: check if it is actually a SfmNode<SfmScene>
 				return true;
 			/*
 			case 'delete-character':
@@ -288,31 +289,31 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		switch (command.command) {
 			case 'add-track-group':
 				// Delete the track from this group
-				this.#deleteTrackGroup(command.params);
+				this.#deleteTrackGroup(command.params as SfmTrackGroup);
 
 				// Reattach the clip to the previous track, if any
 				const previousClip = command.undoParams as SfmFilmClip;
 				if (previousClip) {
-					previousClip.#addTrackGroup(command.params);
+					previousClip.#addTrackGroup(command.params as SfmTrackGroup);
 				}
 				return true;
 			case 'delete-track-group':
 				// Reattach the track group
-				this.#addTrackGroup(command.undoParams);
+				this.#addTrackGroup(command.undoParams as SfmTrackGroup);
 				return true;
 			case 'add-selected-clip':
 			case 'set-selected-clip':
 			case 'remove-selected-clip':
 			case 'add-primary-selected-clip':
 				this.#selectedClips.clear();
-				this.#primarySelectedClip = command.undoParams[0];
-				(command.undoParams[1] as Set<SfmClip>).forEach(clip => this.#selectedClips.add(clip));
+				this.#primarySelectedClip = (command.undoParams as AddSelectedClipUndoParam)[0];
+				((command.undoParams as AddSelectedClipUndoParam)[1]).forEach(clip => this.#selectedClips.add(clip));
 				return true;
 			case 'set-world':
-				this.#world = command.undoParams;
+				this.#world = command.undoParams as SfmNode<SfmWorld> | undefined;
 				return true;
 			case 'set-scene':
-				this.#setScene(command.undoParams);
+				this.#setScene(command.undoParams as SfmNode<SfmScene>);
 				return true;
 			default:
 				return super.undo(command);

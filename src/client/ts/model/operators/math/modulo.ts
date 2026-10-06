@@ -1,15 +1,14 @@
 import { errorOnce } from 'harmony-utils';
 import { SerializableProperty, SerializablePropertyValue } from '../../../serialize/serializable';
 import { SfmSerializer } from '../../../serialize/serializer';
-import { SfmOperatorContext } from '../../interfaces/operator';
 import { SfmOperatorIO } from '../io';
 import { SfmOperator } from '../operator';
 
 export class SfmModuloOperator extends SfmOperator {
-	modulo: number = 1;
+	modulo = 1;
 	value = 50;
 
-	override operate(context: SfmOperatorContext): boolean {
+	override operate(): boolean {
 		errorOnce('TODO')
 		const input = this.getInputValue('input') ?? 0;
 		this.value = 1 + ((input as number) % 1) * 100;
@@ -32,8 +31,7 @@ export class SfmModuloOperator extends SfmOperator {
 		}];
 	}
 
-	//abstract getOutputValue(name: string): SfmOperatorIO[];
-	override getOutputValue(name: string): SerializablePropertyValue {
+	override getOutputValue(): SerializablePropertyValue {
 		return this.value;
 	}
 

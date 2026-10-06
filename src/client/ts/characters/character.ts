@@ -116,6 +116,7 @@ export function createCharacter(template: CharacterTemplate): Character {
 		case 'dota2':
 			return new Dota2Character(template as Dota2CharacterTemplate);
 		default:
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new Error(`Can't create character: unknown game ${game}`);
 	}
 }

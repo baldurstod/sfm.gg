@@ -174,7 +174,7 @@ export async function itemToModel(item: ItemTemplate): Promise<Source1ModelInsta
 	const model = await Source1ModelManager.createInstance(item.game, item.modelPath, true);
 	model?.playSequence(/*item.animation ?? */'ref');
 	if (item.skin) {
-		model?.setSkinId(Number(item.skin));
+		await model?.setSkinId(Number(item.skin));
 	}
 
 	if (model) {
@@ -225,14 +225,14 @@ function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): 
 		skin = item.skin_blu as string | undefined ?? '1';
 	}
 
-	let attachedModel = item.attached_models as string;
-	let extraWearable = item.extra_wearable as string;
+	const attachedModel = item.attached_models as string;
+	const extraWearable = item.extra_wearable as string;
 
 
-	let skinRed = Number(item.skin_red as string);
+	let skinRed = Number(item.skin_red);
 	skinRed = isNaN(skinRed) ? 0 : skinRed;
 
-	let skinBlu = Number(item.skin_blu as string);
+	let skinBlu = Number(item.skin_blu);
 	skinBlu = isNaN(skinBlu) ? 1 : skinBlu;
 
 	return {
@@ -241,7 +241,7 @@ function tf2ItemToItem(item: JSONObject, characterName: string, team: Tf2Team): 
 		style: item.style as string,
 		game: 'tf2',
 		name: item.name as string,
-		icon: 'https://tf2content.loadout.tf/materials/' + item.image_inventory + '.png',//TODO: add constant
+		icon: 'https://tf2content.loadout.tf/materials/' + (item.image_inventory as string) + '.png',//TODO: add constant
 		modelPath: getTf2ModelPath(characterName, item),//item.model_player as string,// TODO: use model_player_per_class
 		attachedModel,
 		extraWearable,
@@ -282,15 +282,17 @@ async function getTf2ItemTemplate(characterName: string, id: string, itemSlot: s
 	}
 	console.log(items);
 
-	const result: ItemTemplate[] = []
+	//const result: ItemTemplate[] = []
 	for (const index in items.items as JSONObject) {
 		const item = (items.items as JSONObject)[index] as JSONObject;
 
 		if (item.defindex === id && item.style === style) {
+			/*
 			let skin: string | undefined;
 			if (item.skin_red !== undefined) {
 				skin = item.skin_red as string;
 			}
+			*/
 
 			return tf2ItemToItem(item, characterName, team);
 		}
@@ -300,16 +302,17 @@ async function getTf2ItemTemplate(characterName: string, id: string, itemSlot: s
 
 let tf2Items: Promise<JSONObject | null>;
 async function getTf2ItemList(): Promise<JSONObject | null> {
-	if (!tf2Items) {
+	if (tf2Items === undefined) {
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		tf2Items = new Promise<JSONObject | null>(async resolve => {
 			while (true) {
 				const resp = await fetch('https://tf2content.loadout.tf/generated/items/items_english.json');//TODO: add var
 				if (resp.ok) {
-					const result = await resp.json();
+					const result = await resp.json() as JSONObject;
 					resolve(result ?? null);
 					return;
 				}
-				setTimeoutPromise(5000);
+				await setTimeoutPromise(5000);
 			}
 		});
 	}

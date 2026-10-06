@@ -1,7 +1,6 @@
 import { Command } from '../../history/action';
 import { Serializable, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
-import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmOperatorIO } from '../operators/io';
 import { OperatorParameters, SfmOperator } from '../operators/operator';
 
@@ -68,11 +67,11 @@ export class SfmChannel extends SfmOperator {
 		return [];
 	}
 
-	override getOutputValue(name: string): SerializablePropertyValue {
+	override getOutputValue(/*name: string*/): SerializablePropertyValue {
 		return null;
 	}
 
-	operate(context: SfmOperatorContext): boolean {
+	operate(/*context: SfmOperatorContext*/): boolean {
 		if (!this.#toElement) {
 			return false;
 		}
@@ -135,15 +134,15 @@ export class SfmChannel extends SfmOperator {
 			*/
 			case 'set-to-element':
 				command.undoParams = this.#toElement;
-				this.#toElement = command.params;//TODO: check if it's a suitable element
+				this.#toElement = command.params as Serializable | null;//TODO: check if it's a suitable element
 				return true;
 			case 'set-to-attribute':
 				command.undoParams = this.#toAttribute;
-				this.#toAttribute = command.params;//TODO: check if it's a string
+				this.#toAttribute = command.params as string;//TODO: check if it's a string
 				return true;
 			case 'set-to-index':
 				command.undoParams = this.#toIndex;
-				this.#toIndex = command.params;//TODO: check if it's a positive integer
+				this.#toIndex = command.params as number;//TODO: check if it's a positive integer
 				return true;
 			default:
 				return super.do(command);
@@ -164,13 +163,13 @@ export class SfmChannel extends SfmOperator {
 				return true;
 			*/
 			case 'set-to-element':
-				this.#toElement = command.undoParams;
+				this.#toElement = command.undoParams as Serializable | null;
 				return true;
 			case 'set-to-attribute':
-				this.#toAttribute = command.undoParams;
+				this.#toAttribute = command.undoParams as string;
 				return true;
 			case 'set-to-index':
-				this.#toIndex = command.undoParams;
+				this.#toIndex = command.undoParams as number;
 				return true;
 			default:
 				return super.undo(command);

@@ -75,7 +75,7 @@ export class SfmTrack extends Serializable implements Undoable {
 		return this.#trackType;
 	}
 
-	getGaps(start: number = -Infinity, end: number = Infinity, excludedClips?: Set<SfmClip>): Set<SfmTimeFrame> {
+	getGaps(start = -Infinity, end = Infinity, excludedClips?: Set<SfmClip>): Set<SfmTimeFrame> {
 		const gaps = new Set<SfmTimeFrame>([new SfmTimeFrame({ start, end })]);
 
 		for (const clip of this.#clips) {
@@ -105,19 +105,19 @@ export class SfmTrack extends Serializable implements Undoable {
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-clip':
-				command.undoParams = command.params.track;
-				this.#addClip(command.params);
+				command.undoParams = (command.params as SfmClip).track;
+				this.#addClip(command.params as SfmClip);
 				return true;
 			case 'delete-clip':
-				if (!this.#clips.has(command.params)) {
+				if (!this.#clips.has(command.params as SfmClip)) {
 					return false;
 				}
-				command.undoParams = command.params;
-				this.#deleteClip(command.params);
+				command.undoParams = command.params as SfmClip;
+				this.#deleteClip(command.params as SfmClip);
 				return true;
 			case 'set-order':
 				command.undoParams = this.#order;
-				this.#order = command.params;
+				this.#order = command.params as number;
 				return true;
 			default:
 				return super.do(command);
@@ -128,20 +128,20 @@ export class SfmTrack extends Serializable implements Undoable {
 		switch (command.command) {
 			case 'add-clip':
 				// Delete the clip from this track
-				this.#deleteClip(command.params);
+				this.#deleteClip(command.params as SfmClip);
 
 				// Reattach the clip to the previous track, if any
 				const previousTrack = command.undoParams as SfmTrack;
 				if (previousTrack) {
-					previousTrack.#addClip(command.params);
+					previousTrack.#addClip(command.params as SfmClip);
 				}
 				return true;
 			case 'delete-clip':
 				// Reattach the clip to this track
-				this.#addClip(command.undoParams);
+				this.#addClip(command.undoParams as SfmClip);
 				return true;
 			case 'set-order':
-				this.#order = command.undoParams;
+				this.#order = command.undoParams as number;
 				return true;
 			default:
 				return super.undo(command);

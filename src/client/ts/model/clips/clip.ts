@@ -104,7 +104,7 @@ export abstract class SfmClip extends Serializable implements Undoable {
 	getNextName(): string {
 		let base: string = this.getName();
 		const result = /^([^\d]*)(\d*)?$/.exec(base);
-		let n: number = 0;
+		let n = 0;
 		if (result && result.length > 2) {
 			base = result[1]!;
 			n = Number(result[2] ?? 0);

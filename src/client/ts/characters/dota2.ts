@@ -2,7 +2,7 @@ import { Source2ModelInstance, Source2ModelManager } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
 import { createElement } from 'harmony-ui';
 import { errorOnce, setTimeoutPromise } from 'harmony-utils';
-import { Game, GameTeam } from '../misc/character';
+import { Game } from '../misc/character';
 import { Character, CharacterTemplate } from './character';
 import { Item, ItemTemplate } from './item';
 import { Slot, SlotTemplate } from './slot';
@@ -49,7 +49,7 @@ export class Dota2Character implements Character {
 		throw new Error("TODO");
 	}
 
-	async setTeam(team: GameTeam): Promise<void> {
+	async setTeam(/*team: GameTeam*/): Promise<void> {
 		// Nothing to do
 	}
 
@@ -67,7 +67,7 @@ export class Dota2Character implements Character {
 		// TODO: gold / ice ragdolls + invuln
 		const skin = 0;//this.#team === 'red' ? 0 : 1;
 
-		(await this.getModel())?.setSkinId(skin);
+		await (await this.getModel())?.setSkinId(skin);
 
 
 		//await this.#setMaterialOverride(null);
@@ -147,7 +147,7 @@ export class Dota2Character implements Character {
 
 	async #loadoutChanged(): Promise<void> {
 		//this.autoSelectAnim();TODO
-		this.#updateSkin();
+		await this.#updateSkin();
 		//this.#checkBodyGroups();
 
 
@@ -203,7 +203,7 @@ export class Dota2Character implements Character {
 
 
 	async select(): Promise<void> {
-		this.equipDefaultItems();
+		await this.equipDefaultItems();
 	}
 
 
@@ -238,7 +238,7 @@ export class Dota2Item implements Item {
 	#template: Dota2ItemTemplate;
 	#owner: Dota2Character;
 	#model?: Source2ModelInstance | null;
-	#visible: boolean = true;
+	#visible = true;
 	//#attachedModel?: Source2ModelInstance | null;
 	//#extraWearable?: Source2ModelInstance | null;
 
@@ -275,7 +275,7 @@ export class Dota2Item implements Item {
 		this.#owner = owner;
 	}
 
-	async setTeam(team: GameTeam): Promise<void> {
+	async setTeam(/*team: GameTeam*/): Promise<void> {
 		// Nothing to do
 	}
 
@@ -335,7 +335,7 @@ export class Dota2Item implements Item {
 		}
 		*/
 
-		this.#updateSkin();
+		await this.#updateSkin();
 
 		if (this.#model) {
 			models.push(this.#model);
@@ -390,14 +390,14 @@ export class Dota2Item implements Item {
 		return this.#visible;
 	}
 
-	getPersonaId() {
+	getPersonaId(): number {
 		return getPersonaId(this.#template.slot)
 	}
 
 }
 
 async function dota2CharacterToModel(character: Dota2CharacterTemplate): Promise<Source2ModelInstance | null> {
-	let model = await Source2ModelManager.createInstance(character.game, character.modelPath, true);
+	const model = await Source2ModelManager.createInstance(character.game, character.modelPath, true);
 	model?.playSequence(character.animation ?? 'ref');
 
 	return model;
@@ -454,38 +454,20 @@ export async function getDota2Characters(): Promise<Dota2CharacterTemplate[]> {
 
 	return characters;
 }
-/**
- * Fill the game, animation and slots character properties
- * @param character The character to update
- */
-function populateDota2Character(character: CharacterTemplate): void {
-	character.game = 'dota2';
-	character.animation = 'stand_secondary';
-	character.slots = [
-		{
-			name: 'weapon',
-			slots: ['primary', 'secondary', 'melee'],
-			limit: 1,
-		},
-		{
-			name: 'cosmetics',
-			slots: ['head', 'misc'],
-		},
-	];
-}
 
 let dota2Heroes: Promise<JSONObject | null>;
 async function getDota2Heroes(): Promise<JSONObject | null> {
-	if (!dota2Heroes) {
+	if (dota2Heroes === undefined) {
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		dota2Heroes = new Promise<JSONObject | null>(async resolve => {
 			while (true) {
 				const resp = await fetch(`${DOTA2_HEROES_URL}?t=${new Date().getTime()}`);
 				if (resp.ok) {
-					const result = await resp.json();
+					const result = await resp.json() as JSONObject;
 					resolve(result ?? null);
 					return;
 				}
-				setTimeoutPromise(5000);
+				await setTimeoutPromise(5000);
 			}
 		});
 	}
@@ -499,13 +481,13 @@ const DOTA2_HERO_IMG_WIDTH = 256;
 const DOTA2_HERO_IMG_HEIGHT = 144;
 async function getHeroPicture(heroOrderID: number): Promise<string> {
 	// TODO: optimize: a canvas + context is created for each image
-	if (!dota2HeroesImg) {
+	if (dota2HeroesImg === undefined) {
 		// Get the all heroes picture
-		dota2HeroesImg = new Promise<HTMLImageElement>(async resolve => {
+		dota2HeroesImg = new Promise<HTMLImageElement>(resolve => {
 			const img = new Image();
 			// Prevent tainting the canvas
 			img.crossOrigin = 'anonymous';
-			img.onload = () => resolve(img);
+			img.onload = (): void => resolve(img);
 			img.src = DOTA2_HEROES_IMG_URL;
 		});
 	}
@@ -534,7 +516,7 @@ export async function getItemsDota2(hero: string, slot?: Slot): Promise<Dota2Ite
 	const result: Dota2ItemTemplate[] = [];
 	//const slots = slot.getSlots();
 	const slotName = slot?.getName();
-	for (const item of items as JSONObject[]) {
+	for (const item of items) {
 		//const item = (items.items as JSONObject)[index] as JSONObject;
 		if (slotName === undefined || item.slot === slotName) {
 			result.push(dota2ItemToItem(item));
@@ -552,19 +534,20 @@ export async function getItemsDota2(hero: string, slot?: Slot): Promise<Dota2Ite
 	return result;
 }
 
-let dota2ItemsMap = new Map<string, Promise<JSONObject[] | null>>();
+const dota2ItemsMap = new Map<string, Promise<JSONObject[] | null>>();
 async function getDota2ItemList(hero: string): Promise<JSONObject[] | null> {
 	let dota2Items = dota2ItemsMap.get(hero);
 	if (!dota2Items) {
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		dota2Items = new Promise<JSONObject[] | null>(async resolve => {
 			while (true) {
 				const resp = await fetch(`${DOTA2_ITEMS_URL}${hero}.json`);
 				if (resp.ok) {
-					const result = await resp.json();
+					const result = await resp.json() as JSONObject[];
 					resolve(result ?? null);
 					return;
 				}
-				setTimeoutPromise(5000);
+				await setTimeoutPromise(5000);
 			}
 		});
 		dota2ItemsMap.set(hero, dota2Items);
@@ -578,18 +561,10 @@ function dota2ItemToItem(item: JSONObject): Dota2ItemTemplate {
 	//skin = item.skin_red as string;
 	//}
 
-	let skin: string;
-	skin = item.skin_red as string | undefined ?? '0';
+	const skin: string = item.skin_red as string | undefined ?? '0';
 
-	let attachedModel = item.attached_models as string;
-	let extraWearable = item.extra_wearable as string;
-
-
-	let skinRed = Number(item.skin_red as string);
-	skinRed = isNaN(skinRed) ? 0 : skinRed;
-
-	let skinBlu = Number(item.skin_blu as string);
-	skinBlu = isNaN(skinBlu) ? 1 : skinBlu;
+	const attachedModel = item.attached_models as string;
+	const extraWearable = item.extra_wearable as string;
 
 	return {
 		id: item.id as string,

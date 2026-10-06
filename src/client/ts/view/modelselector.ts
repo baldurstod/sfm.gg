@@ -25,7 +25,7 @@ export class ModelSelectorPanel extends Panel {
 		*/
 	}
 
-	open() {
+	open(): void {
 		this.initPanel();
 	}
 }

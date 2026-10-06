@@ -2,7 +2,6 @@ import { JSONObject } from 'harmony-types';
 import { errorOnce } from 'harmony-utils';
 import { Serializable, SerializableParameters, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable } from '../../serialize/serializer';
-import { SfmEntityPropertyValue } from '../entity';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { HasInputs, HasOutputs, SfmOperatorIO, SfmOperatorOutput } from './io';
 
@@ -69,8 +68,9 @@ export abstract class SfmOperator extends Serializable implements HasInputs, Has
 		this.inputs.clear();
 		const properties = json.inputs as JSONObject;
 		if (properties) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			for (const key in properties) {
-				const value = properties[key] as SfmEntityPropertyValue;// TODO: check the value
+				//const value = properties[key] as SfmEntityPropertyValue;// TODO: check the value
 				//this.properties.set(key, value);
 			}
 		}

@@ -3,10 +3,12 @@ import { SerializableProperty, SerializablePropertyValue, UnserializationContext
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmOperator } from '../operators/operator';
-import { ClipParameters, SfmClip, SfmClipType } from './clip';
+import { SfmClip, SfmClipType } from './clip';
 
+/*
 export interface OperatorClipParameters extends ClipParameters {
 }
+*/
 
 export class SfmOperatorClip extends SfmClip {
 	readonly isSfmOperatorClip = true as const;
@@ -35,15 +37,15 @@ export class SfmOperatorClip extends SfmClip {
 		switch (command.command) {
 			case 'add-operator':
 				command.undoParams = new Set<SfmOperator>(this.#operators);
-				this.#operators.add(command.params);//TODO: check if it's actually an operator
+				this.#operators.add(command.params as SfmOperator);//TODO: check if it's actually an operator
 				return true;
 			case 'delete-operator':
 				//TODO: check if it's actually an operator
-				if (!this.#operators.has(command.params)) {
+				if (!this.#operators.has(command.params as SfmOperator)) {
 					return false;
 				}
-				command.undoParams = command.params;
-				this.#operators.delete(command.params);
+				command.undoParams = command.params as SfmOperator;
+				this.#operators.delete(command.params as SfmOperator);
 				return true;
 			default:
 				return super.do(command);
@@ -58,7 +60,7 @@ export class SfmOperatorClip extends SfmClip {
 				return true;
 			case 'delete-operator':
 				// Reattach the operator to this clip
-				this.#operators.add(command.undoParams)
+				this.#operators.add(command.undoParams as SfmOperator)
 				return true;
 			default:
 				return super.undo(command);

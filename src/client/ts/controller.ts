@@ -70,6 +70,7 @@ export type ControllerEvent = 'setsession'
 	;
 
 // Same as CustomEventInit with required detail
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ControllerEventInit<T = any> extends EventInit {
 	detail: T;
 }

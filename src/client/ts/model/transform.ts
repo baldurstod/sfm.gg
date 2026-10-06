@@ -29,7 +29,7 @@ export class SfmTransform extends Serializable {
 		vec3.copy(this.#scale, params.scale ?? DEFAULT_SCALE);
 	}
 
-	reset() {
+	reset(): void {
 		vec3.zero(this.#position);
 		quat.identity(this.#orientation);
 		vec3.set(this.#scale, 1, 1, 1);

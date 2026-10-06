@@ -14,6 +14,7 @@ export type SfmDataCurveType =
 export abstract class SfmDataCurve extends Serializable {
 	readonly isSfmDataCurve = true as const;
 	//readonly controlPoints = new Set();
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	readonly keys: Set<CurveKey<any>>[] = [];
 	curveType: SfmDataCurveType = 'linear';
 	readonly curveCount: number = 1;
@@ -33,6 +34,7 @@ export abstract class SfmDataCurve extends Serializable {
 			for (const curve of this.keys) {
 				for (const key of curve) {
 					keys.push(...key.times);
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					keys.push(...key.values);
 				}
 			}

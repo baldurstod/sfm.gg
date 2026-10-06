@@ -10,7 +10,7 @@ export abstract class SfmEntity extends Serializable {
 	readonly properties = new Map<string, SfmEntityPropertyValue>();
 
 	abstract getEngineEntity(): Entity | null;
-	async getEngineEntityAsync(): Promise<Entity | null> { return this.getEngineEntity(); }
+	getEngineEntityAsync(): Promise<Entity | null> { return Promise.resolve(this.getEngineEntity()); }
 
 	override serialize(): JSONSerializable {
 		const json = super.serialize();

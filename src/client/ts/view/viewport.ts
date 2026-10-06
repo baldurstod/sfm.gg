@@ -1,4 +1,4 @@
-import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, GraphicTickEvent, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
+import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
 import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
@@ -21,7 +21,7 @@ export class ViewportPanel extends Panel {
 	#camerasOptions = new WeakMap<SfmCamera, HTMLOptionElement>();
 	#optionsCameras = new WeakMap<HTMLOptionElement, SfmCamera>();
 	#useWorkCamera = true;
-	#cameraControl = new FirstPersonControl(workCamera.getEngineEntity()!);
+	#cameraControl = new FirstPersonControl(workCamera.getEngineEntity());
 	#canvasAttributes: CanvasAttributes | null = null;
 	#orbitGizmo = new OrbitGizmo();
 	static nextId = 0;
@@ -38,9 +38,10 @@ export class ViewportPanel extends Panel {
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		//Controller.addEventListener('userplay', () => this.#setPlaying(true));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Controller.addEventListener('setactivefilmclips', (event) => this.#setActiveFilmClips(event.detail));
 
-		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
+		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl.update(event.detail.delta));
 
 		this.#cameraControl.movementSpeed = 100;
 		this.#cameraControl.lookSpeed = 0.1;
@@ -189,7 +190,7 @@ export class ViewportPanel extends Panel {
 		this.#removeChilds();
 
 		for (const clip of clips) {
-			let current: SfmNode<SfmEntity> | undefined = clip.getSceneWithWorld();
+			const current: SfmNode<SfmEntity> | undefined = clip.getSceneWithWorld();
 			if (!current) {
 				continue;
 			}
@@ -203,7 +204,7 @@ export class ViewportPanel extends Panel {
 			const stack: SfmNode[] = [current];
 			// TODO: improve this: this run every frame
 			for (; ;) {
-				let current = stack.pop();
+				const current = stack.pop();
 				if (!current) {
 					break;
 				}
@@ -323,7 +324,7 @@ export class ViewportPanel extends Panel {
 			if (this.#useWorkCamera) {
 				camera = workCamera.getEngineEntity()!;
 			} else {
-				camera = this.#topFilmClip?.activeCamera?.getEngineEntity() ?? workCamera.getEngineEntity()!;
+				camera = this.#topFilmClip?.activeCamera?.getEngineEntity() ?? workCamera.getEngineEntity();
 			}
 		}
 

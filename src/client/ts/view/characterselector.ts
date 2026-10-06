@@ -1,4 +1,4 @@
-import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, GraphicTickEvent, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
+import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
@@ -177,7 +177,7 @@ export class CharacterSelectorPanel extends Panel {
 		this.#cameraControl = new OrbitControl(this.#camera);
 		this.#cameraControl.setTargetPosition([0, 0, 40]);
 		this.#cameraControl.canvas = this.#htmlCanvas;
-		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl!.update((event as CustomEvent<GraphicTickEvent>).detail.delta));
+		GraphicsEvents.addEventListener('tick', (event) => this.#cameraControl!.update(event.detail.delta));
 
 		this.#scene = new Scene({
 			childs: [
@@ -228,6 +228,7 @@ export class CharacterSelectorPanel extends Panel {
 				createElement('img', {
 					src: team.icon,
 					parent: this.#htmlTeams,
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					$click: () => this.#selectTeam(team),
 				});
 			}
@@ -237,7 +238,7 @@ export class CharacterSelectorPanel extends Panel {
 	async #selectTeam(team: GameTeamDefinition): Promise<void> {
 		this.#currentTeam = team;
 
-		this.#selectedCharacter?.setTeam(team.name);
+		await this.#selectedCharacter?.setTeam(team.name);
 		/*
 
 		if (this.#selectedCharacter) {
@@ -281,6 +282,7 @@ export class CharacterSelectorPanel extends Panel {
 				parent: this.#htmlCharacters,
 				class: 'character',
 				src: characterTemplate.icon,
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				$click: () => this.#selectCharacter(character),
 			});
 		}
@@ -293,7 +295,7 @@ export class CharacterSelectorPanel extends Panel {
 
 		this.#group?.removeChildren();
 
-		let model = await character.getModel();//characterToModel(character);//await Source1ModelManager.createInstance(character.game, character.model, true);
+		const model = await character.getModel();//characterToModel(character);//await Source1ModelManager.createInstance(character.game, character.model, true);
 		if (model) {
 			this.#characterModels.set(character, model);
 		}
@@ -301,11 +303,11 @@ export class CharacterSelectorPanel extends Panel {
 		this.#initSlots(character);
 		const slot = this.#selectedSlot.get(character) ?? character.getSlots()?.[0];
 		if (slot) {
-			this.#selectSlot(slot);
+			await this.#selectSlot(slot);
 		} else {
 			BugReporter.reportBug('warning', `No slot found for character ${JSON.stringify(character)}`);
 		}
-		character.select();
+		await character.select();
 
 		this.#updateEquippedItems();
 	}
@@ -323,6 +325,7 @@ export class CharacterSelectorPanel extends Panel {
 				parent: this.#htmlSlots,
 				class: 'slot',
 				innerText: slot.getName(),
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				$click: () => this.#selectSlot(slot),
 			});
 		}
@@ -370,6 +373,7 @@ export class CharacterSelectorPanel extends Panel {
 					child: createElement('img', {
 						src: item.icon,
 					}),
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					$click: () => this.#itemClick(item),
 				});
 
@@ -397,7 +401,7 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	#setSortingType(type: ItemSortType): void {
-		let sortingDirection: number = this.#sortingDirection;
+		const sortingDirection: number = this.#sortingDirection;
 		/*
 		if (this.#filters.sfmWorkshop) {
 			sortingDirection = this.#sortingDirectionSfm;
@@ -428,13 +432,12 @@ export class CharacterSelectorPanel extends Panel {
 				this.#sortRandom();
 				break;
 			*/
-			default: console.error(`unsupported field: ${type}`);
+			default: console.error(`unsupported field: ${type as string}`);
 				break;
 		}
 	}
 
 	#sortByName(sortingDirection: number): void {
-		const self = this;
 		this.#items[Symbol.iterator] = function* (): ArrayIterator<ItemTemplate> {
 			yield* [...this.values()].sort(
 				(a, b) => {
@@ -447,7 +450,6 @@ export class CharacterSelectorPanel extends Panel {
 	}
 
 	#sortByIndex(sortingDirection: number): void {
-		const self = this;
 		this.#items[Symbol.iterator] = function* (): ArrayIterator<ItemTemplate> {
 			yield* [...this.values()].sort(
 				(a, b) => {
@@ -663,9 +665,9 @@ export class CharacterSelectorPanel extends Panel {
 
 		console.info(item);
 		if (this.#selectedCharacter.hasItem(item)) {
-			this.#selectedCharacter.unequipItem(item);
+			await this.#selectedCharacter.unequipItem(item);
 		} else {
-			this.#selectedCharacter.equipItem(item);
+			await this.#selectedCharacter.equipItem(item);
 		}
 
 		this.#updateEquippedItems();
@@ -712,11 +714,13 @@ export class CharacterSelectorPanel extends Panel {
 				child: createElement('img', {
 					src: item.getIcon(),
 				}),
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				$click: () => this.#itemClick(item.getTemplate()),
 			});
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async #equipItem(character: Character, item: Item): Promise<void> {
 		/*
 		//this.#equipedItems.set(character, slot, item);
@@ -743,8 +747,8 @@ export class CharacterSelectorPanel extends Panel {
 		*/
 	}
 
-	#unEquipItem(character: Character, item: ItemTemplate): void {
-		character.unequipItem(item);
+	async #unEquipItem(character: Character, item: ItemTemplate): Promise<void> {
+		await character.unequipItem(item);
 
 		/*
 		const itemHash = getItemIdStyle(item);

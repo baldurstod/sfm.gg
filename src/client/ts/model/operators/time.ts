@@ -24,7 +24,7 @@ export class SfmTimeOperator extends SfmOperator {
 		}];
 	}
 
-	override getOutputValue(name: string): SerializablePropertyValue {
+	override getOutputValue(): SerializablePropertyValue {
 		return this.#time;
 	}
 

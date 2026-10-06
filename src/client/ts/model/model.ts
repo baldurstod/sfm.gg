@@ -27,7 +27,7 @@ export class SfmModel extends SfmEntity {
 		this.#path = params.path;
 		this.#skin = params.skin;
 		if (params.bodyParts) {
-			this.setBodyParts(params.bodyParts);
+			void this.setBodyParts(params.bodyParts);
 		}
 	}
 
@@ -62,42 +62,49 @@ export class SfmModel extends SfmEntity {
 
 	async #getTf2Model(): Promise<void> {
 		this.#model = Source1ModelManager.createInstance(this.#repository!, this.#path!, true);
-		this.#model.then(async model => {
+
+		const model = await this.#model;
+
+		if (model) {
 			(model as Source1ModelInstance)?.playSequence('ref')
 
 			const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
 			if (itemStartSeq) {
 				(model as Source1ModelInstance).playSequence(itemStartSeq.name);
-				(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
+				await (model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
 			}
 			(model as Source1ModelInstance).frame = 0.;
 
 			if (this.#skin !== undefined) {
-				model?.setSkinName(this.#skin);
+				await model?.setSkinName(this.#skin);
 			}
 			await this.#updateBodyParts();
-		});
+		}
 	}
 
 	async #getDota2Model(): Promise<void> {
 		this.#model = Source2ModelManager.createInstance(this.#repository!, this.#path!, true);
-		this.#model.then(async model => {
-			(model as Source2ModelInstance)?.playSequence('ref')
 
-			/*
-			const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
-			if (itemStartSeq) {
-				(model as Source1ModelInstance).playSequence(itemStartSeq.name);
-				(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
-			}
-			(model as Source1ModelInstance).frame = 0.;
+		const model = await this.#model;
 
-			if (this.#skin !== undefined) {
-				model?.setSkinName(this.#skin);
-			}
-			await this.#updateBodyParts();
-			*/
-		});
+		if (model) {
+			(model as Source2ModelInstance)?.playSequence('ref');
+		}
+
+
+		/*
+		const itemStartSeq = (model as Source1ModelInstance).sourceModel.mdl.getSequenceById(0);
+		if (itemStartSeq) {
+			(model as Source1ModelInstance).playSequence(itemStartSeq.name);
+			(model as Source1ModelInstance).setAnimation(0, itemStartSeq.name, 1);
+		}
+		(model as Source1ModelInstance).frame = 0.;
+
+		if (this.#skin !== undefined) {
+			model?.setSkinName(this.#skin);
+		}
+		await this.#updateBodyParts();
+		*/
 	}
 
 	async setBodyParts(bodyParts: Map<string, string | false>): Promise<void> {

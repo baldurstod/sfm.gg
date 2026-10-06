@@ -65,7 +65,7 @@ export class SfmCamera extends SfmEntity {
 	override getProperty(name: string): SerializablePropertyValue {
 		switch (name) {
 			case 'fov':
-				return this.#camera.verticalFov;
+				return this.#camera.getVerticalFov();
 			default:
 				return super.getProperty(name);
 		}
@@ -74,7 +74,7 @@ export class SfmCamera extends SfmEntity {
 	override setProperty(name: string, value: SerializablePropertyValue): boolean {
 		switch (name) {
 			case 'fov':
-				this.#camera.verticalFov = value as number;//TODO: check value type
+				this.#camera.setVerticalFov(value as number);//TODO: check value type
 				return true;
 			default:
 				return super.setProperty(name, value);

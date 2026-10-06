@@ -30,31 +30,31 @@ export class Toolbar extends Panel {
 						//Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeClip?.activeCamera ?? null });
 						//this.#useWorkCamera = false;
 					},
-				}) as HTMLButtonElement,
+				}),
 				createElement('button', {
 					innerHTML: saveSVG,
 					$click: () => {
 						Controller.dispatchEvent('usersavesession');
 					},
-				}) as HTMLButtonElement,
+				}),
 				createElement('button', {
 					innerHTML: settingsSVG,
 					$click: () => {
 						Controller.dispatchEvent('useropenoptions');
 					},
-				}) as HTMLButtonElement,
+				}),
 				createElement('button', {
 					innerHTML: manufacturingSVG,
 					$click: () => {
 						Controller.dispatchEvent('useropenadvancedoptions');
 					},
-				}) as HTMLButtonElement,
+				}),
 				createElement('button', {
 					innerHTML: addSVG,
 					$click: () => {
 						Controller.dispatchEvent('useraddmodel');
 					},
-				}) as HTMLButtonElement,
+				}),
 				this.#htmlAddCharacterButton = createElement('button', {
 					innerHTML: addSVG,
 					disabled: true,
@@ -81,7 +81,7 @@ export class Toolbar extends Panel {
 					$click: () => {
 						Controller.dispatchEvent('userrenderpicture');
 					},
-				}) as HTMLButtonElement,
+				}),
 			],
 		});
 

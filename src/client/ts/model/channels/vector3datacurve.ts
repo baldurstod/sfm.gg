@@ -22,7 +22,7 @@ export class SfmDataCurveVector3 extends SfmDataCurve {
 		return 'Data curve vector3';
 	}
 
-	getValueAtTime(time: number): vec3 {
+	getValueAtTime(/*time: number*/): vec3 {
 		return vec3.create();
 	}
 

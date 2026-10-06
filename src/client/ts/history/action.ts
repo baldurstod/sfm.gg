@@ -19,10 +19,12 @@ export interface Undoable {
 /**
  * A single command. Multiple commands part of the same action will be undone at once.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	readonly element: Undoable;
 	readonly command: C;
 	readonly params: T;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	undoParams: any/*TODO: improve type*/;
 
 	constructor(element: Undoable, command: C, params: T) {
@@ -71,6 +73,7 @@ export class Action {
 	do(element: SfmTrackGroup, command: 'add-track', params: SfmTrack): boolean;
 	do(element: SfmTrackGroup, command: 'delete-track', params: SfmTrack): boolean;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	do(element: Undoable, command: string, params?: any): boolean {
 		const operation = new Command(element, command, params);
 		const result = element.do(operation);
@@ -95,8 +98,6 @@ export class Action {
 	}
 
 	redo(): boolean {
-		let operation: Command;
-
 		for (const operation of this.#operations) {
 			if (!operation.redo()) {
 				return false;

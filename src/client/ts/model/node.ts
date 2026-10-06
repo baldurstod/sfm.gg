@@ -50,14 +50,14 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 					child: command.params as SfmNode,
 					parent: (command.params as SfmNode).#parent,
 				};
-				this.#children.add(command.params);// TODO: check if its an SfmNode
+				this.#children.add(command.params as SfmNode);// TODO: check if its an SfmNode
 				(command.params as SfmNode).#parent = this;
 				return true;
 			case 'delete-child':
 				command.undoParams = {
 					childs: new Set(this.#children),
 				};
-				this.#children.delete(command.params);// TODO: check if its an SfmNode
+				this.#children.delete(command.params as SfmNode);// TODO: check if its an SfmNode
 				return true;
 			case 'delete-children':
 				command.undoParams = {
@@ -67,7 +67,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				return true;
 			case 'set-entity':
 				command.undoParams = this.#entity;
-				this.#entity = command.params;// TODO: check if its an SfmEntity
+				this.#entity = command.params as T;// TODO: check if its an SfmEntity
 				return true;
 			/*
 			case 'set-parent':
@@ -93,7 +93,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				(command.undoParams as AddChildUndo).childs.forEach(child => this.#children.add(child));
 				return true;
 			case 'set-entity':
-				this.#entity = command.undoParams;
+				this.#entity = command.undoParams as T | undefined;
 				return true;
 			default:
 				return super.undo(command);
@@ -128,7 +128,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 		super.unserialize(json, context);
 
 		if (json.entity) {
-			this.#entity = context.elements.get(json.entity as string) as any; // TODO: check if it's actually an entity
+			this.#entity = context.elements.get(json.entity as string) as T; // TODO: check if it's actually an entity
 		}
 
 		// Unserialize children

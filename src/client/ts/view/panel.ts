@@ -31,7 +31,7 @@ export class Panel {
 
 	open(): void {
 		this.getPanel();
-		show(this.panel!.getHtml() as HTMLElement);
+		show(this.panel!.getHtml());
 	}
 
 	hide(): void {
@@ -42,6 +42,7 @@ export class Panel {
 		//show(this.shadowRoot?.host as HTMLElement);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	activated(): void { };
 
 	isVisible(): boolean {

@@ -30,7 +30,7 @@ export class SfmSession extends Serializable {
 		switch (command.command) {
 			case 'set-film-clip':
 				command.undoParams = this.#filmClip;
-				this.#filmClip = command.params;//TODO: check this is an SfmFilmClip
+				this.#filmClip = command.params as SfmFilmClip;//TODO: check this is an SfmFilmClip
 				return true;
 			default:
 				return super.do(command);
@@ -40,7 +40,7 @@ export class SfmSession extends Serializable {
 	undo(command: Command): boolean {
 		switch (command.command) {
 			case 'set-film-clip':
-				this.#filmClip = command.undoParams;
+				this.#filmClip = command.undoParams as SfmFilmClip | undefined;
 				return true;
 			default:
 				return super.undo(command);

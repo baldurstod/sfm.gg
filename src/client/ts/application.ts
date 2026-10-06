@@ -1,4 +1,4 @@
-import { Camera, ContextType, FullScreenQuad, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, Scene, ShaderMaterial, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
+import { Camera, ContextType, FullScreenQuad, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, RepositoryDir, Scene, ShaderMaterial, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
 import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
@@ -17,7 +17,7 @@ import { History } from './history/history';
 import { Game, Games, getCharacter, getItemTemplate, getTf2Characters } from './misc/character';
 import { SfmCamera } from './model/camera';
 import { SfmChannel } from './model/channels/channel';
-import { SfmClip, SfmClipType } from './model/clips/clip';
+import { SfmClip } from './model/clips/clip';
 import { SfmFilmClip } from './model/clips/filmclip';
 import { SfmOperatorClip } from './model/clips/operatorclip';
 import { SfmSoundClip } from './model/clips/soundclip';
@@ -43,9 +43,10 @@ import { CharacterSelectorPanel } from './view/characterselector';
 import { ModelSelectorPanel } from './view/modelselector';
 import { RenderPanel } from './view/render';
 
-documentStyle(htmlCSS);
-documentStyle(varsCSS);
+void documentStyle(htmlCSS);
+void documentStyle(varsCSS);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class Application {
 	static #main = new AppPanel();
 	static #session = new SfmSession();
@@ -63,7 +64,7 @@ class Application {
 		this.#initListeners();
 		this.#initHTML();
 		this.#initOptions();
-		this.#initGraphics();
+		void this.#initGraphics();
 		this.createNewSession();
 
 		//load();
@@ -100,7 +101,7 @@ class Application {
 			}
 		});
 
-		const handleTick = (event: Event) => {
+		const handleTick = (event: Event): void => {
 			WebGLStats.tick();
 			Graphics.renderMultiCanvas((event as CustomEvent<GraphicTickEvent>).detail.delta, {
 				time: this.#player.getCurrentTime(),
@@ -115,7 +116,7 @@ class Application {
 		Graphics.play();
 	}
 
-	static #initListeners() {
+	static #initListeners(): void {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
 		Controller.addEventListener('usersavesession', () => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
@@ -141,6 +142,7 @@ class Application {
 		Controller.addEventListener('useropenadvancedoptions', () => OptionsManager.showOptionsManager());
 		Controller.addEventListener('useraddmodel', () => this.#userAddModel());
 		Controller.addEventListener('userselectcharacter', (event) => this.#userSelectCharacter(event.detail));
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Controller.addEventListener('userselectcharacterselectapp', (event) => this.#userSelectCharacterSelectApp(event.detail));
 		Controller.addEventListener('useraddcharacter', (event) => this.#userAddCharacter(event.detail));
 		Controller.addEventListener('userupdatecharacter', (event) => this.#userUpdateCharacter(event.detail));
@@ -170,6 +172,7 @@ class Application {
 		Controller.addEventListener('userdeletetrackgroup', (event) => this.#deleteTrackGroup(event.detail));
 		Controller.addEventListener('userdeleteoperator', (event) => this.#deleteOperator(event.detail));
 		Controller.addEventListener('userdeletecharacter', (event) => this.#deleteCharacter(event.detail));
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Controller.addEventListener('usereditcharacter', (event) => this.#editCharacter(event.detail));
 		Controller.addEventListener('updateactiveclips', () => this.#setActiveFilmClips());
 		Controller.addEventListener('useraddlight', (event) => {
@@ -179,6 +182,8 @@ class Application {
 				this.#addLight(detail.type, scene);
 			}
 		});
+
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Controller.addEventListener('userrenderpicture', () => this.#renderPicture());
 		Controller.addEventListener('userpauserender', () => this.#raytracer.pause());
 		Controller.addEventListener('userresumerender', () => this.#raytracer.play());
@@ -188,13 +193,13 @@ class Application {
 	}
 
 	static #initOptions(): void {
-		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#setLang((event as CustomEvent<OptionsManagerEvent<string>>).detail.value as string));
+		OptionsManagerEvents.addEventListener('app.lang', (event: Event) => this.#setLang((event as CustomEvent<OptionsManagerEvent<string>>).detail.value));
 
-		OptionsManager.init({ json: optionsmanager });
-		(async () => ShortcutHandler.setShortcuts('timeline', await OptionsManager.getOptionsPerType('shortcut') as Map<string, string>))()
+		void OptionsManager.init({ json: optionsmanager });
+		void (async (): Promise<void> => ShortcutHandler.setShortcuts('timeline', await OptionsManager.getOptionsPerType('shortcut') as Map<string, string>))()
 	}
 
-	static #initHTML() {
+	static #initHTML(): void {
 		//this.#main.getHTML();
 	}
 
@@ -350,8 +355,8 @@ class Application {
 		tf2WebRepository.supportedExtensions.add('vmt');
 		tf2WebRepository.supportedExtensions.add('vtf');
 
-		fetch(TF2_REPOSITORY + `materials_manifest.json?t=${new Date().getTime()}`).then(async (response) => {
-			const j = await response.json();
+		void fetch(TF2_REPOSITORY + `materials_manifest.json?t=${new Date().getTime()}`).then(async (response) => {
+			const j = await response.json() as RepositoryDir;
 			if (!j) {
 				return;
 			}
@@ -361,7 +366,7 @@ class Application {
 	}
 
 	static #setLang(lang: string): void {
-		this.#getLanguage(lang).then(json => {
+		void this.#getLanguage(lang).then(json => {
 			I18n.setOptions({ translations: [json as I18nTranslation] });
 			I18n.setLang(lang);
 		});
@@ -377,7 +382,7 @@ class Application {
 			void (async (): Promise<void> => {
 				const response = await fetch(`/json/i18n/${lang}.json`);
 
-				const json = await response.json();
+				const json = await response.json() as JSONObject;
 				resolve(json);
 			})();
 		});
@@ -437,7 +442,7 @@ class Application {
 		}
 	}
 
-	static async #userAddCharacter(detail: AddCharacter, action?: Action): Promise<void> {
+	static #userAddCharacter(detail: AddCharacter, action?: Action): void {
 		const character = detail.character;
 		console.info('userAddCharacter', character)
 		const scenes = new Set<SfmNode<SfmScene>>();
@@ -503,7 +508,7 @@ class Application {
 		Controller.dispatchEvent('refreshtimeline');
 	}
 
-	static async #userUpdateCharacter(detail: UpdateCharacter): Promise<void> {
+	static #userUpdateCharacter(detail: UpdateCharacter): void {
 		console.info(detail);
 
 		const action = History.startAction();
@@ -737,7 +742,7 @@ class Application {
 				// For a film clip, we first look for a gap corresponding to the click position
 				const gaps = track.getGaps();
 
-				let clipTime: SfmTimeFrame;
+				let clipTime: SfmTimeFrame | undefined = undefined;
 				for (const gap of gaps) {
 					if (gap.inTimeFrame(detail.time)) {
 						clipTime = gap;
@@ -745,8 +750,8 @@ class Application {
 					}
 				}
 
-				let start = clipTime!?.getStart();
-				let end = clipTime!?.getEnd();
+				const start = clipTime?.getStart();
+				const end = clipTime?.getEnd();
 
 				newCLip = new SfmFilmClip({
 					scene: new SfmNode<SfmScene>({ entity: new SfmScene(), }),
@@ -858,7 +863,7 @@ class Application {
 	static #addTrackToTrackGroup(params: AddTrack): void {
 		const action = History.startAction();
 		let name: string;
-		switch (params.type as SfmClipType) {
+		switch (params.type) {
 			case 'film':
 				name = 'Film track';
 				break;
@@ -984,7 +989,7 @@ class Application {
 			}
 		}
 
-		this.#getCharacterSelectorPanel().editCharacter(detail.clip, character, characterNode);
+		await this.#getCharacterSelectorPanel().editCharacter(detail.clip, character, characterNode);
 	}
 
 	static #addLight(type: SfmLightType, scene: SfmNode<SfmScene>, action?: Action): void {
@@ -997,6 +1002,7 @@ class Application {
 				light = new SfmPointLight();
 				break;
 			default:
+				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 				errorOnce(`TODO: add light ${type}`);
 				return;
 		}
@@ -1084,7 +1090,7 @@ class Application {
 	}
 }
 
-async function load(file: JSONFile) {
+function load(file: JSONFile): void {
 	/*
 	const session: JSONFile =
 	{
@@ -1103,11 +1109,11 @@ async function load(file: JSONFile) {
 
 
 	//const json = JSON.parse(session) as JSONObject;
-	const session = await SfmSerializer.unserializeJSON(file);
+	const session = SfmSerializer.unserializeJSON(file);
 	console.info('load', session);
 }
 
-async function save(session: SfmSession) {
+function save(session: SfmSession): void {
 
 	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);

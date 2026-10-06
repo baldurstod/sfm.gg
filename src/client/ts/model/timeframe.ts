@@ -14,8 +14,8 @@ export interface TimeFrameParameters extends SerializableParameters {
 
 export class SfmTimeFrame extends Serializable {
 	readonly isSfmTimeFrame = true as const;
-	#start: number = 0;
-	#duration: number = 60;
+	#start = 0;
+	#duration = 60;
 	#offset: number;
 
 	constructor(params: TimeFrameParameters = {}) {
@@ -154,11 +154,12 @@ export class SfmTimeFrame extends Serializable {
 	 * @returns A timeframe containing the overlapping part of both timeframes, or null if there is no overlap
 	 */
 	overlap(other: SfmTimeFrame): SfmTimeFrame | null {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		let a: SfmTimeFrame = this;
 		let b: SfmTimeFrame = other;
 
 		if (a.#start > b.#start) {
-			let tmp = a;
+			const tmp = a;
 			a = b;
 			b = tmp;
 		}
