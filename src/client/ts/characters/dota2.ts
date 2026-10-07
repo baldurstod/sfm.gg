@@ -21,6 +21,7 @@ export interface Dota2CharacterTemplate extends CharacterTemplate {
 
 export interface Dota2ItemTemplate extends ItemTemplate {
 	baseItem: boolean;
+	definition: JSONObject;
 }
 
 export class Dota2Character implements Character {
@@ -57,13 +58,6 @@ export class Dota2Character implements Character {
 	 * Update the character skin
 	 */
 	async #updateSkin(): Promise<void> {
-		let zombieSkin = false;
-		for (const [, item] of this.#items) {
-			if (item.getTemplate().name.includes('Voodoo-Cursed')) {
-				zombieSkin = true;
-			}
-		}
-
 		// TODO: gold / ice ragdolls + invuln
 		const skin = 0;//this.#team === 'red' ? 0 : 1;
 
@@ -71,9 +65,8 @@ export class Dota2Character implements Character {
 
 
 		//await this.#setMaterialOverride(null);
-		const zombieSkinOffset = (this.getName() == 'spy' ? 22 : 4);
 		if (this.#model) {
-			await this.#model.setSkinId(skin + (zombieSkin ? zombieSkinOffset : 0) + (this.#isInvulnerable ? 2 : 0));
+			await this.#model.setSkinId(skin);
 		}
 		/*
 		for (const extraModel of this.#extraModels) {
@@ -322,6 +315,8 @@ export class Dota2Item implements Item {
 				}
 				*/
 			}
+
+			await this.#updateSkin();
 		}
 
 		/*
@@ -335,7 +330,7 @@ export class Dota2Item implements Item {
 		}
 		*/
 
-		await this.#updateSkin();
+		//await this.#updateSkin();
 
 		if (this.#model) {
 			models.push(this.#model);
@@ -578,6 +573,7 @@ function dota2ItemToItem(item: JSONObject): Dota2ItemTemplate {
 		extraWearable,
 		skin,
 		baseItem: item.baseItem == '1',
+		definition: item,
 	}
 }
 
