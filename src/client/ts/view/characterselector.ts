@@ -1,4 +1,4 @@
-import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
+import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, Group, OrbitControl, Scene, SceneExplorer, Source1ModelInstance } from 'harmony-3d';
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
@@ -173,7 +173,7 @@ export class CharacterSelectorPanel extends Panel {
 
 		// Create scene and camera
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
-		this.#camera = new Camera({ position: [500, 0, 40], verticalFov: 10, nearPlane: 10, farPlane: 10000 },);
+		this.#camera = new Camera({ position: [0, -500, 40], verticalFov: 10, nearPlane: 10, farPlane: 10000 },);
 		this.#cameraControl = new OrbitControl(this.#camera);
 		this.#cameraControl.setTargetPosition([0, 0, 40]);
 		this.#cameraControl.canvas = this.#htmlCanvas;
@@ -182,7 +182,7 @@ export class CharacterSelectorPanel extends Panel {
 		this.#scene = new Scene({
 			childs: [
 				new AmbientLight(),
-				this.#group = new Group(),
+				this.#group = new Group({ name: 'Character selector group' }),
 			]
 		});
 

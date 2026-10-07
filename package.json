@@ -30,6 +30,7 @@
     "harmony-browser-utils": "github:baldurstod/harmony-browser-utils",
     "harmony-types": "github:baldurstod/harmony-types",
     "harmony-ui": "github:baldurstod/harmony-ui",
-    "harmony-utils": "github:baldurstod/harmony-utils"
+    "harmony-utils": "github:baldurstod/harmony-utils",
+    "loadout": "github:baldurstod/loadout"
   }
 }

@@ -1,7 +1,8 @@
-import { Source2ModelInstance, Source2ModelManager } from 'harmony-3d';
+import { Group, Scene, Source2ModelInstance, Source2ModelManager } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
 import { createElement } from 'harmony-ui';
 import { errorOnce, setTimeoutPromise } from 'harmony-utils';
+import { Dota2Hero, Dota2HeroTemplates, Dota2ItemManager, Dota2ItemTemplates } from 'loadout';
 import { Game } from '../misc/character';
 import { Character, CharacterTemplate } from './character';
 import { Item, ItemTemplate } from './item';
@@ -33,9 +34,13 @@ export class Dota2Character implements Character {
 	//#extraModels = new Set<Source2ModelInstance>();
 	//#showBodyParts = new Map<string, boolean>();
 	//#bodyParts = new Map<string, string | false>();
+	#hero?: Dota2Hero;
+	#group = new Group({ name: 'Dota 2 character group' });
+	#itemTemplates = new Map<string, Dota2ItemTemplate>();// TODO: remove this; get templates from Dota2ItemManager
 
 	constructor(template: Dota2CharacterTemplate) {
 		this.#template = template;
+		console.info(template);
 	}
 
 	getGame(): Game {
@@ -79,50 +84,24 @@ export class Dota2Character implements Character {
 		return undefined;
 	}
 
-	hasItem(item: Dota2ItemTemplate): boolean {
-		return this.#items.has(item.id);
+	hasItem(itemTemplate: Dota2ItemTemplate): boolean {
+		return this.#getHero().hasItem(itemTemplate.id);
+		//return this.#items.has(item.id);
 	}
 
 	async equipItem(itemTemplate: Dota2ItemTemplate): Promise<void> {
-		console.info(itemTemplate);
-		// If item is present, do nothing
-		if (this.hasItem(itemTemplate)) {
-			return;
-		}
-
-		for (const [, item] of this.#items) {
-			if (item.getSlot() === itemTemplate.slot) {
-				await this.unequipItem(item.getTemplate());
-			}
-		}
-
-		const item = new Dota2Item(itemTemplate, this);
-		this.#items.set(itemTemplate.id, item);
-
-		//await item.setTeam(this.#team);
-
-		const characterModel = await this.getModel();
-		if (characterModel) {
-			const models = await item.getModels();
-			models.forEach(model => characterModel.addChild(model));
-		}
-
-		await this.#loadoutChanged();
+		this.#itemTemplates.set(itemTemplate.id, itemTemplate);
+		this.#getHero().addItem(itemTemplate.id);
 	}
 
 	async unequipItem(itemTemplate: Dota2ItemTemplate): Promise<void> {
-		const item = this.#items.get(itemTemplate.id);
-		// If item is absent, do nothing
-		if (!item) {
-			return;
+		this.#itemTemplates.set(itemTemplate.id, itemTemplate);
+		await this.#getHero().removeItem(itemTemplate.id);
+
+		const baseItem = await Dota2ItemManager.getBaseItemId(this.#template.id, itemTemplate.slot);
+		if (baseItem) {
+			await this.#getHero().addItem(baseItem);
 		}
-
-		this.#items.delete(itemTemplate.id);
-
-		const models = await item.getModels();
-		models.forEach(model => model.remove());
-
-		await this.#loadoutChanged();
 	}
 
 	async equipDefaultItems(): Promise<void> {
@@ -138,17 +117,6 @@ export class Dota2Character implements Character {
 		//await this.#loadoutChanged();
 	}
 
-	async #loadoutChanged(): Promise<void> {
-		//this.autoSelectAnim();TODO
-		await this.#updateSkin();
-		//this.#checkBodyGroups();
-
-
-		for (const [, item] of this.#items) {
-			await item.setVisible(this.#personaId == item.getPersonaId());
-		}
-	}
-
 	/*
 	setBodyPartIdModel(bodyPartId: number, modelId: number): void {
 		this.#bodyParts.set(String(bodyPartId), String(modelId));
@@ -162,18 +130,38 @@ export class Dota2Character implements Character {
 	*/
 
 	getItems(): Map<string, Dota2Item> {
-		return new Map(this.#items);
+		const equippedItems = this.#getHero().getItems();
+
+		Dota2ItemManager.getItems(this.#template.id);
+
+		const items = new Map<string, Dota2Item>();
+
+		for (const [id, equippedItem] of equippedItems) {
+			if (!equippedItem.isVisible()) {
+				continue;
+			}
+			const itemTemplate = this.#itemTemplates.get(id);
+			if (itemTemplate) {
+				items.set(id, new Dota2Item(itemTemplate, this));
+			}
+		}
+
+		return items;
 	}
 
 	async getModel(): Promise<Source2ModelInstance | null> {
+		/*
 		if (!this.#model) {
 			this.#model = await dota2CharacterToModel(this.#template);
 		}
-		return this.#model;
+		*/
+		await this.#getHero().getModel();
+		return this.#group as Source2ModelInstance;
 	}
 
 	getModelPath(): string {
-		return this.#template.modelPath;
+		return this.#getHero().getModelPath();
+		//return this.#template.modelPath;
 	}
 
 	getBodyParts(): Map<string, string | false> {
@@ -197,6 +185,14 @@ export class Dota2Character implements Character {
 
 	async select(): Promise<void> {
 		await this.equipDefaultItems();
+	}
+
+	#getHero(): Dota2Hero {
+		if (!this.#hero) {
+			this.#hero = new Dota2Hero(this.#template.id, this.#group as Scene/*TODO: fix that: remove scene hero constructor*/);
+		}
+
+		return this.#hero;
 	}
 
 
@@ -415,6 +411,8 @@ export async function getDota2Characters(): Promise<Dota2CharacterTemplate[]> {
 
 	const characters: Dota2CharacterTemplate[] = [];
 	for (const hero of heroes) {
+		// Populate hero templates
+		Dota2HeroTemplates.addTemplate(hero);
 
 		const slots: SlotTemplate[] = [];
 		if (hero.ItemSlots) {
@@ -512,6 +510,7 @@ export async function getItemsDota2(hero: string, slot?: Slot): Promise<Dota2Ite
 	//const slots = slot.getSlots();
 	const slotName = slot?.getName();
 	for (const item of items) {
+		Dota2ItemTemplates.addTemplate(item);
 		//const item = (items.items as JSONObject)[index] as JSONObject;
 		if (slotName === undefined || item.slot === slotName) {
 			result.push(dota2ItemToItem(item));
@@ -562,7 +561,7 @@ function dota2ItemToItem(item: JSONObject): Dota2ItemTemplate {
 	const extraWearable = item.extra_wearable as string;
 
 	return {
-		id: item.id as string,
+		id: String(item.id),
 		slot: item.slot as string,
 		style: item.style as string,
 		game: 'dota2',
