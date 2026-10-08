@@ -182,6 +182,13 @@
 .clip-header {
 	text-wrap: nowrap;
 	padding: 0.2em;
+	display: flex;
+	flex-direction: column;
+}
+
+.clip-header-start-duration {
+	display: flex;
+	gap: 0.5rem;
 }
 
 .clip.active .clip-header {

@@ -1,5 +1,5 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement, I18n } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { AddLight, Controller } from '../controller';
@@ -39,7 +39,7 @@ export class TimelinePanel extends Panel {
 	#frameRate = 24;
 	//#dragTime = false;
 	#elementsOuter = new Map<Serializable, HTMLElement>();
-	#elementsTitle = new Map<Serializable, HTMLElement>();
+	#elementsTitle = new Map<Serializable, [HTMLElement, HTMLElement, HTMLElement | undefined, HTMLElement | undefined]>();
 	#elementsInner = new Map<Serializable, HTMLElement>();
 	#potentialDragOperation: DragOperation | null = null;
 	#dragOperation: DragOperation | null = null;
@@ -179,21 +179,21 @@ export class TimelinePanel extends Panel {
 				);
 			};
 
-			const [htmlTrackGroupOuter, htmlTrackGroupInner] = this.#getSerializableElement(trackGroup);
+			const [, htmlTrackGroupOuter, htmlTrackGroupInner] = this.#getSerializableElement(trackGroup);
 			htmlTrackGroupOuter.style.cssText = `--tracks:${tracks.length};`;
 			this.#htmlContent?.append(htmlTrackGroupOuter);
 			htmlTrackGroupInner.replaceChildren();
 
 			let trackId = 0;
 			for (const track of tracks) {
-				const [htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
+				const [, htmlTrackOuter, htmlTrackInner] = this.#getSerializableElement(track);
 				htmlTrackOuter.style.cssText = `--start:${topFilmClip.getStart()};--duration:${topFilmClip.getDuration()};--track:${trackId};`;
 				htmlTrackGroupInner.append(htmlTrackOuter);
 				htmlTrackInner.replaceChildren();
 
 				let maxRow = -1;
 				for (const clip of track.getClips()) {
-					const [htmlClipOuter, htmlClipInner] = this.#getSerializableElement(clip);
+					const [, htmlClipOuter, htmlClipInner] = this.#getSerializableElement(clip);
 					const row = getClipRow(clip);
 					maxRow = Math.max(row, maxRow);
 					htmlClipOuter.style.cssText = `--start:${clip.getStart()};--duration:${clip.getDuration()};--row:${row}`;
@@ -255,17 +255,22 @@ export class TimelinePanel extends Panel {
 		}
 	}
 
-	#getSerializableElement(element: Serializable): [HTMLElement, HTMLElement] {
+	#getSerializableElement(element: Serializable): [HTMLElement, HTMLElement, HTMLElement] {
 		let outer = this.#elementsOuter.get(element);
-		let title = this.#elementsTitle.get(element);
+		let [header, title, start, duration] = this.#elementsTitle.get(element) ?? [];
 		let inner = this.#elementsInner.get(element);
 
 		if (title) {
 			title.innerText = element.getName();
+
+			if ((element as SfmClip).isSfmClip) {
+				I18n.setValue(start, 'start', (element as SfmClip).getTimeFrame().getStart());
+				I18n.setValue(duration, 'duration', (element as SfmClip).getTimeFrame().getDuration());
+			}
 		}
 
-		if (outer && inner) {
-			return [outer, inner];
+		if (header && outer && inner) {
+			return [header, outer, inner];
 		}
 
 		switch (true) {
@@ -277,7 +282,7 @@ export class TimelinePanel extends Panel {
 				outer = createElement('div', {
 					class: 'trackgroup',
 					childs: [
-						createElement('div', {
+						header = createElement('div', {
 							class: 'trackgroup-header',
 							child: title = createTitle(element),
 						}),
@@ -292,7 +297,7 @@ export class TimelinePanel extends Panel {
 				outer = createElement('div', {
 					class: 'track',
 					childs: [
-						createElement('div', {
+						header = createElement('div', {
 							class: 'track-header',
 							child: title = createTitle(element),
 						}),
@@ -305,12 +310,41 @@ export class TimelinePanel extends Panel {
 				});
 				break;
 			case (element as SfmClip).isSfmClip:
+				const clipChilds = [
+					title = createTitle(element),
+				];
+
+				if ((element as SfmFilmClip).isSfmFilmClip) {
+					clipChilds.push(
+						createElement('div', {
+							class: 'clip-header-start-duration',
+							childs: [
+								start = createElement('div', {
+									i18n: {
+										innerText: '#clip_start',
+										values: {
+											start: (element as SfmClip).getTimeFrame().getStart(),
+										}
+									},
+								}),
+								duration = createElement('div', {
+									i18n: {
+										innerText: '#clip_duration',
+										values: {
+											duration: (element as SfmClip).getTimeFrame().getDuration(),
+										}
+									},
+								}),
+							],
+						}),);
+				}
+
 				outer = createElement('div', {
 					class: `clip ${(element as SfmClip).getClipType()}-clip`,
 					childs: [
-						createElement('div', {
+						header = createElement('div', {
 							class: 'clip-header',
-							child: title = createTitle(element),
+							childs: clipChilds,
 							$mousedown: (event: MouseEvent) => {
 								if (this.#potentialDragOperation) {
 									return;
@@ -340,10 +374,10 @@ export class TimelinePanel extends Panel {
 
 		this.#elementsOuter.set(element, outer);
 		if (title) {
-			this.#elementsTitle.set(element, title);
+			this.#elementsTitle.set(element, [header!, title, start, duration]);
 		}
 		this.#elementsInner.set(element, inner);
-		return [outer, inner];
+		return [header, outer, inner];
 	}
 
 	#hoverTrack(track: SfmTrack, event: MouseEvent, trackElement: HTMLElement): void {
@@ -376,7 +410,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		if (nearest < 0.5 && nearestClip) {
-			const rect = this.#getSerializableElement(nearestClip)[0].getBoundingClientRect();
+			const rect = this.#getSerializableElement(nearestClip)[1].getBoundingClientRect();
 			if (event.clientY < rect.top || event.clientY > rect.bottom) {
 				this.#potentialDragOperation = null;
 				trackElement.classList.remove('resize');
