@@ -171,6 +171,8 @@ export class Tf2Character implements Character {
 		await this.#loadoutChanged();
 	}
 
+	async equipBaseItems(): Promise<void> { }
+
 	async #loadoutChanged(): Promise<void> {
 		//this.autoSelectAnim();TODO
 		await this.#updateSkin();
@@ -262,9 +264,6 @@ export class Tf2Character implements Character {
 	getTemplate(): CharacterTemplate {
 		return this.#template;
 	}
-
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	async select(): Promise<void> { }
 
 	/*
 	// Game this character is part of

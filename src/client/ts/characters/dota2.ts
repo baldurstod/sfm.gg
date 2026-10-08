@@ -26,6 +26,7 @@ export interface Dota2ItemTemplate extends ItemTemplate {
 }
 
 export class Dota2Character implements Character {
+	isDota2Character = true as const;
 	#template: Dota2CharacterTemplate;
 	#items = new Map<string, Dota2Item>();
 	#model?: Source2ModelInstance | null;
@@ -103,7 +104,7 @@ export class Dota2Character implements Character {
 		}
 	}
 
-	async equipDefaultItems(): Promise<void> {
+	async equipBaseItems(): Promise<void> {
 		const items = await getItemsDota2(this.getTemplate().id);
 		//console.info(items);
 		for (const itemTemplate of items) {
@@ -181,13 +182,6 @@ export class Dota2Character implements Character {
 		return this.#template;
 	}
 
-
-	async select(editMode: boolean): Promise<void> {
-		if (!editMode) {
-			await this.equipDefaultItems();
-		}
-	}
-
 	#getHero(): Dota2Hero {
 		if (!this.#hero) {
 			this.#hero = new Dota2Hero(this.#template.id, this.#group as Scene/*TODO: fix that: remove scene hero constructor*/);
@@ -195,7 +189,6 @@ export class Dota2Character implements Character {
 
 		return this.#hero;
 	}
-
 
 	/*
 	// Game this character is part of

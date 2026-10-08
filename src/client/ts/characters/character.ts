@@ -47,6 +47,7 @@ export interface Character {
 	hasItem(item: ItemTemplate): boolean;
 	equipItem(item: ItemTemplate): Promise<void>;
 	unequipItem(item: ItemTemplate): Promise<void>;
+	equipBaseItems(): Promise<void>;
 	getItems(): Map<string, Item>;
 
 	getModel(): Promise<Entity | null>;
@@ -56,8 +57,6 @@ export interface Character {
 	getSlots(): Slot[];
 
 	getTemplate(): CharacterTemplate;
-
-	select(editMode: boolean): Promise<void>
 }
 
 /*

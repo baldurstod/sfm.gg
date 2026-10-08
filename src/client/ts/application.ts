@@ -986,6 +986,8 @@ class Application {
 		}
 		*/
 
+		character.equipBaseItems();
+
 		for (const itemNode of itemNodes) {
 			const itemEntity = itemNode.getEntity();
 			if (!itemEntity) {

@@ -309,7 +309,10 @@ export class CharacterSelectorPanel extends Panel {
 		} else {
 			BugReporter.reportBug('warning', `No slot found for character ${JSON.stringify(character)}`);
 		}
-		await character.select(editMode);
+		//await character.select(editMode);
+		if (!editMode) {
+			await character.equipBaseItems();
+		}
 
 		this.#updateEquippedItems();
 	}
