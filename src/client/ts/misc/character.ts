@@ -1,7 +1,7 @@
 //import demoman from '../../img/tf2/class/demoman.png';
 import { PartialBy, Source1ModelInstance, Source1ModelManager } from 'harmony-3d';
 import { JSONObject } from 'harmony-types';
-import { BugReporter, setTimeoutPromise } from 'harmony-utils';
+import { BugReporter, errorOnce, setTimeoutPromise } from 'harmony-utils';
 import iconTf2 from '../../img/icons/steam_icon_440.png';
 import iconDota2 from '../../img/icons/steam_icon_570.png';
 import demoman from '../../img/tf2/class/demoman.png';
@@ -16,7 +16,7 @@ import spy from '../../img/tf2/class/spy.png';
 import teamBlu from '../../img/tf2/logo_blue_white.png';
 import teamRed from '../../img/tf2/logo_red_white.png';
 import { Character, CharacterTemplate } from '../characters/character';
-import { Dota2Character, getItemsDota2 } from '../characters/dota2';
+import { Dota2Character, getDota2Character, getDota2ItemTemplate, getItemsDota2 } from '../characters/dota2';
 import { ItemTemplate } from '../characters/item';
 import { Slot, SlotTemplate } from '../characters/slot';
 import { Tf2Character, Tf2ItemTemplate, Tf2Team } from '../characters/tf2';
@@ -151,7 +151,6 @@ export function getTf2Character(name: string): Character | null {
 	//character.items = new Map<string, Item>();
 	return new Tf2Character(characterTemplate);
 }
-
 
 //[
 /*
@@ -377,11 +376,14 @@ function getTf2ModelPath(characterName: string, item: JSONObject): string {
 //https://tf2content.loadout.tf/generated/items/items_english.json?t=1787917844858
 //?t=${new Date().getTime()
 
-export function getCharacter(game: Game, name: string): Character | null {
+export async function getCharacter(game: Game, name: string): Promise<Character | null> {
 	switch (game) {
 		case 'tf2':
 			return getTf2Character(name);
+		case 'dota2':
+			return getDota2Character(name);
 		default:
+			errorOnce(`missing game entry in getCharacter ${game}`);
 			return null;
 	}
 }
@@ -390,7 +392,10 @@ export async function getItemTemplate(game: Game, characterName: string, itemId:
 	switch (game) {
 		case 'tf2':
 			return getTf2ItemTemplate(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
+		case 'dota2':
+			return getDota2ItemTemplate(characterName, itemId, itemSlot, itemStyle);
 		default:
+			errorOnce(`missing game entry in getItemTemplate ${game}`);
 			return null;
 	}
 }

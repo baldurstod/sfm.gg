@@ -245,8 +245,9 @@ class Application {
 		action.do(this.#session, 'set-film-clip', film);
 
 		const sceneNode = new SfmNode<SfmScene>({ entity: new SfmScene() });
+		const sceneNode2 = new SfmNode<SfmScene>({ entity: new SfmScene() });
 		const clip = new SfmFilmClip({ name: 'shot1', scene: sceneNode, timeFrame: { start: 0, end: 15 }, });
-		const clip2 = new SfmFilmClip({ name: 'shot2', scene: new SfmNode<SfmScene>({ entity: new SfmScene() }), timeFrame: { start: 25, end: 35 }, });
+		const clip2 = new SfmFilmClip({ name: 'shot2', scene: sceneNode2, timeFrame: { start: 25, end: 35 }, });
 
 		const box = new SfmPrimitiveBox();
 		const node = new SfmNode({ entity: box });
@@ -331,6 +332,7 @@ class Application {
 		action.do(characterNode, 'add-child', itemNode);
 
 		this.#addLight('ambient', sceneNode, action);
+		this.#addLight('ambient', sceneNode2, action);
 
 		Controller.dispatchEvent('settopfilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
@@ -477,6 +479,9 @@ class Application {
 		for (const sceneNode of scenes) {
 			const team = character.getTeam();
 
+			const items = character.getItems();
+			const ids = [...items.keys()];
+
 			const characterNode = new SfmNode({
 				entity: new SfmModel({
 					repository: character.getGame(),
@@ -486,13 +491,14 @@ class Application {
 						game: character.getGame(),
 						type: 'character',
 						character: character.getName(),
+						items: ids.join(','),
 						...(team) && { team },
 					},
 				}),
 			})
 			addCharacterAction.do(sceneNode, 'add-child', characterNode);
 
-			for (const [, item] of character.getItems()) {
+			for (const [, item] of items) {
 				if (!item.isVisible()) {
 					continue;
 				}
@@ -964,10 +970,14 @@ class Application {
 		const game = characterEntity.getMetadata('game') as Game;
 		const characterName = characterEntity.getMetadata('character') as string;
 		const characterTeam = (characterEntity.getMetadata('team') as string | undefined) ?? 'red';
-		const character = getCharacter(game, characterName);
+		const characterItems = characterEntity.getMetadata('items') as string;
+		const character = await getCharacter(game, characterName);
 		if (!character) {
 			return;
 		}
+
+		const items = new Set(characterItems.split(','));
+		//console.log(items);
 
 		/*
 		const character = createCharacter(characterTemplate);
@@ -982,12 +992,16 @@ class Application {
 				continue;
 			}
 
-			const item = await getItemTemplate(game, characterName, itemEntity.getMetadata('item_id') as string, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
+			const itemId = itemEntity.getMetadata('item_id') as string;
+			items.delete(itemId);
+
+			const item = await getItemTemplate(game, characterName, itemId, itemEntity.getMetadata('slot') as string, itemEntity.getMetadata('item_style') as string, characterTeam,);
 			if (item) {
 				//characterTemplate.items.set(getItemIdStyle(item), item);
 				await character.equipItem(item);
 			}
 		}
+		console.log(items);
 
 		await this.#getCharacterSelectorPanel().editCharacter(detail.clip, character, characterNode);
 	}

@@ -40,7 +40,6 @@ export class Dota2Character implements Character {
 
 	constructor(template: Dota2CharacterTemplate) {
 		this.#template = template;
-		console.info(template);
 	}
 
 	getGame(): Game {
@@ -48,11 +47,11 @@ export class Dota2Character implements Character {
 	}
 
 	getName(): string {
-		return this.#template.name;
+		return this.#template.id;
 	}
 
 	getLabel(): string {
-		throw new Error("TODO");
+		return this.#template.name;
 	}
 
 	async setTeam(/*team: GameTeam*/): Promise<void> {
@@ -106,7 +105,7 @@ export class Dota2Character implements Character {
 
 	async equipDefaultItems(): Promise<void> {
 		const items = await getItemsDota2(this.getTemplate().id);
-		console.info(items);
+		//console.info(items);
 		for (const itemTemplate of items) {
 			if (itemTemplate.baseItem) {
 				await this.equipItem(itemTemplate);
@@ -183,8 +182,10 @@ export class Dota2Character implements Character {
 	}
 
 
-	async select(): Promise<void> {
-		await this.equipDefaultItems();
+	async select(editMode: boolean): Promise<void> {
+		if (!editMode) {
+			await this.equipDefaultItems();
+		}
 	}
 
 	#getHero(): Dota2Hero {
@@ -402,7 +403,7 @@ function getItemIdStyle(item: ItemTemplate): string {
 
 export async function getDota2Characters(): Promise<Dota2CharacterTemplate[]> {
 	const heroesJSON = await getDota2Heroes();
-	console.info(heroesJSON);
+	//console.info(heroesJSON);
 	if (!heroesJSON) {
 		return [];
 	}
@@ -583,4 +584,30 @@ function getPersonaId(slot: string): number {
 		return Number(result[1]);
 	}
 	return 0;
+}
+
+export async function getDota2Character(id: string): Promise<Character | null> {
+	const dota2Characters = await getDota2Characters();
+
+	for (const characterTemplate of dota2Characters) {
+		if (characterTemplate.id === id) {
+			return new Dota2Character(characterTemplate);
+		}
+	}
+
+	return null;
+}
+
+export async function getDota2ItemTemplate(characterName: string, id: string, itemSlot: string, style: string): Promise<Dota2ItemTemplate | null> {
+	const items = await getDota2ItemList(characterName);
+	if (!items) {
+		return null;
+	}
+
+	for (const item of items) {
+		if (item.id == id) {
+			return dota2ItemToItem(item);
+		}
+	}
+	return null;
 }

@@ -57,7 +57,7 @@ export interface Character {
 
 	getTemplate(): CharacterTemplate;
 
-	select(): Promise<void>
+	select(editMode: boolean): Promise<void>
 }
 
 /*

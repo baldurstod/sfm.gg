@@ -1,4 +1,4 @@
-import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, Group, OrbitControl, Scene, SceneExplorer, Source1ModelInstance } from 'harmony-3d';
+import { AmbientLight, Camera, CanvasAttributes, Entity, Graphics, GraphicsEvents, Group, OrbitControl, Scene, Source1ModelInstance } from 'harmony-3d';
 import { createElement, hide, show } from 'harmony-ui';
 import { BugReporter, Map2 } from 'harmony-utils';
 import characterSelectorCSS from '../../css/characterselector.css';
@@ -208,7 +208,7 @@ export class CharacterSelectorPanel extends Panel {
 		}
 	}
 
-	#selectGame(name: string): void {
+	#selectGame(name: string, reloadCharacters = true): void {
 		const game = this.#games.get(name);
 		if (!game) {
 			return;
@@ -216,7 +216,9 @@ export class CharacterSelectorPanel extends Panel {
 
 		this.#selectedGame = name;
 
-		Controller.dispatchEvent('userselectcharacterselectapp', { detail: game.name });
+		if (reloadCharacters) {
+			Controller.dispatchEvent('userselectcharacterselectapp', { detail: game.name });
+		}
 		hide(this.#htmlTeams);
 
 		this.#currentTeam = null;
@@ -283,12 +285,12 @@ export class CharacterSelectorPanel extends Panel {
 				class: 'character',
 				src: characterTemplate.icon,
 				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				$click: () => this.#selectCharacter(character),
+				$click: () => this.#selectCharacter(character, false),
 			});
 		}
 	}
 
-	async #selectCharacter(character: Character): Promise<void> {
+	async #selectCharacter(character: Character, editMode: boolean): Promise<void> {
 		this.#selectedCharacter = character;
 		console.info('select character', character);
 		this.initPanel();
@@ -307,7 +309,7 @@ export class CharacterSelectorPanel extends Panel {
 		} else {
 			BugReporter.reportBug('warning', `No slot found for character ${JSON.stringify(character)}`);
 		}
-		await character.select();
+		await character.select(editMode);
 
 		this.#updateEquippedItems();
 	}
@@ -606,10 +608,10 @@ export class CharacterSelectorPanel extends Panel {
 		//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 440 });
 
 		// Select the character game
-		this.#selectGame(character.getGame());
+		this.#selectGame(character.getGame(), false);
 		// Load only this character
 		this.setCharacters([character.getTemplate()]);
-		await this.#selectCharacter(character);
+		await this.#selectCharacter(character, true);
 
 		//this.#equipedItems.getMap().delete(character);
 
@@ -663,7 +665,6 @@ export class CharacterSelectorPanel extends Panel {
 			return;
 		}
 
-		console.info(item);
 		if (this.#selectedCharacter.hasItem(item)) {
 			await this.#selectedCharacter.unequipItem(item);
 		} else {
