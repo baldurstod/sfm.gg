@@ -188,3 +188,18 @@
 	background-color: yellow;
 	color: black;
 }
+
+.clip-content {
+	display: flex;
+}
+
+.clip-content .characters {
+	overflow: hidden;
+	display: flex;
+}
+
+.clip-content .character {
+	text-wrap: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

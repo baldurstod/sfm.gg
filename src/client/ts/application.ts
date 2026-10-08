@@ -304,6 +304,7 @@ class Application {
 
 		const characterNode = new SfmNode({
 			entity: new SfmModel({
+				name: 'Sniper',
 				repository: 'tf2',
 				path: 'models/player/sniper',
 				metadatas: {
@@ -316,6 +317,7 @@ class Application {
 		});
 		const itemNode = new SfmNode({
 			entity: new SfmModel({
+				name: 'Sydney sleeper',
 				repository: 'tf2',
 				path: 'models/workshop/weapons/c_models/c_sydney_sleeper/c_sydney_sleeper',
 				metadatas: {
@@ -484,6 +486,7 @@ class Application {
 
 			const characterNode = new SfmNode({
 				entity: new SfmModel({
+					name: character.getLabel(),
 					repository: character.getGame(),
 					path: character.getModelPath(),
 					bodyParts: character.getBodyParts(),

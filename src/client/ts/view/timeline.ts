@@ -244,7 +244,8 @@ export class TimelinePanel extends Panel {
 						}
 						createElement('span', {
 							class: `character`,
-							innerText: character.getMetadata('character') as string ?? character.getName(),
+							//innerText: character.getMetadata('character') as string ?? character.getName(),
+							innerText: character.getName(),
 							parent: htmlCharacters,
 							$contextmenu: (event: MouseEvent) => this.#displayCharacterContextMenu(event, clip as SfmFilmClip, characterNode),
 						});
