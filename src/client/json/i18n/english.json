@@ -16,8 +16,6 @@
 		"#model_selector": "Model selector",
 		"#character_selector": "Character selector",
 		"#element_viewer": "Element viewer",
-		"#clip_start": "Start: ${start}",
-		"#clip_duration": "Duration: ${duration}",
 		"": ""
 	}
 }
