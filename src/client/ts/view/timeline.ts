@@ -319,7 +319,8 @@ export class TimelinePanel extends Panel {
 								this.#dragTime = this.#getTimeFromMouseEvent(event);
 								this.#dragStart = (element as SfmClip).getStart();
 								this.#dragEnd = (element as SfmClip).getEnd();
-							}
+							},
+							$click: (event: MouseEvent) => this.#clipMouseDownOrClick(event, element),
 						}),
 						inner = createElement('div', {
 							class: 'clip-content',
@@ -584,6 +585,7 @@ export class TimelinePanel extends Panel {
 		//this.#dragAction.do(this.#dragElement as SfmClip, 'set-end', newEnd);//(this.#dragElement as SfmClip).setEnd(delta + this.#dragEnd);
 		this.#dragAction.do(this.#dragElement as SfmClip, 'move-start', newStart);//(this.#dragElement as SfmClip).setStart(delta + this.#dragStart);
 		Controller.dispatchEvent('updateactiveclips');
+		Controller.dispatchEvent('clipupdated', { detail: this.#dragElement as SfmClip, });
 
 	}
 
@@ -625,6 +627,8 @@ export class TimelinePanel extends Panel {
 		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-start', time);//(this.#dragElement as SfmClip).setStart(time);
 
 		this.refreshHTML();
+
+		Controller.dispatchEvent('clipupdated', { detail: this.#dragElement as SfmClip, });
 	}
 
 	#setClipEnd(time: number): void {
@@ -639,6 +643,7 @@ export class TimelinePanel extends Panel {
 
 		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-end', time);//(this.#dragElement as SfmClip).setEnd(time);
 		this.refreshHTML();
+		Controller.dispatchEvent('clipupdated', { detail: this.#dragElement as SfmClip, });
 	}
 
 	#setCssVars(): void {

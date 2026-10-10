@@ -16,6 +16,7 @@
 		"#model_selector": "Model selector",
 		"#character_selector": "Character selector",
 		"#element_viewer": "Element viewer",
+		"#status_bar_clip": "Clip: ${name}, start: ${start}, duration: ${duration}",
 		"": ""
 	}
 }

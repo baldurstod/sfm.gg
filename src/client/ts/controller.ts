@@ -67,6 +67,7 @@ export type ControllerEvent = 'setsession'
 	| 'userrenderpicture'
 	| 'userpauserender'
 	| 'userresumerender'
+	| 'clipupdated'
 	;
 
 // Same as CustomEventInit with required detail
@@ -125,6 +126,7 @@ export class Controller {
 	static addEventListener(type: 'userrenderpicture', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userpauserender', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userresumerender', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'clipupdated', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 
 	static addEventListener(type: ControllerEvent, callback: (evt: CustomEvent) => void, options?: AddEventListenerOptions | boolean): void {
 		this.#eventTarget.addEventListener(type, callback as (evt: Event) => void, options);
@@ -177,6 +179,7 @@ export class Controller {
 	static dispatchEvent(type: 'userrenderpicture', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userpauserender', options?: EventInit): boolean;
 	static dispatchEvent(type: 'userresumerender', options?: EventInit): boolean;
+	static dispatchEvent(type: 'clipupdated', options: ControllerEventInit<SfmClip>): boolean;
 
 	static dispatchEvent<T>(type: ControllerEvent, options?: CustomEventInit<T>): boolean {
 		return this.#eventTarget.dispatchEvent(new CustomEvent<T>(type, options));
