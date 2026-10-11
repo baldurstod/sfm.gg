@@ -1,3 +1,4 @@
+import { SfmCamera } from '../model/camera';
 import { SfmClip } from '../model/clips/clip';
 import { SfmFilmClip } from '../model/clips/filmclip';
 import { SfmOperatorClip } from '../model/clips/operatorclip';
@@ -46,20 +47,26 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
  * An action is an operation or a list of operation that will be undone all at once
  */
 export class Action {
-	#operations: Command[] = [];
+	readonly #operations: Command[] = [];
 	#committed = false;
+	/** If defined, onUndo will be called each time the action is reverted if all revert operations succeed */
+	onUndo?: () => void;
+	/** If defined, onRedo will be called each time the action is redone if all redo operations succeed */
+	onRedo?: () => void;
 
 	do(element: Serializable, command: 'set-name', params: string): boolean;
 	do(element: SfmOperatorClip, command: 'add-operator', params: SfmOperator): boolean;
 	do(element: SfmClip, command: 'move-start', params: number): boolean;
 	do(element: SfmClip, command: 'set-end', params: number): boolean;
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
+	do(element: SfmFilmClip, command: 'add-camera', params: SfmCamera): boolean;
 	do(element: SfmFilmClip, command: 'add-light', params: SfmLightType): boolean;
 	do(element: SfmFilmClip, command: 'add-selected-clip', params: SfmClip): boolean;
 	do(element: SfmFilmClip, command: 'add-primary-selected-clip', params: SfmClip): boolean;
 	do(element: SfmFilmClip, command: 'add-track-group', params: SfmTrackGroup): boolean;
 	do(element: SfmFilmClip, command: 'delete-character', params: SfmModel): boolean;
 	do(element: SfmFilmClip, command: 'delete-track-group', params: SfmTrackGroup): boolean;
+	do(element: SfmFilmClip, command: 'set-active-camera', params: SfmCamera): boolean;
 	do(element: SfmFilmClip, command: 'set-selected-clip', params: SfmClip): boolean;
 	do(element: SfmNode, command: 'add-child', params: SfmNode): boolean;
 	do(element: SfmNode, command: 'delete-child', params: SfmNode): boolean;
@@ -94,6 +101,7 @@ export class Action {
 				return false;
 			}
 		}
+		this.onUndo?.();
 		return true;
 	}
 
@@ -103,6 +111,7 @@ export class Action {
 				return false;
 			}
 		}
+		this.onRedo?.();
 		return true;
 	}
 

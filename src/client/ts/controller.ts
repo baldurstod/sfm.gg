@@ -14,6 +14,7 @@ import { Serializable } from './serialize/serializable';
 
 export type ControllerEvent = 'setsession'
 	| 'cameraadded'
+	| 'cameraremoved'
 	| 'settopfilmclip'
 	| 'setcurrentclip'
 	| 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip'
@@ -81,6 +82,7 @@ export class Controller {
 
 	static addEventListener(type: 'setsession', callback: (evt: CustomEvent<SfmSession>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'cameraadded', callback: (evt: CustomEvent<CameraAdded>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'cameraremoved', callback: (evt: CustomEvent<CameraRemoved>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'settopfilmclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setcurrentclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -135,6 +137,7 @@ export class Controller {
 	static dispatchEvent(type: 'setsession', options: ControllerEventInit<SfmCamera | null>): boolean;
 	static dispatchEvent(type: 'useraddcamera', options: ControllerEventInit<SfmCamera | null>): boolean;
 	static dispatchEvent(type: 'cameraadded', options: ControllerEventInit<CameraAdded>): boolean;
+	static dispatchEvent(type: 'cameraremoved', options: ControllerEventInit<CameraRemoved>): boolean;
 	static dispatchEvent(type: 'setactivecamera', options: ControllerEventInit<SetActiveCamera>): boolean;
 	static dispatchEvent(type: 'settopfilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
 	static dispatchEvent(type: 'setcurrentclip', options: ControllerEventInit<SfmClip>): boolean;
@@ -195,9 +198,11 @@ export type CameraAdded = {
 	camera: SfmCamera;
 }
 
+export type CameraRemoved = CameraAdded;
+
 export type SetActiveCamera = {
 	clip: SfmClip;
-	camera: SfmCamera;
+	camera: SfmCamera | undefined;
 }
 
 export type SetSelectedClip = {

@@ -204,7 +204,7 @@ class Application {
 	}
 
 	static #addCamera(source: SfmCamera | null): SfmCamera | null {
-		const clip = this.#session.getFilmClip();
+		const clip = this.#session.getFilmClip()!;
 		if (!clip) {
 			return null;
 		}
@@ -213,28 +213,44 @@ class Application {
 			sfmCamera.copy(source);
 		}
 
-		//const camera = new Camera({ name: sfmCamera.#name });
-		//camera.copy(source?.getCamera() ?? workCamera.getCamera()!);
-		//camera.setPosition([-10, clip.getCameras().size * 2, 0])
-		//camera.addChild(new CameraFrustum());
-		clip.addCamera(sfmCamera);
-		clip.setActiveCamera(sfmCamera);
-		//sfmCamera.setCamera(camera);
+		const action = History.startAction();
+		action.do(clip, 'add-camera', sfmCamera);
+		action.do(clip, 'set-active-camera', sfmCamera);
+		action.onUndo = () => {
+			Controller.dispatchEvent('cameraremoved', {
+				detail: {
+					camera: sfmCamera,
+					clip,
+				}
+			});
 
-		//camera.addChild(new Text2D({ text: sfmCamera.getCamera().name }));
+			Controller.dispatchEvent('setactivecamera', {
+				detail: {
+					camera: clip.getActiveCamera(),
+					clip,
+				}
+			});
 
-		Controller.dispatchEvent('cameraadded', {
-			detail: {
-				camera: sfmCamera,
-				clip,
-			}
-		});
-		Controller.dispatchEvent('setactivecamera', {
-			detail: {
-				camera: sfmCamera,
-				clip,
-			}
-		});
+		};
+
+		function redo() {
+			Controller.dispatchEvent('cameraadded', {
+				detail: {
+					camera: sfmCamera,
+					clip,
+				}
+			});
+			Controller.dispatchEvent('setactivecamera', {
+				detail: {
+					camera: sfmCamera,
+					clip,
+				}
+			});
+		}
+
+		action.onRedo = redo;
+		redo();
+		History.commit(action);
 		return sfmCamera;
 	}
 
@@ -1037,7 +1053,7 @@ class Application {
 		this.#setActiveFilmClips();
 	}
 
-	static async  #renderPicture(): Promise<void> {
+	static async #renderPicture(): Promise<void> {
 		// TODO: remove notifications and prevent them to happen
 		if (!Graphics.isWebGPU) {
 			addNotification(I18n.getString('#failed_to_render_no_webgpu'), NotificationType.Info, 15);
@@ -1058,7 +1074,7 @@ class Application {
 
 		// TODO: we need to do that for several clips with compositing
 		const clip = clips.values().next().value!;
-		let clipCamera: SfmCamera | null | undefined = clip.activeCamera ?? clip.getParentFilmClip()?.activeCamera;
+		let clipCamera: SfmCamera | null | undefined = clip.getActiveCamera() ?? clip.getParentFilmClip()?.getActiveCamera();
 
 		if (!clipCamera) {
 			// If there is no camera, create one cloning the work camera

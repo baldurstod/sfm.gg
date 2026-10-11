@@ -26,7 +26,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly #sceneWithWorld = new SfmNode<SfmScene>({ entity: new SfmScene() });
 	#scene?: SfmNode<SfmScene>;
 	readonly #cameras = new Set<SfmCamera>();
-	activeCamera?: SfmCamera;
+	#activeCamera?: SfmCamera;
 	readonly #trackGroups = new Set<SfmTrackGroup>();
 	#activeFilmTrack?: SfmTrack;
 	#primarySelectedClip?: SfmClip;
@@ -38,7 +38,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		super(params);
 
 		this.#setScene(params.scene);
-		this.activeCamera = params.camera;
+		this.#activeCamera = params.camera;
 	}
 
 	getScene(): SfmNode<SfmScene> | undefined {
@@ -107,14 +107,18 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		}
 	}
 
-	addCamera(camera: SfmCamera): void {//TODO: remove: create do action
+	#addCamera(camera: SfmCamera): void {
 		this.#cameras.add(camera);
 
 		this.#scene?.getEntity()?.getEngineEntity().addChild(camera.getEngineEntity());
 	}
 
-	setActiveCamera(camera: SfmCamera): void {//TODO: remove: create do action
-		this.activeCamera = camera;
+	#setActiveCamera(camera: SfmCamera): void {
+		this.#activeCamera = camera;
+	}
+
+	getActiveCamera(): SfmCamera | undefined {
+		return this.#activeCamera;
 	}
 
 	getCameras(): Set<SfmCamera> {
@@ -270,6 +274,14 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				command.undoParams = this.#scene;
 				this.#setScene(command.params as SfmNode<SfmScene>);// TODO: check if it is actually a SfmNode<SfmScene>
 				return true;
+			case 'add-camera':
+				command.undoParams = new Set<SfmCamera>(this.#cameras);
+				this.#addCamera(command.params as SfmCamera);// TODO: check if it is actually a SfmCamera
+				return true;
+			case 'set-active-camera':
+				command.undoParams = this.#activeCamera;
+				this.#setActiveCamera(command.params as SfmCamera);// TODO: check if it is actually a SfmCamera
+				return true;
 			/*
 			case 'delete-character':
 				//TODO: check if it's actually an operator
@@ -315,6 +327,13 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			case 'set-scene':
 				this.#setScene(command.undoParams as SfmNode<SfmScene>);
 				return true;
+			case 'add-camera':
+				this.#cameras.clear();
+				(command.undoParams as Set<SfmCamera>).forEach(camera => this.#addCamera(camera));
+				return true;
+			case 'set-active-camera':
+				this.#setActiveCamera(command.undoParams as SfmCamera);
+				return true;
 			default:
 				return super.undo(command);
 		}
@@ -333,8 +352,8 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 		json.scene = this.#scene;
 
-		if (this.activeCamera) {
-			json.active_camera = this.activeCamera;
+		if (this.#activeCamera) {
+			json.active_camera = this.#activeCamera;
 		}
 
 		if (this.#cameras.size) {
@@ -365,7 +384,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 		const elements = context.elements;
 
-		this.activeCamera = undefined;
+		this.#activeCamera = undefined;
 		this.#cameras.clear();
 
 		if (json.scene) {
@@ -376,7 +395,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		}
 
 		if (json.active_camera) {
-			this.activeCamera = elements.get(json.active_camera as string) as SfmCamera | undefined; // TODO: check if it's actually a camera
+			this.#activeCamera = elements.get(json.active_camera as string) as SfmCamera | undefined; // TODO: check if it's actually a camera
 		}
 
 		this.#cameras.clear();
@@ -450,7 +469,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			case 'scene':
 				return this.#scene;
 			case 'activeCamera':
-				return this.activeCamera;
+				return this.#activeCamera;
 			case 'trackGroups':
 				return [...this.#trackGroups];
 			default:

@@ -36,6 +36,7 @@ export class ViewportPanel extends Panel {
 	constructor(titleI18n?: string) {
 		super();
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
+		Controller.addEventListener('cameraremoved', (event) => this.#cameraRemoved(event.detail));
 		Controller.addEventListener('settopfilmclip', (event) => this.#setTopFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
@@ -101,7 +102,7 @@ export class ViewportPanel extends Panel {
 						createElement('button', {
 							innerHTML: videoCameraBackAddSVG,
 							$click: () => {
-								Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#topFilmClip?.activeCamera ?? null });
+								Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#topFilmClip?.getActiveCamera() ?? null });
 								this.#useWorkCamera = false;
 							},
 						}),
@@ -261,20 +262,6 @@ export class ViewportPanel extends Panel {
 
 	#setTopFilmClip(clip: SfmFilmClip): void {
 		this.#topFilmClip = clip;
-		/*
-
-		const scene = clip.scene?.getScene();
-		if (scene) {
-			new SceneExplorer().setScene(scene);
-		}
-
-		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
-		if (view) {
-			view.scene = clip.scene?.getScene();
-		}
-
-		this.#refreshCameras();
-		*/
 	}
 
 	#setActiveCamera(detail: SetActiveCamera): void {
@@ -283,21 +270,33 @@ export class ViewportPanel extends Panel {
 		}
 
 		const activeCamera = detail.camera;
-		const option = this.#camerasOptions.get(activeCamera);
-		if (!option) {
-			return;
+		if (activeCamera) {
+			const option = this.#camerasOptions.get(activeCamera);
+			if (!option) {
+				return;
+			}
+			option.selected = true;
 		}
-
-		option.selected = true;
 
 		//this.#useWorkCamera = false;
 		this.#setCanvasCamera(activeCamera);
-		this.#cameraChanged(activeCamera);
+		this.#cameraChanged(activeCamera ?? workCamera);
 	}
 
 	#cameraAdded(detail: CameraAdded): void {
 		if (detail.clip === this.#topFilmClip) {
 			this.#refreshCameras();
+		}
+	}
+
+	#cameraRemoved(detail: CameraAdded): void {
+		if (detail.clip === this.#topFilmClip) {
+			this.#refreshCameras();
+
+			const realCamera = detail.camera?.getEngineEntity();
+			if (realCamera) {
+				this.#canvasView?.additionalObjects?.delete(realCamera);
+			}
 		}
 	}
 
@@ -338,12 +337,13 @@ export class ViewportPanel extends Panel {
 			if (this.#useWorkCamera) {
 				camera = workCamera;//.getEngineEntity()!;
 			} else {
-				camera = this.#topFilmClip?.activeCamera;//?.getEngineEntity() ?? workCamera.getEngineEntity();
+				camera = this.#topFilmClip?.getActiveCamera();//?.getEngineEntity() ?? workCamera.getEngineEntity();
 			}
 		}
 
 		if (!camera) {
-			return;
+			camera = workCamera;
+			this.#useWorkCamera = true;
 		}
 
 		const realCamera = camera?.getEngineEntity();
@@ -351,10 +351,10 @@ export class ViewportPanel extends Panel {
 
 			this.#cameraControl.camera = realCamera;
 
-			const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
+			const view = this.#canvasView;
 			if (view) {
 				view.camera = realCamera;
-				this.#canvasView?.additionalObjects?.add(realCamera);
+				view.additionalObjects?.add(realCamera);
 			}
 
 			this.#cameraChanged(camera);
