@@ -15,6 +15,7 @@
 		"#language": "Langue :",
 		"#model_selector": "Sélecteur de modèle",
 		"#character_selector": "Sélecteur de personnage",
-		"": ""
+		"#element_viewer": "Visualiseur d'éléments",
+		"#status_bar_clip": "Extrait: ${name}, début: ${start}, durée: ${duration}"
 	}
 }

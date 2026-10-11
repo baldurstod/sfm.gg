@@ -1,0 +1,25 @@
+{
+	"langs": [
+		"english",
+		"french"
+	],
+	"strings": [
+		"#viewport",
+		"#primary_viewport",
+		"#secondary_viewport",
+		"#timeline",
+		"#script_editor",
+		"#shader_editor",
+		"#viewports",
+		"#scene_explorer",
+		"#outline",
+		"#options",
+		"#advanced_options",
+		"#language",
+		"#model_selector",
+		"#character_selector",
+		"#element_viewer",
+		"#status_bar_clip",
+		""
+	]
+}
