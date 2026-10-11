@@ -203,10 +203,10 @@ class Application {
 		//this.#main.getHTML();
 	}
 
-	static #addCamera(source: SfmCamera | null): void {
+	static #addCamera(source: SfmCamera | null): SfmCamera | null {
 		const clip = this.#session.getFilmClip();
 		if (!clip) {
-			return;
+			return null;
 		}
 		const sfmCamera = new SfmCamera({ name: `Camera ${clip.getCameras().size + 1}` });
 		if (source) {
@@ -235,6 +235,7 @@ class Application {
 				clip,
 			}
 		});
+		return sfmCamera;
 	}
 
 	static createNewSession(): void {
@@ -1057,12 +1058,15 @@ class Application {
 
 		// TODO: we need to do that for several clips with compositing
 		const clip = clips.values().next().value!;
-		const activeCamera = clip.activeCamera ?? clip.getParentFilmClip()?.activeCamera
-		const camera = activeCamera?.getEngineEntity();
-		if (!camera) {
-			addNotification(I18n.getString('#no_active_camera_for_clip'), NotificationType.Info, 15);
-			return;
+		let clipCamera: SfmCamera | null | undefined = clip.activeCamera ?? clip.getParentFilmClip()?.activeCamera;
+
+		if (!clipCamera) {
+			// If there is no camera, create one cloning the work camera
+			clipCamera = this.#addCamera(workCamera);
 		}
+
+		const activeCamera = clipCamera ?? workCamera;
+		const camera = activeCamera?.getEngineEntity();
 
 		const scene = clip.getScene()?.getEntity()?.getEngineEntity();
 		if (!scene) {
