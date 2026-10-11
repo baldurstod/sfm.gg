@@ -383,6 +383,7 @@ export async function getCharacter(game: Game, name: string): Promise<Character 
 		case 'dota2':
 			return getDota2Character(name);
 		default:
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			errorOnce(`missing game entry in getCharacter ${game}`);
 			return null;
 	}
@@ -393,8 +394,9 @@ export async function getItemTemplate(game: Game, characterName: string, itemId:
 		case 'tf2':
 			return getTf2ItemTemplate(characterName, itemId, itemSlot, itemStyle, team as Tf2Team);
 		case 'dota2':
-			return getDota2ItemTemplate(characterName, itemId, itemSlot, itemStyle);
+			return getDota2ItemTemplate(characterName, itemId/*, itemSlot, itemStyle*/);
 		default:
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			errorOnce(`missing game entry in getItemTemplate ${game}`);
 			return null;
 	}

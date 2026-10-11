@@ -171,6 +171,7 @@ export class Tf2Character implements Character {
 		await this.#loadoutChanged();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	async equipBaseItems(): Promise<void> { }
 
 	async #loadoutChanged(): Promise<void> {

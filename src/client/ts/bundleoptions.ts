@@ -1,3 +1,4 @@
+// eslint-disable-next-line prefer-const
 let __isProduction__ = false;
 
 export const PRODUCTION = __isProduction__;

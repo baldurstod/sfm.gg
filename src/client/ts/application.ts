@@ -217,7 +217,7 @@ class Application {
 		const action = History.startAction();
 		action.do(clip, 'add-camera', sfmCamera);
 		action.do(clip, 'set-active-camera', sfmCamera);
-		action.onUndo = () => {
+		action.onUndo = (): void => {
 			Controller.dispatchEvent('cameraremoved', {
 				detail: {
 					camera: sfmCamera,
@@ -234,7 +234,7 @@ class Application {
 
 		};
 
-		function redo() {
+		function redo(): void {
 			Controller.dispatchEvent('cameraadded', {
 				detail: {
 					camera: sfmCamera,
@@ -1012,7 +1012,7 @@ class Application {
 		}
 		*/
 
-		character.equipBaseItems();
+		await character.equipBaseItems();
 
 		for (const itemNode of itemNodes) {
 			const itemEntity = itemNode.getEntity();

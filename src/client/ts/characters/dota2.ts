@@ -91,7 +91,7 @@ export class Dota2Character implements Character {
 
 	async equipItem(itemTemplate: Dota2ItemTemplate): Promise<void> {
 		this.#itemTemplates.set(itemTemplate.id, itemTemplate);
-		this.#getHero().addItem(itemTemplate.id);
+		await this.#getHero().addItem(itemTemplate.id);
 	}
 
 	async unequipItem(itemTemplate: Dota2ItemTemplate): Promise<void> {
@@ -132,7 +132,7 @@ export class Dota2Character implements Character {
 	getItems(): Map<string, Dota2Item> {
 		const equippedItems = this.#getHero().getItems();
 
-		Dota2ItemManager.getItems(this.#template.id);
+		void Dota2ItemManager.getItems(this.#template.id);
 
 		const items = new Map<string, Dota2Item>();
 
@@ -381,12 +381,14 @@ export class Dota2Item implements Item {
 
 }
 
+/*
 async function dota2CharacterToModel(character: Dota2CharacterTemplate): Promise<Source2ModelInstance | null> {
 	const model = await Source2ModelManager.createInstance(character.game, character.modelPath, true);
 	model?.playSequence(character.animation ?? 'ref');
 
 	return model;
 }
+*/
 
 /*
 function getItemIdStyle(item: ItemTemplate): string {
@@ -555,6 +557,7 @@ function dota2ItemToItem(item: JSONObject): Dota2ItemTemplate {
 	const extraWearable = item.extra_wearable as string;
 
 	return {
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		id: String(item.id),
 		slot: item.slot as string,
 		style: item.style as string,
@@ -591,7 +594,7 @@ export async function getDota2Character(id: string): Promise<Character | null> {
 	return null;
 }
 
-export async function getDota2ItemTemplate(characterName: string, id: string, itemSlot: string, style: string): Promise<Dota2ItemTemplate | null> {
+export async function getDota2ItemTemplate(characterName: string, id: string/*, itemSlot: string, style: string*/): Promise<Dota2ItemTemplate | null> {
 	const items = await getDota2ItemList(characterName);
 	if (!items) {
 		return null;
