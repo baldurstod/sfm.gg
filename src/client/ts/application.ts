@@ -8,6 +8,7 @@ import varsCSS from '../css/vars.css';
 import english from '../json/i18n/english.json';
 import french from '../json/i18n/french.json';
 import optionsmanager from '../json/optionsmanager.json';
+import { TESTING } from './bundleoptions';
 import { getDota2Characters } from './characters/dota2';
 import { ALYX_REPOSITORY, CSGO_REPOSITORY, DEADLOCK_REPOSITORY, DOTA2_REPOSITORY, TF2_REPOSITORY } from './constants';
 import { AddCharacter, AddClip, AddTrack, Controller, DeleteCharacter, DeleteOperator, EditCharacter, SelectCharacter, SetName, SetSelectedClip, UpdateCharacter } from './controller';
@@ -355,6 +356,11 @@ class Application {
 
 		Controller.dispatchEvent('settopfilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: this.#session });
+
+		if (TESTING) {
+			//Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip2, clips: new Set<SfmClip>() } },);
+			//Controller.dispatchEvent('userselectcharacterselectapp', { detail: 'dota2' });
+		}
 	}
 
 	static #iniRepositories(): void {
@@ -1092,7 +1098,7 @@ class Application {
 
 		await this.#raytracer.configure(scene, camera, 800, 600)
 
-		this.#raytracer.play();
+		Controller.dispatchEvent('userresumerender');
 
 		const presentationScene = new Scene({ camera: new Camera() });
 
@@ -1119,6 +1125,11 @@ class Application {
 		}
 
 		this.#getRenderPanel().setCanvas(rtCanvas.canvas);
+
+		if (TESTING) {
+			await setTimeoutPromise(1000);
+			Controller.dispatchEvent('userpauserender');
+		}
 	}
 
 	static #getRenderPanel(): RenderPanel {

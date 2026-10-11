@@ -1,10 +1,11 @@
-import { createElement, defineHarmonySwitch, HTMLHarmonyToggleButtonElement } from 'harmony-ui';
+import { createElement, defineHarmonySwitch, HTMLHarmonySwitchElement, HTMLHarmonyToggleButtonElement } from 'harmony-ui';
 import renderCSS from '../../css/render.css';
 import { Controller } from '../controller';
 import { Panel } from './panel';
 
 export class RenderPanel extends Panel {
 	#canvasContainer?: HTMLElement;
+	#htmlPlay?: HTMLHarmonySwitchElement;
 
 	protected initPanel(): void {
 		if (this.panel) {
@@ -22,7 +23,7 @@ export class RenderPanel extends Panel {
 		});
 
 		defineHarmonySwitch();
-		createElement('harmony-switch', {
+		this.#htmlPlay = createElement('harmony-switch', {
 			'data-i18n': '#render',
 			parent: this.panel!.getContent(),
 			state: '1',
@@ -33,12 +34,16 @@ export class RenderPanel extends Panel {
 					Controller.dispatchEvent('userpauserender');
 				}
 			},
-		}) as HTMLHarmonyToggleButtonElement;
+		}) as HTMLHarmonySwitchElement;
 
 		this.#canvasContainer = createElement('div', {
 			parent: this.panel!.getContent(),
 			class: 'canvas-container',
 		});
+
+
+		Controller.addEventListener('userpauserender', () => this.#htmlPlay!.state = false);
+		Controller.addEventListener('userresumerender', () => this.#htmlPlay!.state = true);
 	}
 
 	setCanvas(canvas: HTMLCanvasElement): void {
