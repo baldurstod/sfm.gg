@@ -1,4 +1,4 @@
-import { Camera, CanvasAttributes, Entity, FirstPersonControl, Graphics, GraphicsEvents, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
+import { CanvasAttributes, CanvasView, Entity, FirstPersonControl, Graphics, GraphicsEvents, OrbitGizmo, Scene, SceneExplorer } from 'harmony-3d';
 import { cameraswitchSVG, fastForwardSVG, fastRewindSVG, keyboardDoubleArrowLeftSVG, keyboardDoubleArrowRightSVG, pauseSVG, playSVG, skipNextSVG, skipPreviousSVG, videoCameraBackAddSVG } from 'harmony-svg';
 import { createElement } from 'harmony-ui';
 import viewportCSS from '../../css/viewport.css';
@@ -11,9 +11,11 @@ import { SfmNode } from '../model/node';
 import { Panel } from './panel';
 
 export class ViewportPanel extends Panel {
-	#htmTime?: HTMLElement;
+	#htmlTime?: HTMLElement;
+	#htmlCamera?: HTMLElement;
 	#htmlCanvas?: HTMLCanvasElement;
 	#htmlCameraSelector?: HTMLSelectElement;
+	#htmlCameraSwitch?: HTMLButtonElement;
 	#htmlPlayPauseButton?: HTMLButtonElement;
 	#playing = false;
 	#topFilmClip: SfmFilmClip | null = null;
@@ -23,6 +25,7 @@ export class ViewportPanel extends Panel {
 	#useWorkCamera = true;
 	#cameraControl = new FirstPersonControl(workCamera.getEngineEntity());
 	#canvasAttributes: CanvasAttributes | null = null;
+	#canvasView?: CanvasView;
 	#orbitGizmo = new OrbitGizmo();
 	static nextId = 0;
 	#id = ++ViewportPanel.nextId;
@@ -46,6 +49,7 @@ export class ViewportPanel extends Panel {
 		this.#cameraControl.movementSpeed = 100;
 		this.#cameraControl.lookSpeed = 0.1;
 		this.#titleI18n = titleI18n;
+		this.#cameraChanged(workCamera);
 		//this.#orbitGizmo.orbitControl = this.#cameraControl;
 	}
 
@@ -59,7 +63,8 @@ export class ViewportPanel extends Panel {
 			class: 'header',
 			parent: this.panel!.getContent(),
 			childs: [
-				this.#htmTime = createElement('div'),
+				this.#htmlTime = createElement('div'),
+				this.#htmlCamera = createElement('div'),
 			],
 		});
 
@@ -100,10 +105,11 @@ export class ViewportPanel extends Panel {
 								this.#useWorkCamera = false;
 							},
 						}),
-						createElement('button', {
+						this.#htmlCameraSwitch = createElement('button', {
 							innerHTML: cameraswitchSVG,
 							$click: () => this.#switchCamera(),
-						}),
+							disabled: true,
+						}) as HTMLButtonElement,
 					],
 				}),
 
@@ -153,7 +159,10 @@ export class ViewportPanel extends Panel {
 
 		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
 		if (view) {
-			view.camera = workCamera.getEngineEntity();
+			this.#canvasView = view;
+			const cameraEntity = workCamera.getEngineEntity();
+			view.camera = cameraEntity;
+			view.additionalObjects = new Set([cameraEntity]);
 		}
 	}
 
@@ -178,11 +187,11 @@ export class ViewportPanel extends Panel {
 	}
 
 	#setCurrentTime(time: number): void {
-		if (!this.#htmTime) {
+		if (!this.#htmlTime) {
 			return;
 		}
 
-		this.#htmTime.innerText = formatTime(time);
+		this.#htmlTime.innerText = formatTime(time);
 	}
 
 	async #setActiveFilmClips(clips: Set<SfmFilmClip>): Promise<void> {
@@ -273,7 +282,8 @@ export class ViewportPanel extends Panel {
 			return;
 		}
 
-		const option = this.#camerasOptions.get(detail.camera);
+		const activeCamera = detail.camera;
+		const option = this.#camerasOptions.get(activeCamera);
 		if (!option) {
 			return;
 		}
@@ -281,7 +291,8 @@ export class ViewportPanel extends Panel {
 		option.selected = true;
 
 		//this.#useWorkCamera = false;
-		this.#setCanvasCamera(detail.camera.getEngineEntity());
+		this.#setCanvasCamera(activeCamera);
+		this.#cameraChanged(activeCamera);
 	}
 
 	#cameraAdded(detail: CameraAdded): void {
@@ -298,7 +309,10 @@ export class ViewportPanel extends Panel {
 			return;
 		}
 
+		this.#htmlCameraSwitch?.setAttribute('disabled', '');
+
 		for (const camera of this.#topFilmClip.getCameras()) {
+			this.#htmlCameraSwitch?.removeAttribute('disabled');
 			const option = createElement('option', {
 				value: camera.getName(),
 				innerText: camera.getName(),
@@ -316,24 +330,40 @@ export class ViewportPanel extends Panel {
 		this.#setCanvasCamera(/*this.#cameraControl.camera*/);
 	}
 
-	#setCanvasCamera(camera?: Camera): void {
+	#setCanvasCamera(camera?: SfmCamera): void {
 		//let camera: Camera;
 		if (camera) {
 			this.#useWorkCamera = false;
 		} else {
 			if (this.#useWorkCamera) {
-				camera = workCamera.getEngineEntity()!;
+				camera = workCamera;//.getEngineEntity()!;
 			} else {
-				camera = this.#topFilmClip?.activeCamera?.getEngineEntity() ?? workCamera.getEngineEntity();
+				camera = this.#topFilmClip?.activeCamera;//?.getEngineEntity() ?? workCamera.getEngineEntity();
 			}
 		}
 
-		this.#cameraControl.camera = camera;
-
-		const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
-		if (view) {
-			view.camera = camera;
+		if (!camera) {
+			return;
 		}
+
+		const realCamera = camera?.getEngineEntity();
+		if (realCamera) {
+
+			this.#cameraControl.camera = realCamera;
+
+			const view = this.#canvasAttributes?.getLayout(CanvasAttributes.defaultLayout)?.views.get('all');
+			if (view) {
+				view.camera = realCamera;
+				this.#canvasView?.additionalObjects?.add(realCamera);
+			}
+
+			this.#cameraChanged(camera);
+		}
+	}
+
+	#cameraChanged(camera: SfmCamera): void {
+		this.initPanel();
+		this.#htmlCamera!.innerText = camera.getName();
 	}
 }
 

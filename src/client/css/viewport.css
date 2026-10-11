@@ -2,6 +2,11 @@
 	--content-bg-color: rgba(20, 78, 202, 0.493);
 }
 
+.header {
+	display: flex;
+	gap: 0.5rem;
+}
+
 .canvas-container {
 	display: flex;
 	flex: 1;

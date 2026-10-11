@@ -208,7 +208,7 @@ class Application {
 		if (!clip) {
 			return;
 		}
-		const sfmCamera = new SfmCamera({ name: `camera${clip.getCameras().size + 1}` });
+		const sfmCamera = new SfmCamera({ name: `Camera ${clip.getCameras().size + 1}` });
 		if (source) {
 			sfmCamera.copy(source);
 		}
@@ -254,8 +254,8 @@ class Application {
 		const clipScene = clip.getScene()!;
 		action.do(clipScene, 'add-child', node);//clip.scene!.addChild(node)//!.#entity = new SfmPrimitiveBox();
 		//action.do(node, 'set-entity', new SfmPrimitiveBox());
-		const cameraNode = new SfmNode({ entity: workCamera });
-		action.do(clipScene, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
+		//const cameraNode = new SfmNode({ entity: workCamera });
+		//action.do(clipScene, 'add-child', cameraNode);//clip.scene!.getScene().addChild(workCamera.getCamera());
 
 		const filmTrackGroup = new SfmTrackGroup({ name: 'Picture', order: film.getNextTrackGroupOrder(), });
 		action.do(film, 'add-track-group', filmTrackGroup);
