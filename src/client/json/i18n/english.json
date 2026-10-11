@@ -16,6 +16,21 @@
 		"#model_selector": "Model selector",
 		"#character_selector": "Character selector",
 		"#element_viewer": "Element viewer",
-		"#status_bar_clip": "Clip: ${name}, start: ${start}, duration: ${duration}"
+		"#status_bar_clip": "Clip: ${name}, start: ${start}, duration: ${duration}",
+		"#properties": "Properties",
+		"#files": "Files",
+		"#material_editor": "Material editor",
+		"#display_manipulator": "Display manipulator",
+		"#display_skeleton": "Display skeleton",
+		"#display_bone_joints": "Display bone joints",
+		"#display_bones_as_lines": "Display bones as line",
+		"#id": "Id",
+		"#position": "Position",
+		"#quaternion": "Quaternion",
+		"#scale": "Scale",
+		"#world_position": "World position",
+		"#world_quaternion": "World quaternion",
+		"#world_scale": "World scale",
+		"": ""
 	}
 }

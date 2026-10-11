@@ -16,6 +16,21 @@
 		"#model_selector": "Sélecteur de modèle",
 		"#character_selector": "Sélecteur de personnage",
 		"#element_viewer": "Visualiseur d'éléments",
-		"#status_bar_clip": "Extrait: ${name}, début: ${start}, durée: ${duration}"
+		"#status_bar_clip": "Extrait: ${name}, début: ${start}, durée: ${duration}",
+		"#properties": "Propriétés",
+		"#files": "Fichiers",
+		"#material_editor": "Éditeur de matériaux",
+		"#display_manipulator": "Afficher le manipulateur",
+		"#display_skeleton": "Afficher le squelette",
+		"#display_bone_joints": "Afficher les extrémités des os",
+		"#display_bones_as_lines": "Afficher les os sous forme de ligne",
+		"#id": "Id",
+		"#position": "Position",
+		"#quaternion": "Quaternion",
+		"#scale": "Échelle",
+		"#world_position": "Position monde",
+		"#world_quaternion": "Quaternion monde",
+		"#world_scale": "Échelle monde",
+		"": ""
 	}
 }

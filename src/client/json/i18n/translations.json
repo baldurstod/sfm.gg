@@ -20,6 +20,20 @@
 		"#character_selector",
 		"#element_viewer",
 		"#status_bar_clip",
+		"#properties",
+		"#files",
+		"#material_editor",
+		"#display_manipulator",
+		"#display_skeleton",
+		"#display_bone_joints",
+		"#display_bones_as_lines",
+		"#id",
+		"#position",
+		"#quaternion",
+		"#scale",
+		"#world_position",
+		"#world_quaternion",
+		"#world_scale",
 		""
 	]
 }
