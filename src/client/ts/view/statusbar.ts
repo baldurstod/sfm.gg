@@ -31,7 +31,6 @@ export class StatusBar extends Panel {
 
 	#setSelectedClip(clip: SfmClip): void {
 		this.initPanel();
-		console.info(clip);
 
 		updateElement(this.#htmlSelectedClip, {
 			i18n: {

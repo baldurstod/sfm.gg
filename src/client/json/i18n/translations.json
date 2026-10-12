@@ -95,6 +95,7 @@
 		"#receive_shadows",
 		"#material",
 		"#edit_material",
+		"#show_in_element_viewer",
 		""
 	]
 }

@@ -355,7 +355,7 @@ class Application {
 		this.#addLight('ambient', sceneNode2, action);
 
 		Controller.dispatchEvent('settopfilmclip', { detail: film });
-		Controller.dispatchEvent('viewelement', { detail: this.#session });
+		Controller.dispatchEvent('viewelement', { detail: { element: this.#session, } });
 
 		if (TESTING) {
 			//Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip2, clips: new Set<SfmClip>() } },);

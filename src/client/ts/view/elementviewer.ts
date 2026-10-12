@@ -1,6 +1,6 @@
 import { HarmonyTree, ItemClickEventData, TreeItem } from 'harmony-ui';
 import elementViewerCSS from '../../css/elementviewer.css';
-import { Controller } from '../controller';
+import { Controller, ViewElement } from '../controller';
 import { Serializable } from '../serialize/serializable';
 import { Panel } from './panel';
 
@@ -14,7 +14,7 @@ export class ElementViewerPanel extends Panel {
 
 	constructor() {
 		super()
-		Controller.addEventListener('viewelement', (event) => this.setRootElement(event.detail));
+		Controller.addEventListener('viewelement', event => this.#viewElement(event.detail));
 	}
 
 	protected initPanel(): void {
@@ -182,6 +182,13 @@ export class ElementViewerPanel extends Panel {
 			this.#htmlTree?.expandItem(item);
 		}
 		*/
+	}
+
+	#viewElement(detail: ViewElement): void {
+		this.setRootElement(detail.element);
+		if (detail.showElementViewer !== false) {
+			this.panel?.activate();
+		}
 	}
 }
 

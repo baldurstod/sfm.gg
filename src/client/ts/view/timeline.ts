@@ -397,7 +397,6 @@ export class TimelinePanel extends Panel {
 	}
 
 	#clipMouseDownOrClick(event: MouseEvent, element: Serializable): void {
-		console.info(event.target);
 		if (event.ctrlKey) {
 			this.#addSelectedClip(element as SfmClip);
 		} else {
@@ -735,6 +734,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
+			...getShowInElementViewer(group),
 			add_track: { i18n: '#add_track', submenu, },
 			delete_track_group: { i18n: '#delete_track_group', f: (): void => { Controller.dispatchEvent('userdeletetrackgroup', { detail: group }) }, },
 		};
@@ -750,6 +750,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
+			...getShowInElementViewer(track),
 			add_clip: {
 				i18n: '#add_clip', f: (): void => {
 					Controller.dispatchEvent('useraddcliptotrack', { detail: { track, time: this.#getTimeFromMouseEvent(event) } });
@@ -782,6 +783,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
+			...getShowInElementViewer(clip),
 			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } }) }, } },
 			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).getScene()) && {
 				add_light: {
@@ -815,6 +817,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
+			...getShowInElementViewer(operator),
 			delete_operator: {
 				i18n: '#delete_operator', f: (): void => {
 					Controller.dispatchEvent('userdeleteoperator', {
@@ -847,6 +850,7 @@ export class TimelinePanel extends Panel {
 		}
 
 		const contextMenu: HarmonyMenuItemsDict = {
+			...getShowInElementViewer(character),
 			delete_character: {
 				i18n: '#delete_character', f: (): void => {
 					Controller.dispatchEvent('userdeletecharacter', {
@@ -910,5 +914,18 @@ function createTitle(element: Serializable): HTMLElement {
 			input.focus();
 		}
 	});
+}
 
+function getShowInElementViewer(element: Serializable): HarmonyMenuItemsDict {
+	return {
+		show_in_element_viewer: {
+			i18n: '#show_in_element_viewer', f: (): void => {
+				Controller.dispatchEvent('viewelement', {
+					detail: {
+						element,
+					},
+				})
+			},
+		},
+	}
 }

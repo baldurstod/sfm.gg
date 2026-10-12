@@ -100,7 +100,7 @@ export class Controller {
 	static addEventListener(type: 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', callback: (evt: CustomEvent<number>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddcharacter', callback: (evt: CustomEvent<AddCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userupdatecharacter', callback: (evt: CustomEvent<UpdateCharacter>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<Serializable | null>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'viewelement', callback: (evt: CustomEvent<ViewElement>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersetplaying', callback: (evt: CustomEvent<boolean>) => void, options?: AddEventListenerOptions | boolean): void;
 	//static addEventListener(type: 'userpause', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usergotopreviousframe', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -154,7 +154,7 @@ export class Controller {
 	static dispatchEvent(type: 'setcurrenttime' | 'usersetcurrenttime' | 'playersetcurrenttime', options: ControllerEventInit<number>): boolean;
 	static dispatchEvent(type: 'useraddcharacter', options: ControllerEventInit<AddCharacter>): boolean;
 	static dispatchEvent(type: 'userupdatecharacter', options: ControllerEventInit<UpdateCharacter>): boolean;
-	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<Serializable | null>): boolean;
+	static dispatchEvent(type: 'viewelement', options: ControllerEventInit<ViewElement>): boolean;
 	static dispatchEvent(type: 'usersetplaying', options: ControllerEventInit<boolean>): boolean;
 	//static dispatchEvent(type: 'userpause', options?: EventInit): boolean;
 	static dispatchEvent(type: 'usergotopreviousframe', options?: EventInit): boolean;
@@ -267,4 +267,11 @@ export type SetName = {
 export type AddLight = {
 	type: SfmLightType;
 	clip: SfmFilmClip;
+
+}
+export type ViewElement = {
+	/* Element to show. */
+	element: Serializable;
+	/* Open the element viewer. Default to true. */
+	showElementViewer?: boolean;
 }
