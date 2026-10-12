@@ -113,12 +113,12 @@ export class SfmTimeFrame extends Serializable {
 	}
 
 	/**
-	 * Check if a time is part of a time frame, bounds included
+	 * Check if a time is part of a time frame, start time included, end time not included
 	 * @param time The time to check for
 	 * @returns True if the time frame
 	 */
 	inTimeFrame(time: number): boolean {
-		return time >= this.#start && time <= this.getEnd();
+		return time >= this.#start && time < this.getEnd();
 	}
 
 	/**
