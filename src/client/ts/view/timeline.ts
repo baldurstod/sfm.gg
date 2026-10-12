@@ -1,5 +1,5 @@
 import { ShortcutHandler } from 'harmony-browser-utils';
-import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement } from 'harmony-ui';
+import { addRemoveClass, createElement, defineHarmonyMenu, HarmonyMenuItems, HarmonyMenuItemsDict, HTMLHarmonyMenuElement, promptI18n } from 'harmony-ui';
 import { Map2 } from 'harmony-utils';
 import timelineCSS from '../../css/timeline.css';
 import { AddLight, Controller } from '../controller';
@@ -484,10 +484,14 @@ export class TimelinePanel extends Panel {
 				this.#setPlayPos(time);
 				break;
 			case 'clipstart':
-				this.#setClipStart(time);
+				if ((this.#dragElement as SfmClip | null)?.isSfmClip) {
+					this.#setClipStart(this.#dragElement as SfmClip, time);
+				}
 				break;
 			case 'clipend':
-				this.#setClipEnd(time);
+				if ((this.#dragElement as SfmClip | null)?.isSfmClip) {
+					this.#setClipEnd(this.#dragElement as SfmClip, time);
+				}
 				break;
 			case 'moveclip':
 				//this.#setClipEnd(time);
@@ -614,35 +618,26 @@ export class TimelinePanel extends Panel {
 		Controller.dispatchEvent('usersetcurrenttime', { detail: playPos, });
 	}
 
-	#setClipStart(time: number): void {
-		if (!this.#dragElement || !(this.#dragElement as SfmClip).isSfmClip) {
-			return;
-		}
-
-		if ((this.#dragElement as SfmFilmClip).isSfmFilmClip) {
+	#setClipStart(clip: SfmClip, time: number): void {
+		if ((clip as SfmFilmClip).isSfmFilmClip) {
 			time = this.#dragAllowedTimeFrame.clampTime(time);
 		}
 
-		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-start', time);//(this.#dragElement as SfmClip).setStart(time);
-
+		this.#dragAction?.do(clip, 'set-start', time);
 		this.refreshHTML();
-
-		Controller.dispatchEvent('clipupdated', { detail: this.#dragElement as SfmClip, });
+		Controller.dispatchEvent('updateactiveclips');
+		Controller.dispatchEvent('clipupdated', { detail: clip, });
 	}
 
-	#setClipEnd(time: number): void {
-		//Controller.dispatchEvent('usersetcurrenttime', { detail: time, });
-		if (!this.#dragElement || !(this.#dragElement as SfmClip).isSfmClip) {
-			return;
-		}
-
-		if ((this.#dragElement as SfmFilmClip).isSfmFilmClip) {
+	#setClipEnd(clip: SfmClip, time: number): void {
+		if ((clip as SfmFilmClip).isSfmFilmClip) {
 			time = this.#dragAllowedTimeFrame.clampTime(time);
 		}
 
-		this.#dragAction?.do(this.#dragElement as SfmClip, 'set-end', time);//(this.#dragElement as SfmClip).setEnd(time);
+		this.#dragAction?.do(clip, 'set-end', time);
 		this.refreshHTML();
-		Controller.dispatchEvent('clipupdated', { detail: this.#dragElement as SfmClip, });
+		Controller.dispatchEvent('updateactiveclips');
+		Controller.dispatchEvent('clipupdated', { detail: clip, });
 	}
 
 	#setCssVars(): void {
@@ -784,6 +779,42 @@ export class TimelinePanel extends Panel {
 
 		const contextMenu: HarmonyMenuItemsDict = {
 			...getShowInElementViewer(clip),
+			set_start: {
+				i18n: '#set_start',
+				f: (): void => {
+					this.#setAllowedTimeFrame(clip);
+					const start = promptI18n('#clip_start', String(clip.getStart()));
+					const n = Number(start);
+					if (start === null || Number.isNaN(n)) {
+						return;
+					}
+					this.#setClipStart(clip, n);
+				},
+			},
+			set_end: {
+				i18n: '#set_end',
+				f: (): void => {
+					this.#setAllowedTimeFrame(clip);
+					const end = promptI18n('#clip_end', String(clip.getEnd()));
+					const n = Number(end);
+					if (end === null || Number.isNaN(n)) {
+						return;
+					}
+					this.#setClipEnd(clip, n);
+				},
+			},
+			set_duration: {
+				i18n: '#set_duration',
+				f: (): void => {
+					this.#setAllowedTimeFrame(clip);
+					const duration = promptI18n('#clip_duration', String(clip.getDuration()));
+					const n = Number(duration) + clip.getStart();
+					if (duration === null || Number.isNaN(n)) {
+						return;
+					}
+					this.#setClipEnd(clip, n);
+				},
+			},
 			...((clip as SfmFilmClip).isSfmFilmClip) && { add_character: { i18n: '#add_character', f: (): void => { Controller.dispatchEvent('userselectcharacter', { detail: { primary: clip, clips } }) }, } },
 			...((clip as SfmFilmClip).isSfmFilmClip && (clip as SfmFilmClip).getScene()) && {
 				add_light: {
