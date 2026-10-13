@@ -545,7 +545,7 @@ class Application {
 
 		const action = History.startAction();
 		const characterNode = detail.characterNode;
-		const parentNode = characterNode.getParent();
+		const parentNode = characterNode.getParentNode();
 		if (parentNode) {
 			action.do(parentNode, 'delete-child', characterNode);
 		}
@@ -966,7 +966,7 @@ class Application {
 	}
 
 	static #deleteCharacter(detail: DeleteCharacter): void {
-		const parent = detail.characterNode.getParent();
+		const parent = detail.characterNode.getParentNode();
 		if (!parent) {
 			return;
 		}

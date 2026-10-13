@@ -225,7 +225,7 @@ export class ViewportPanel extends Panel {
 				if (!currentEntity) {
 					continue;
 				}
-				const parentEntity = await current.getParent()?.getEntity()?.getEngineEntityAsync();
+				const parentEntity = await current.getParentNode()?.getEntity()?.getEngineEntityAsync();
 				if (!parentEntity) {
 					continue;
 				}

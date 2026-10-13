@@ -34,7 +34,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 		return this.#entity;
 	}
 
-	getParent(): SfmNode | undefined {
+	getParentNode(): SfmNode | undefined {
 		return this.#parent;
 	}
 
