@@ -27,6 +27,8 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	readonly params: T;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	undoParams: any/*TODO: improve type*/;
+	/* Sub command if a command that will be executed right after this one*/
+	#subCommand?: Command;
 
 	constructor(element: Undoable, command: C, params: T) {
 		this.element = element;
@@ -35,11 +37,24 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	}
 
 	undo(): boolean {
-		return this.element.undo(this);
+		return this.element.undo(this) && (this.#subCommand?.undo() ?? true);
 	}
 
 	redo(): boolean {
-		return this.element.do(this);
+		return this.element.do(this) && (this.#subCommand?.redo() ?? true);
+	}
+
+	addSubCommand(command: Command): void {
+		if (this.#subCommand) {
+			this.#subCommand.addSubCommand(command);
+		} else {
+			this.#subCommand = command;
+		}
+	}
+
+	addAndExecuteSubCommand(command: Command): void {
+		this.addSubCommand(command);
+		command.element.do(command);
 	}
 }
 
