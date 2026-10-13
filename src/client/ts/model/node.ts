@@ -1,6 +1,7 @@
 import { Command } from '../history/action';
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
+import { SfmFilmClip } from './clips/filmclip';
 import { SfmEntity } from './entity';
 
 type AddChildUndo = {
@@ -21,6 +22,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 	#entity?: T;
 	#parent?: SfmNode;
 	#children = new Set<SfmNode>();
+	#clip?: SfmFilmClip | null;
 
 	constructor(params: NodeParameters<T> = {}) {
 		super(params);
@@ -69,6 +71,10 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				command.undoParams = this.#entity;
 				this.#entity = command.params as T;// TODO: check if its an SfmEntity
 				return true;
+			case 'set-parent-clip':
+				command.undoParams = this.#clip;
+				this.#clip = command.params as SfmFilmClip;// TODO: check if its an SfmFilmClip
+				return true;
 			/*
 			case 'set-parent':
 				command.undoParams = this.#parent;
@@ -94,6 +100,9 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				return true;
 			case 'set-entity':
 				this.#entity = command.undoParams as T | undefined;
+				return true;
+			case 'set-parent-clip':
+				this.#clip = command.undoParams as SfmFilmClip;
 				return true;
 			default:
 				return super.undo(command);

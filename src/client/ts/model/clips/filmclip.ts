@@ -1,6 +1,6 @@
 import { errorOnce } from 'harmony-utils';
 import { Action, Command, Undoable } from '../../history/action';
-import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { isCharacter } from '../../utils/models';
 import { SfmCamera } from '../camera';
@@ -92,9 +92,18 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	}
 
 	#setScene(scene: SfmNode<SfmScene> | undefined): void {
+		const action = new Action();
+
+		if (this.#scene) {
+			action.do(this.#scene, 'set-parent-clip', null);
+		}
+
+		if (scene) {
+			action.do(scene, 'set-parent-clip', this);
+		}
+
 		this.#scene = scene;
 
-		const action = new Action();
 		action.do(this.#sceneWithWorld, 'delete-children');
 		if (scene) {
 			action.do(this.#sceneWithWorld, 'add-child', scene);
