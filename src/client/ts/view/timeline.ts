@@ -428,7 +428,7 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		const timeFrame = track.getTrackGroup()?.parentClip?.getTimeFrame();
+		const timeFrame = track.getTrackGroup()?.getParentClip()?.getTimeFrame();
 		if (!timeFrame) {
 			return;
 		}
@@ -553,7 +553,7 @@ export class TimelinePanel extends Panel {
 			let best = +Infinity;
 			let bestTimeFrame: SfmTimeFrame | undefined;
 			if (overlapping.size > 0) {
-				const timeFrame = track.getTrackGroup()?.parentClip?.getTimeFrame();
+				const timeFrame = track.getTrackGroup()?.getParentClip()?.getTimeFrame();
 				if (!timeFrame) {
 					return;
 				}

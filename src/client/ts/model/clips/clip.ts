@@ -58,7 +58,7 @@ export abstract class SfmClip extends Serializable implements Undoable {
 	 * @returns The parent film clip or null
 	 */
 	getParentFilmClip(): SfmFilmClip | null {
-		return this.track?.getTrackGroup()?.parentClip ?? null;
+		return this.track?.getTrackGroup()?.getParentClip() ?? null;
 	}
 
 	abstract update(context: SfmOperatorContext): void;

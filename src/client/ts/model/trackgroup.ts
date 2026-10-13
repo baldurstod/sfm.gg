@@ -11,7 +11,7 @@ export interface TrackGroupParameters extends SerializableParameters {
 
 export class SfmTrackGroup extends Serializable implements Undoable {
 	readonly isSfmTrackGroup = true as const;
-	parentClip: SfmFilmClip | null = null;
+	#parentClip: SfmFilmClip | null = null;
 	readonly #tracks = new Set<SfmTrack>();
 	#order = 0;
 
@@ -46,6 +46,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 		return ++order;
 	}
 
+	getParentClip(): SfmFilmClip | null {
+		return this.#parentClip;
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-track':
@@ -65,6 +69,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			case 'set-order':
 				command.undoParams = this.#order;
 				this.#order = command.params as number;
+				return true;
+			case 'set-parent-clip':
+				command.undoParams = this.#parentClip;
+				this.#parentClip = command.params as SfmFilmClip | null;//TODO: check if it is actually an SfmFilmClip
 				return true;
 			default:
 				return super.do(command);
@@ -90,6 +98,9 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			case 'set-order':
 				this.#order = command.undoParams as number;
 				return true;
+			case 'set-track-group':
+				this.#parentClip = command.undoParams as SfmFilmClip | null;
+				return true;
 			default:
 				return super.undo(command);
 		}
@@ -111,8 +122,8 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			json.tracks = [...this.#tracks];
 		}
 
-		if (this.parentClip) {
-			json.parent_clip = this.parentClip;
+		if (this.#parentClip) {
+			json.parent_clip = this.#parentClip;
 		}
 
 		return json;
@@ -132,9 +143,9 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			}
 		}
 
-		this.parentClip = null;
+		this.#parentClip = null;
 		if (json.parent_clip) {
-			this.parentClip = context.elements.get(json.parent_clip as string) as SfmFilmClip | null; // TODO: check if it's actually a film clip
+			this.#parentClip = context.elements.get(json.parent_clip as string) as SfmFilmClip | null; // TODO: check if it's actually a film clip
 		}
 	}
 

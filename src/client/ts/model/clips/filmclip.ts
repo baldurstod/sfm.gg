@@ -79,15 +79,12 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		return characters;
 	}
 
-	#addTrackGroup(group: SfmTrackGroup): SfmTrackGroup {
+	#addTrackGroup(group: SfmTrackGroup): void {
 		this.#trackGroups.add(group);
-		group.parentClip = this;
-		return group;
 	}
 
 	#deleteTrackGroup(group: SfmTrackGroup): void {
 		this.#trackGroups.delete(group);
-		group.parentClip = null;
 	}
 
 	getTrackGroups(): SfmTrackGroup[] {
@@ -229,8 +226,10 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	override do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-track-group':
-				command.undoParams = (command.params as SfmTrackGroup).parentClip;
+				const addedTrackGroup = command.params as SfmTrackGroup;
+				command.undoParams = addedTrackGroup.getParentClip();
 				this.#addTrackGroup(command.params as SfmTrackGroup);
+				command.addAndExecuteSubCommand(new Command(addedTrackGroup, 'set-parent-clip', this));
 				return true;
 			case 'delete-track-group':
 				if (!this.#trackGroups.has(command.params as SfmTrackGroup)) {
