@@ -20,21 +20,12 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 		this.#order = params.order ?? 0;
 	}
 
-	#addTrack(track: SfmTrack): SfmTrack {
+	#addTrack(track: SfmTrack): void {
 		this.#tracks.add(track);
-		track.trackGroup = this;
-		return track;
 	}
-
-	/*
-	#addTracks(tracks: SfmTrack[]): void {
-		tracks.forEach((track) => this.#tracks.add(track));
-	}
-	*/
 
 	#deleteTrack(track: SfmTrack): void {
 		this.#tracks.delete(track);
-		track.trackGroup = null;
 	}
 
 	getTracks(): SfmTrack[] {
@@ -58,8 +49,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-track':
-				command.undoParams = (command.params as SfmTrack).trackGroup;
-				this.#addTrack(command.params as SfmTrack);
+				const addedTrack = command.params as SfmTrack;
+				command.undoParams = addedTrack.getTrackGroup();
+				this.#addTrack(addedTrack);
+				command.addAndExecuteSubCommand(new Command(addedTrack, 'set-track-group', this));
 				return true;
 			case 'delete-track':
 				if (!this.#tracks.has(command.params as SfmTrack)) {
@@ -67,6 +60,7 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				}
 				command.undoParams = command.params as SfmTrack;
 				this.#deleteTrack(command.params as SfmTrack);
+				command.addAndExecuteSubCommand(new Command(command.params as SfmTrack, 'set-track-group', null));
 				return true;
 			case 'set-order':
 				command.undoParams = this.#order;

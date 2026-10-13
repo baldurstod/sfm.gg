@@ -762,7 +762,7 @@ class Application {
 
 	static #addClipToTrack(detail: AddClip): void {
 		const track = detail.track;
-		const topClip = track.trackGroup?.parentClip;
+		const topClip = track.getTrackGroup()?.parentClip;
 		if (!topClip) {
 			return;
 		}
@@ -820,7 +820,7 @@ class Application {
 	static #fillGaps(track: SfmTrack): void {
 		const action = History.startAction();
 
-		const timeFrame = track.trackGroup?.parentClip?.getTimeFrame();
+		const timeFrame = track.getTrackGroup()?.parentClip?.getTimeFrame();
 
 		const gaps = track.getGaps(timeFrame?.getStart() ?? -Infinity, timeFrame?.getEnd() ?? Infinity);
 		console.info(gaps);
@@ -932,7 +932,7 @@ class Application {
 	}
 
 	static #deleteTrack(track: SfmTrack): void {
-		const trackGroup = track.trackGroup;
+		const trackGroup = track.getTrackGroup();
 		if (!trackGroup) {
 			return;
 		}

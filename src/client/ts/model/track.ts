@@ -16,7 +16,7 @@ export interface TrackParameters extends SerializableParameters {
 
 export class SfmTrack extends Serializable implements Undoable {
 	readonly isSfmTrack = true as const;
-	trackGroup: SfmTrackGroup | null = null;
+	#trackGroup: SfmTrackGroup | null = null;
 	#clips = new Set<SfmClip>();
 	#trackType: SfmClipType;
 	mute = false;
@@ -102,6 +102,10 @@ export class SfmTrack extends Serializable implements Undoable {
 		return this.#order;
 	}
 
+	getTrackGroup(): SfmTrackGroup | null {
+		return this.#trackGroup;
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-clip':
@@ -118,6 +122,10 @@ export class SfmTrack extends Serializable implements Undoable {
 			case 'set-order':
 				command.undoParams = this.#order;
 				this.#order = command.params as number;
+				return true;
+			case 'set-track-group':
+				command.undoParams = this.#trackGroup;
+				this.#trackGroup = command.params as SfmTrackGroup | null;//TODO: check if it is actually an SfmTrackGroup
 				return true;
 			default:
 				return super.do(command);
@@ -143,6 +151,9 @@ export class SfmTrack extends Serializable implements Undoable {
 			case 'set-order':
 				this.#order = command.undoParams as number;
 				return true;
+			case 'set-track-group':
+				this.#trackGroup = command.undoParams as SfmTrackGroup | null;
+				return true;
 			default:
 				return super.undo(command);
 		}
@@ -163,8 +174,8 @@ export class SfmTrack extends Serializable implements Undoable {
 			json.clips = [...this.#clips];
 		}
 
-		if (this.trackGroup) {
-			json.track_group = this.trackGroup;
+		if (this.#trackGroup) {
+			json.track_group = this.#trackGroup;
 		}
 		json.track_type = this.#trackType;
 		json.mute = this.mute;
@@ -187,9 +198,9 @@ export class SfmTrack extends Serializable implements Undoable {
 			}
 		}
 
-		this.trackGroup = null;
+		this.#trackGroup = null;
 		if (json.track_group) {
-			this.trackGroup = context.elements.get(json.track_group as string) as SfmTrackGroup | null; // TODO: check if it's actually a track group
+			this.#trackGroup = context.elements.get(json.track_group as string) as SfmTrackGroup | null; // TODO: check if it's actually a track group
 		}
 
 		this.mute = json.mute as boolean ?? false;
