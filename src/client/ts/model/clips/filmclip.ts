@@ -1,6 +1,6 @@
 import { errorOnce } from 'harmony-utils';
 import { Action, Command, Undoable } from '../../history/action';
-import { Serializable, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
+import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { isCharacter } from '../../utils/models';
 import { SfmCamera } from '../camera';
@@ -81,10 +81,14 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 
 	#addTrackGroup(group: SfmTrackGroup): void {
 		this.#trackGroups.add(group);
+		const action = new Action();
+		action.do(group, 'set-parent-clip', this);
 	}
 
 	#deleteTrackGroup(group: SfmTrackGroup): void {
 		this.#trackGroups.delete(group);
+		const action = new Action();
+		action.do(group, 'set-parent-clip', null);
 	}
 
 	getTrackGroups(): SfmTrackGroup[] {
@@ -238,7 +242,6 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 				const addedTrackGroup = command.params as SfmTrackGroup;
 				command.undoParams = addedTrackGroup.getParentClip();
 				this.#addTrackGroup(command.params as SfmTrackGroup);
-				command.addAndExecuteSubCommand(new Command(addedTrackGroup, 'set-parent-clip', this));
 				return true;
 			case 'delete-track-group':
 				if (!this.#trackGroups.has(command.params as SfmTrackGroup)) {

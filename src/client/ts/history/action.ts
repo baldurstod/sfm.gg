@@ -28,8 +28,6 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	readonly params: T;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	undoParams: any/*TODO: improve type*/;
-	/* Sub command if a command that will be executed right after this one*/
-	#subCommand?: Command;
 
 	constructor(element: Undoable, command: C, params: T) {
 		this.element = element;
@@ -38,24 +36,11 @@ export class Command<C extends string = string, T = any/*TODO: improve type*/> {
 	}
 
 	undo(): boolean {
-		return this.element.undo(this) && (this.#subCommand?.undo() ?? true);
+		return this.element.undo(this);
 	}
 
 	redo(): boolean {
-		return this.element.do(this) && (this.#subCommand?.redo() ?? true);
-	}
-
-	addSubCommand(command: Command): void {
-		if (this.#subCommand) {
-			this.#subCommand.addSubCommand(command);
-		} else {
-			this.#subCommand = command;
-		}
-	}
-
-	addAndExecuteSubCommand(command: Command): void {
-		this.addSubCommand(command);
-		command.element.do(command);
+		return this.element.do(this);
 	}
 }
 
@@ -94,8 +79,10 @@ export class Action {
 	do(element: SfmSession, command: 'set-film-clip', params: SfmFilmClip): boolean;
 	do(element: SfmTrack, command: 'add-clip', params: SfmClip): boolean;
 	do(element: SfmTrack, command: 'delete-clip', params: SfmClip): boolean;
+	do(element: SfmTrack, command: 'set-track-group', params: SfmTrackGroup | null): boolean;
 	do(element: SfmTrackGroup, command: 'add-track', params: SfmTrack): boolean;
 	do(element: SfmTrackGroup, command: 'delete-track', params: SfmTrack): boolean;
+	do(element: SfmTrackGroup, command: 'set-parent-clip', params: SfmFilmClip | null): boolean;
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	do(element: Undoable, command: string, params?: any): boolean {

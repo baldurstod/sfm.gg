@@ -1,4 +1,4 @@
-import { Command, Undoable } from '../history/action';
+import { Action, Command, Undoable } from '../history/action';
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmFilmClip } from './clips/filmclip';
@@ -22,10 +22,14 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 
 	#addTrack(track: SfmTrack): void {
 		this.#tracks.add(track);
+		const action = new Action();
+		action.do(track, 'set-track-group', this);
 	}
 
 	#deleteTrack(track: SfmTrack): void {
 		this.#tracks.delete(track);
+		const action = new Action();
+		action.do(track, 'set-track-group', null);
 	}
 
 	getTracks(): SfmTrack[] {
@@ -56,7 +60,6 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				const addedTrack = command.params as SfmTrack;
 				command.undoParams = addedTrack.getTrackGroup();
 				this.#addTrack(addedTrack);
-				command.addAndExecuteSubCommand(new Command(addedTrack, 'set-track-group', this));
 				return true;
 			case 'delete-track':
 				if (!this.#tracks.has(command.params as SfmTrack)) {
@@ -64,7 +67,6 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				}
 				command.undoParams = command.params as SfmTrack;
 				this.#deleteTrack(command.params as SfmTrack);
-				command.addAndExecuteSubCommand(new Command(command.params as SfmTrack, 'set-track-group', null));
 				return true;
 			case 'set-order':
 				command.undoParams = this.#order;
@@ -98,7 +100,7 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 			case 'set-order':
 				this.#order = command.undoParams as number;
 				return true;
-			case 'set-track-group':
+			case 'set-parent-clip':
 				this.#parentClip = command.undoParams as SfmFilmClip | null;
 				return true;
 			default:
