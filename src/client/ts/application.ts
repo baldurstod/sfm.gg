@@ -1146,6 +1146,7 @@ class Application {
 			this.#session = session;
 			Controller.dispatchEvent('refreshtimeline');
 			Controller.dispatchEvent('setsessionfilmclip', { detail: session.getFilmClip() ?? null });
+			this.#setActiveFilmClips();
 		}
 	}
 }
@@ -1164,6 +1165,8 @@ async function load(): Promise<SfmSession | null> {
 				if (!files!) {
 					return;
 				}
+
+				(event.target as HTMLInputElement).files = null;
 
 				for (const file of files) {
 
@@ -1202,7 +1205,7 @@ function save(session: SfmSession): void {
 	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);
 
-	saveFile(new File([JSON.stringify(result)], 'session.sfm.gg'));
+	saveFile(new File([JSON.stringify(result)], 'session.sfm.gg.json'));
 
 	//load(result);
 }

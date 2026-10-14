@@ -405,7 +405,7 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 		if (json.scene) {
 			const scene = elements.get(json.scene as string) as SfmNode<SfmScene> | undefined; // TODO: check if it's actually a scene
 			if (scene) {
-				this.#scene = scene;
+				this.#setScene(scene);
 			}
 		}
 

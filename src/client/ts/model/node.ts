@@ -7,7 +7,7 @@ import { SfmEntity } from './entity';
 type AddChildUndo = {
 	child: SfmNode;
 	childs: Set<SfmNode>;
-	parent?: SfmNode;
+	formerParent?: SfmNode;
 }
 
 export interface NodeParameters<T extends SfmEntity = SfmEntity> extends SerializableParameters {
@@ -44,22 +44,36 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 		return new Set<SfmNode>(this.#children);
 	}
 
+	#addChild(child: SfmNode): void {
+		this.#children.add(child);
+		child.#parent = this;
+	}
+
+	#deleteChild(child: SfmNode): void {
+		this.#children.delete(child);
+		child.#parent = undefined;
+	}
+
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-child':
+				const addedChild = command.params as SfmNode;// TODO: check if its an SfmNode
 				command.undoParams = {
 					childs: new Set(this.#children),
 					child: command.params as SfmNode,
-					parent: (command.params as SfmNode).#parent,
-				};
-				this.#children.add(command.params as SfmNode);// TODO: check if its an SfmNode
-				(command.params as SfmNode).#parent = this;
+					formerParent: addedChild.#parent,
+				} as AddChildUndo;
+
+				if (addedChild.#parent) {
+					addedChild.#parent.#deleteChild(addedChild);
+				}
+				this.#addChild(command.params as SfmNode);
 				return true;
 			case 'delete-child':
 				command.undoParams = {
 					childs: new Set(this.#children),
 				};
-				this.#children.delete(command.params as SfmNode);// TODO: check if its an SfmNode
+				this.#deleteChild(command.params as SfmNode);// TODO: check if its an SfmNode
 				return true;
 			case 'delete-children':
 				command.undoParams = {
@@ -90,13 +104,18 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 		switch (command.command) {
 			case 'add-child':
 				this.#children.clear();
-				(command.undoParams as AddChildUndo).childs.forEach(child => this.#children.add(child));
-				(command.undoParams as AddChildUndo).child.#parent = (command.undoParams as AddChildUndo).parent;
+				const addedChild = (command.undoParams as AddChildUndo).child;
+				(command.undoParams as AddChildUndo).childs.forEach(child => this.#addChild(child));
+				//addedChild.#parent = (command.undoParams as AddChildUndo).formerParent;
+				const formerParent = (command.undoParams as AddChildUndo).formerParent;
+				if (formerParent) {
+					formerParent.#addChild(addedChild);
+				}
 				return true;
 			case 'delete-child':
 			case 'delete-children':
 				this.#children.clear();
-				(command.undoParams as AddChildUndo).childs.forEach(child => this.#children.add(child));
+				(command.undoParams as AddChildUndo).childs.forEach(child => this.#addChild(child));
 				return true;
 			case 'set-entity':
 				this.#entity = command.undoParams as T | undefined;
@@ -147,7 +166,7 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				const child = context.elements.get(childId) as SfmNode | undefined; // TODO: check if it's actually a track group
 
 				if (child) {
-					this.#children.add(child);
+					this.#addChild(child);
 				}
 			}
 		}
