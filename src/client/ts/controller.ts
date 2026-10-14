@@ -15,7 +15,7 @@ import { Serializable } from './serialize/serializable';
 export type ControllerEvent = 'setsession'
 	| 'cameraadded'
 	| 'cameraremoved'
-	| 'settopfilmclip'
+	| 'setsessionfilmclip'
 	| 'setcurrentclip'
 	| 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip'
 	| 'useraddprimaryselectedclip'
@@ -24,6 +24,7 @@ export type ControllerEvent = 'setsession'
 	| 'useraddcamera'
 	| 'userselectcamera'
 	| 'usersavesession'
+	| 'useropensession'
 	| 'useropenoptions'
 	| 'useropenadvancedoptions'
 	| 'useraddmodel'
@@ -83,7 +84,7 @@ export class Controller {
 	static addEventListener(type: 'setsession', callback: (evt: CustomEvent<SfmSession>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'cameraadded', callback: (evt: CustomEvent<CameraAdded>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'cameraremoved', callback: (evt: CustomEvent<CameraRemoved>) => void, options?: AddEventListenerOptions | boolean): void;
-	static addEventListener(type: 'settopfilmclip', callback: (evt: CustomEvent<SfmFilmClip>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'setsessionfilmclip', callback: (evt: CustomEvent<SfmFilmClip | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setcurrentclip', callback: (evt: CustomEvent<SfmClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddprimaryselectedclip', callback: (evt: CustomEvent<SetSelectedClip>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -92,6 +93,7 @@ export class Controller {
 	static addEventListener(type: 'useraddcamera', callback: (evt: CustomEvent<SfmCamera | null>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'userselectcamera', callback: (evt: CustomEvent<SfmCamera>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'usersavesession', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
+	static addEventListener(type: 'useropensession', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useropenadvancedoptions', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
 	static addEventListener(type: 'useraddmodel', callback: (evt: CustomEvent<void>) => void, options?: AddEventListenerOptions | boolean): void;
@@ -139,13 +141,14 @@ export class Controller {
 	static dispatchEvent(type: 'cameraadded', options: ControllerEventInit<CameraAdded>): boolean;
 	static dispatchEvent(type: 'cameraremoved', options: ControllerEventInit<CameraRemoved>): boolean;
 	static dispatchEvent(type: 'setactivecamera', options: ControllerEventInit<SetActiveCamera>): boolean;
-	static dispatchEvent(type: 'settopfilmclip', options: ControllerEventInit<SfmFilmClip>): boolean;
+	static dispatchEvent(type: 'setsessionfilmclip', options: ControllerEventInit<SfmFilmClip | null>): boolean;
 	static dispatchEvent(type: 'setcurrentclip', options: ControllerEventInit<SfmClip>): boolean;
 	static dispatchEvent(type: 'setselectedclip' | 'usersetselectedclip' | 'addselectedclip' | 'useraddselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
 	static dispatchEvent(type: 'useraddprimaryselectedclip', options: ControllerEventInit<SetSelectedClip>): boolean;
 	static dispatchEvent(type: 'setactivefilmclips', options: ControllerEventInit<Set<SfmFilmClip>>): boolean;
 	static dispatchEvent(type: 'userselectcamera', options: ControllerEventInit<SfmCamera>): boolean;
 	static dispatchEvent(type: 'usersavesession', options?: EventInit): boolean;
+	static dispatchEvent(type: 'useropensession', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useropenadvancedoptions', options?: EventInit): boolean;
 	static dispatchEvent(type: 'useraddmodel', options?: EventInit): boolean;

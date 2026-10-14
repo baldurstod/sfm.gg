@@ -16,7 +16,7 @@ export type SfmClipCommand = 'set-start' | 'set-end';
 
 export abstract class SfmClip extends Serializable implements Undoable {
 	readonly isSfmClip = true as const;
-	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
+	#timeFrame: SfmTimeFrame;//= new SfmTimeFrame();
 	#track: SfmTrack | null = null;
 	abstract type: SfmClipType;
 

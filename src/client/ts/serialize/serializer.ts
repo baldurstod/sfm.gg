@@ -40,7 +40,7 @@ export class SfmSerializer {
 
 	static readonly #entities = new Map<string, ConcreteSerializable>();
 
-	static unserializeJSON(file: JSONFile): SfmSession | null {
+	static async unserializeJSON(file: File): Promise<SfmSession | null> {
 		/*
 		let loadedResolve: (value: boolean) => void;
 		const loadedPromise = new Promise<boolean>(resolve => {
@@ -48,12 +48,14 @@ export class SfmSerializer {
 		});
 		*/
 
+		const sessionJSON = JSON.parse(await file.text()) as JSONFile;// TODO: check the file integrity
+
 		let session: SfmSession | null = null;
 		const elements = new Map<string, Serializable>();
 		const elements2 = new Map<Serializable, JSONElement>();
 
 		// Step 1: recreate the elements
-		for (const elementJSON of file.elements) {
+		for (const elementJSON of sessionJSON.elements) {
 			const element = this.#getElement(elementJSON);
 			if (element) {
 				elements.set(element.getId(), element);
@@ -117,8 +119,8 @@ export class SfmSerializer {
 			element.unserialize(json, { elements, fileVersion: 1/*TODO: add an actual file version*/ });
 		}
 
-		if (file.session) {
-			session = elements.get(file.session) as SfmSession;
+		if (sessionJSON.session) {
+			session = elements.get(sessionJSON.session) as SfmSession;
 		}
 
 		//loadedResolve!(true);

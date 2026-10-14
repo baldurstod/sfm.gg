@@ -99,13 +99,13 @@ export class TimelinePanel extends Panel {
 
 	constructor() {
 		super();
-		Controller.addEventListener('settopfilmclip', (event) => this.#setTopFilmClip(event.detail));
+		Controller.addEventListener('setsessionfilmclip', (event) => this.#setTopFilmClip(event.detail));
 		Controller.addEventListener('setcurrentclip', (event) => this.#setSelectedClip(event.detail));
 		Controller.addEventListener('setcurrenttime', (event) => this.#setCurrentTime(event.detail));
 		Controller.addEventListener('refreshtimeline', () => this.refreshHTML());
 	}
 
-	#setTopFilmClip(clip: SfmFilmClip): void {
+	#setTopFilmClip(clip: SfmFilmClip | null): void {
 		this.#topFilmClip = clip;
 		this.refreshHTML();
 	}

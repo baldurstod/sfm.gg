@@ -26,16 +26,13 @@ export class Toolbar extends Panel {
 			childs: [
 				createElement('button', {
 					innerHTML: fileOpenSVG,
-					$click: () => {
-						//Controller.dispatchEvent('useraddcamera', { detail: this.#useWorkCamera ? workCamera : this.#activeClip?.activeCamera ?? null });
-						//this.#useWorkCamera = false;
-					},
+					$click: () => Controller.dispatchEvent('useropensession'),
 				}),
 				createElement('button', {
 					innerHTML: saveSVG,
-					$click: () => {
-						Controller.dispatchEvent('usersavesession');
-					},
+					$click: () =>
+						Controller.dispatchEvent('usersavesession')
+					,
 				}),
 				createElement('button', {
 					innerHTML: settingsSVG,

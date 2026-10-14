@@ -1,7 +1,7 @@
 import { Camera, ContextType, FullScreenQuad, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, RepositoryDir, Scene, ShaderMaterial, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
-import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, ShortcutHandler } from 'harmony-browser-utils';
+import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, saveFile, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
-import { documentStyle, I18n, I18nTranslation } from 'harmony-ui';
+import { createElement, documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import { errorOnce, setTimeoutPromise } from 'harmony-utils';
 import htmlCSS from '../css/html.css';
 import varsCSS from '../css/vars.css';
@@ -36,7 +36,7 @@ import { SfmTimeFrame } from './model/timeframe';
 import { SfmTrack } from './model/track';
 import { SfmTrackGroup } from './model/trackgroup';
 import { Player } from './player';
-import { JSONFile, SfmSerializer } from './serialize/serializer';
+import { SfmSerializer } from './serialize/serializer';
 import { getItemNodes } from './utils/items';
 import { isCharacter, isItem } from './utils/models';
 import { AppPanel } from './view/app';
@@ -67,9 +67,6 @@ class Application {
 		this.#initOptions();
 		void this.#initGraphics();
 		this.createNewSession();
-
-		//load();
-		save(this.#session);
 
 		this.#updateCurrentTime();
 	}
@@ -119,6 +116,7 @@ class Application {
 
 	static #initListeners(): void {
 		Controller.addEventListener('useraddcamera', (event) => this.#addCamera(event.detail));
+		Controller.addEventListener('useropensession', () => this.#loadSession());
 		Controller.addEventListener('usersavesession', () => save(this.#session));
 		Controller.addEventListener('userselectcamera', (event) => {
 			const clip = this.#session.getFilmClip();
@@ -354,7 +352,7 @@ class Application {
 		this.#addLight('ambient', sceneNode, action);
 		this.#addLight('ambient', sceneNode2, action);
 
-		Controller.dispatchEvent('settopfilmclip', { detail: film });
+		Controller.dispatchEvent('setsessionfilmclip', { detail: film });
 		Controller.dispatchEvent('viewelement', { detail: { element: this.#session, } });
 
 		if (TESTING) {
@@ -1141,9 +1139,42 @@ class Application {
 		}
 		return this.#renderPanel;
 	}
+
+	static async #loadSession() {
+		const session = await load();
+		if (session) {
+			this.#session = session;
+			Controller.dispatchEvent('refreshtimeline');
+			Controller.dispatchEvent('setsessionfilmclip', { detail: session.getFilmClip() ?? null });
+		}
+	}
 }
 
-function load(file: JSONFile): void {
+async function load(): Promise<SfmSession | null> {
+	const p = new Promise<SfmSession | null>(resolve => {
+		const fileInput = createElement('input', {
+			type: 'file',
+			$change: async (event: Event) => {
+
+				let files: FileList | null;
+				if (event.target) {
+					files = (event.target as HTMLInputElement).files;
+				}
+
+				if (!files!) {
+					return;
+				}
+
+				for (const file of files) {
+
+					const session = await SfmSerializer.unserializeJSON(file);
+					resolve(session);
+				}
+			},
+		});
+		fileInput.dispatchEvent(new MouseEvent('click'));
+	});
+
 	/*
 	const session: JSONFile =
 	{
@@ -1162,16 +1193,18 @@ function load(file: JSONFile): void {
 
 
 	//const json = JSON.parse(session) as JSONObject;
-	const session = SfmSerializer.unserializeJSON(file);
-	console.info('load', session);
+	//const session = SfmSerializer.unserializeJSON(file);
+	//console.info('load', session);
+	return p;
 }
 
 function save(session: SfmSession): void {
-
 	const result = SfmSerializer.serializeJSON(session);
 	console.info('save', result);
 
-	load(result);
+	saveFile(new File([JSON.stringify(result)], 'session.sfm.gg'));
+
+	//load(result);
 }
 
 function createClip(track: SfmTrack, timeFrame: SfmTimeFrame): SfmClip {

@@ -37,7 +37,7 @@ export class ViewportPanel extends Panel {
 		super();
 		Controller.addEventListener('cameraadded', (event) => this.#cameraAdded(event.detail));
 		Controller.addEventListener('cameraremoved', (event) => this.#cameraRemoved(event.detail));
-		Controller.addEventListener('settopfilmclip', (event) => this.#setTopFilmClip(event.detail));
+		Controller.addEventListener('setsessionfilmclip', (event) => this.#setTopFilmClip(event.detail));
 		Controller.addEventListener('setactivecamera', (event) => this.#setActiveCamera(event.detail));
 		Controller.addEventListener('usersetplaying', (event) => this.#setPlaying(event.detail));
 		//Controller.addEventListener('userplay', () => this.#setPlaying(true));
@@ -260,7 +260,7 @@ export class ViewportPanel extends Panel {
 		return node.getEntity()?.getEngineEntity();
 	}
 
-	#setTopFilmClip(clip: SfmFilmClip): void {
+	#setTopFilmClip(clip: SfmFilmClip | null): void {
 		this.#topFilmClip = clip;
 	}
 
