@@ -18,7 +18,7 @@ export class SfmSession extends Serializable {
 
 	constructor(params: SessionParameters = {}) {
 		super(params);
-		this.#settings = new SfmSessionSettings(params.settings);
+		this.#settings = new SfmSessionSettings({ session: this, ...params.settings });
 		this.#filmClip = params.clip;
 	}
 
@@ -97,7 +97,7 @@ export class SfmSession extends Serializable {
 		}
 
 		if (json.settings) {
-			this.#settings = (elements.get(json.settings as string) as SfmSessionSettings | undefined) ?? new SfmSessionSettings(); // TODO: check if it's actually a session settings
+			this.#settings = (elements.get(json.settings as string) as SfmSessionSettings | undefined) ?? new SfmSessionSettings({ session: this, }); // TODO: check if it's actually a session settings
 		}
 
 		/*

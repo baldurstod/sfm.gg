@@ -1,18 +1,22 @@
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
+import { SfmSession } from '../session';
 import { RenderSettingsParameters, SfmRenderSettings } from './rendersettings';
 
 export interface SessionSettingsParameters extends SerializableParameters {
 	renderSettings?: RenderSettingsParameters;
+	session: SfmSession;
 }
 
 export class SfmSessionSettings extends Serializable {
 	readonly isSfmSessionSettings = true as const;
 	#renderSettings: SfmRenderSettings;
+	#session: SfmSession;
 
-	constructor(params: SessionSettingsParameters = {}) {
+	constructor(params: SessionSettingsParameters) {
 		super(params);
 		this.#renderSettings = new SfmRenderSettings(params.renderSettings);
+		this.#session = params.session;
 	}
 
 	static override getTypeName(): string {
@@ -59,6 +63,10 @@ export class SfmSessionSettings extends Serializable {
 			default:
 				throw new Error("do me " + name);
 		}
+	}
+
+	getParent(): Serializable | null {
+		return this.#session;
 	}
 }
 
