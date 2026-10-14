@@ -256,6 +256,10 @@ export class SfmTrack extends Serializable implements Undoable {
 				throw new Error("do me " + name);
 		}
 	}
+
+	getParent(): Serializable | null {
+		return this.#trackGroup;
+	}
 }
 
 SfmSerializer.registerSerializable(SfmTrack);

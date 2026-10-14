@@ -170,6 +170,10 @@ export class SfmTrackGroup extends Serializable implements Undoable {
 				throw new Error("do me " + name);
 		}
 	}
+
+	getParent(): Serializable | null {
+		return this.#parentClip;
+	}
 }
 
 SfmSerializer.registerSerializable(SfmTrackGroup);

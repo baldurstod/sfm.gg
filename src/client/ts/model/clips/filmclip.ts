@@ -1,6 +1,6 @@
 import { errorOnce } from 'harmony-utils';
 import { Action, Command, Undoable } from '../../history/action';
-import { SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
+import { Serializable, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../../serialize/serializer';
 import { isCharacter } from '../../utils/models';
 import { SfmCamera } from '../camera';
@@ -8,6 +8,7 @@ import { SfmOperatorContext } from '../interfaces/operator';
 import { SfmModel } from '../model';
 import { SfmNode } from '../node';
 import { SfmScene } from '../scene';
+import { SfmSession } from '../session';
 import { SfmTrack } from '../track';
 import { SfmTrackGroup } from '../trackgroup';
 import { SfmWorld } from '../world/world';
@@ -16,6 +17,7 @@ import { ClipParameters, SfmClip, SfmClipType } from './clip';
 export interface FilmClipParameters extends ClipParameters {
 	scene?: SfmNode<SfmScene>;
 	camera?: SfmCamera;
+	session?: SfmSession;
 	//trackGroups?: SfmTrackGroup[];
 }
 
@@ -33,12 +35,14 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 	readonly #selectedClips = new Set<SfmClip>();
 	type: SfmClipType = 'film' as const;
 	#world?: SfmNode<SfmWorld>;
+	#session: SfmSession | null;
 
 	constructor(params: FilmClipParameters = {}) {
 		super(params);
 
 		this.#setScene(params.scene);
 		this.#activeCamera = params.camera;
+		this.#session = params.session ?? null;
 	}
 
 	getScene(): SfmNode<SfmScene> | undefined {
@@ -486,6 +490,11 @@ export class SfmFilmClip extends SfmClip implements Undoable {
 			default:
 				throw new Error("do me " + name);
 		}
+	}
+
+
+	getParent(): Serializable | null {
+		return this.#session ?? super.getParent();
 	}
 }
 

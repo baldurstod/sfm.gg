@@ -1,4 +1,4 @@
-import { HarmonyTree, ItemClickEventData, TreeItem } from 'harmony-ui';
+import { createElement, HarmonyTree, ItemClickEventData, TreeItem } from 'harmony-ui';
 import elementViewerCSS from '../../css/elementviewer.css';
 import { Controller, ViewElement } from '../controller';
 import { Serializable } from '../serialize/serializable';
@@ -6,6 +6,7 @@ import { Panel } from './panel';
 
 export class ElementViewerPanel extends Panel {
 	#rootElement: Serializable | null = null;
+	#htmlParent?: HTMLButtonElement;
 	#htmlTree?: HarmonyTree;
 	#treeRoot?: TreeItem;
 	#treeItems = new WeakMap<Serializable, TreeItem>();
@@ -22,6 +23,23 @@ export class ElementViewerPanel extends Panel {
 			return;
 		}
 		super.initPanel({ size: 1, adoptStyle: elementViewerCSS, layout: 'column', titleI18n: '#element_viewer', dropTarget: true, });
+
+		createElement('button', {
+			parent: this.panel!.getContent(),
+			innerText: 'parent',
+			$click: () => {
+				if (!this.#rootElement) {
+					return;
+				}
+				const parent = this.#rootElement.getParent();
+				if (!parent) {
+					console.warn('No parent for element', this.#rootElement);
+					return;
+				}
+
+				this.setRootElement(parent);
+			},
+		});
 
 		this.#htmlTree = new HarmonyTree();
 		this.#htmlTree.addEventListener('itemclick', (event: Event) => {

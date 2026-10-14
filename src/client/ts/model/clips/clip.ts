@@ -146,4 +146,8 @@ export abstract class SfmClip extends Serializable implements Undoable {
 			this.#timeFrame = (context.elements.get(json.time_frame as string) as SfmTimeFrame | undefined) ?? new SfmTimeFrame(); // TODO: check if it's actually a timeframe
 		}
 	}
+
+	getParent(): Serializable | null {
+		return this.#track;
+	}
 }

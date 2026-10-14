@@ -259,7 +259,7 @@ class Application {
 		const action = new Action();
 		this.#session = new SfmSession({ name: 'session' });
 
-		const film = new SfmFilmClip({ name: 'Film' });
+		const film = new SfmFilmClip({ name: 'Film', session: this.#session });
 		action.do(this.#session, 'set-film-clip', film);
 
 		const sceneNode = new SfmNode<SfmScene>({ entity: new SfmScene() });

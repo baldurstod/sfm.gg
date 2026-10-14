@@ -235,6 +235,10 @@ export abstract class Serializable implements Undoable {
 		errorOnce(`This method shoul be overriden, ${name} ${element} ${value}`);
 		return false;
 	}
+
+	getParent(): Serializable | null {
+		return null;
+	}
 }
 
 /** Concrete subclasses of Serializable */

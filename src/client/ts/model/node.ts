@@ -172,6 +172,10 @@ export class SfmNode<T extends SfmEntity = SfmEntity> extends Serializable {
 				throw new Error("do me " + name);
 		}
 	}
+
+	getParent(): Serializable | null {
+		return this.#clip ?? this.#parent ?? null;
+	}
 }
 
 SfmSerializer.registerSerializable(SfmNode);
