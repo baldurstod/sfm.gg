@@ -1,4 +1,4 @@
-import { Command, Undoable } from '../history/action';
+import { Action, Command, Undoable } from '../history/action';
 import { Serializable, SerializableParameters, SerializableProperty, SerializablePropertyValue, UnserializationContext } from '../serialize/serializable';
 import { JSONSerializable, SfmSerializer } from '../serialize/serializer';
 import { SfmClip, SfmClipType } from './clips/clip';
@@ -54,17 +54,20 @@ export class SfmTrack extends Serializable implements Undoable {
 
 	#addClip2(clip: SfmClip): void {
 		// Remove the clip from the previous track
-		if (clip.track) {
-			clip.track.#deleteClip(clip);
+		const clipTrack = clip.getTrack();
+		if (clipTrack) {
+			clipTrack.#deleteClip(clip);
 		}
-		clip.track = this;
+		const action = new Action();
+		action.do(clip, 'set-track', this);
 
 		this.#clips.add(clip);
 	}
 
 	#deleteClip(clip: SfmClip): void {
 		this.#clips.delete(clip);
-		clip.track = null;
+		const action = new Action();
+		action.do(clip, 'set-track', null);
 	}
 
 	getClips(): SfmClip[] {
@@ -109,7 +112,7 @@ export class SfmTrack extends Serializable implements Undoable {
 	do(command: Command): boolean {
 		switch (command.command) {
 			case 'add-clip':
-				command.undoParams = (command.params as SfmClip).track;
+				command.undoParams = (command.params as SfmClip).getTrack();
 				this.#addClip(command.params as SfmClip);
 				return true;
 			case 'delete-clip':

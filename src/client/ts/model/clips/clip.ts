@@ -17,7 +17,7 @@ export type SfmClipCommand = 'set-start' | 'set-end';
 export abstract class SfmClip extends Serializable implements Undoable {
 	readonly isSfmClip = true as const;
 	#timeFrame: SfmTimeFrame//= new SfmTimeFrame();
-	track: SfmTrack | null = null;
+	#track: SfmTrack | null = null;
 	abstract type: SfmClipType;
 
 	constructor(params: ClipParameters = {}) {
@@ -35,6 +35,10 @@ export abstract class SfmClip extends Serializable implements Undoable {
 
 	getDuration(): number {
 		return this.#timeFrame.getDuration();
+	}
+
+	getTrack(): SfmTrack | null {
+		return this.#track;
 	}
 
 	getTimeFrame(): SfmTimeFrame {
@@ -58,7 +62,7 @@ export abstract class SfmClip extends Serializable implements Undoable {
 	 * @returns The parent film clip or null
 	 */
 	getParentFilmClip(): SfmFilmClip | null {
-		return this.track?.getTrackGroup()?.getParentClip() ?? null;
+		return this.#track?.getTrackGroup()?.getParentClip() ?? null;
 	}
 
 	abstract update(context: SfmOperatorContext): void;
@@ -80,6 +84,10 @@ export abstract class SfmClip extends Serializable implements Undoable {
 				this.#timeFrame.moveTo(command.params as number);
 				command.undoParams = moveStart;
 				return true;
+			case 'set-track':
+				command.undoParams = this.#track;
+				this.#track = command.params as SfmTrack | null;//TODO: check if it is actually an SfmTrack
+				return true;
 			default:
 				return super.do(command);
 		}
@@ -95,6 +103,9 @@ export abstract class SfmClip extends Serializable implements Undoable {
 				return true;
 			case 'move-start':
 				this.#timeFrame.moveTo(command.undoParams as number);
+				return true;
+			case 'set-track':
+				this.#track = command.undoParams as SfmTrack | null;
 				return true;
 			default:
 				return super.undo(command);

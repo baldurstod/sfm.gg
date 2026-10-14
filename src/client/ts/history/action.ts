@@ -60,6 +60,7 @@ export class Action {
 	do(element: SfmClip, command: 'move-start', params: number): boolean;
 	do(element: SfmClip, command: 'set-end', params: number): boolean;
 	do(element: SfmClip, command: 'set-start', params: number): boolean;
+	do(element: SfmClip, command: 'set-track', params: SfmTrack | null): boolean;
 	do(element: SfmFilmClip, command: 'add-camera', params: SfmCamera): boolean;
 	do(element: SfmFilmClip, command: 'add-light', params: SfmLightType): boolean;
 	do(element: SfmFilmClip, command: 'add-selected-clip', params: SfmClip): boolean;

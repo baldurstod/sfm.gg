@@ -132,7 +132,7 @@ export class TimelinePanel extends Panel {
 		const posPerTrack = new Map2<SfmTrack, number, number>();
 
 		function getClipRow(clip: SfmClip): number {
-			const track = clip.track;
+			const track = clip.getTrack();
 			if (!track) {
 				return 0;
 			}
@@ -423,7 +423,7 @@ export class TimelinePanel extends Panel {
 			return;
 		}
 
-		const track = (element as SfmFilmClip).track;
+		const track = (element as SfmFilmClip).getTrack();
 		if (!track) {
 			return;
 		}
@@ -525,7 +525,7 @@ export class TimelinePanel extends Panel {
 			}
 
 			// Get other clip from this film track
-			const track = draggedClip.track;
+			const track = draggedClip.getTrack();
 			if (!track) {
 				return;
 			}

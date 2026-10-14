@@ -701,7 +701,8 @@ class Application {
 		const time = this.#player.getCurrentTime();
 
 		for (const selected of topClip.getSelectedClips()) {// We create a copy as we update the original set
-			if (!selected.track) {
+			const selectedTrack = selected.getTrack();
+			if (!selectedTrack) {
 				continue;
 			}
 
@@ -721,7 +722,7 @@ class Application {
 			const newCLip = selected.createClip(selected.getNextName());
 			action.do(newCLip, 'set-start', time);//newCLip.setStart(time);
 			action.do(newCLip, 'set-end', end);//newCLip.setEnd(end);
-			action.do(selected.track, 'add-clip', newCLip);//selected.track.addClip(newCLip);
+			action.do(selectedTrack, 'add-clip', newCLip);//selected.track.addClip(newCLip);
 			this.#addSelectedClip(topClip, newCLip, action);
 		}
 		History.commit(action);
@@ -733,11 +734,12 @@ class Application {
 
 		let deleted = 0;
 		for (const selected of topClip.getSelectedClips()) {// We create a copy as we update the original set
-			if (!selected.track) {
+			const selectedTrack = selected.getTrack();
+			if (!selectedTrack) {
 				continue;
 			}
 
-			if (action.do(selected.track, 'delete-clip', selected)) {
+			if (action.do(selectedTrack, 'delete-clip', selected)) {
 				++deleted;
 			}
 		}
@@ -749,12 +751,13 @@ class Application {
 	}
 
 	static #deleteClip(clip: SfmClip): void {
-		if (!clip.track) {
+		const clipTrack = clip.getTrack();
+		if (!clipTrack) {
 			return;
 		}
 
 		const action = History.startAction();
-		action.do(clip.track, 'delete-clip', clip);
+		action.do(clipTrack, 'delete-clip', clip);
 		History.commit(action);
 
 		Controller.dispatchEvent('refreshtimeline');
