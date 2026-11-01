@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"io/fs"
 	"log"
 	"net/http"
@@ -13,11 +13,15 @@ import (
 	assets "github.com/baldurstod/sfm.gg"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/mongo/mongodriver"
+	"github.com/gin-contrib/sessions/postgres"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var sessionsDb *sql.DB
+
+func initsessionsDB(config Database) {
+	sessionsDb = openPostgre(config.Datasource)
+}
 
 func startServer(config Config) {
 	engine := initEngine(config)
@@ -54,13 +58,10 @@ func initEngine(config Config) *gin.Engine {
 	}
 
 	// Init sessions store
-	mongoOptions := options.Client().ApplyURI(config.Sessions.ConnectURI)
-	client, err := mongo.Connect(context.Background(), mongoOptions)
+	store, err := postgres.NewStore(sessionsDb, []byte(config.Sessions.Secret))
 	if err != nil {
 		log.Fatal(err)
 	}
-	c := client.Database(config.Sessions.DBName).Collection(config.Sessions.Collection)
-	store := mongodriver.NewStore(c, 86400*30, true, []byte(config.Sessions.Secret))
 
 	r.Use(sessions.Sessions(config.Sessions.SessionName, store))
 	r.Use(rewriteURL(r))
@@ -71,6 +72,13 @@ func initEngine(config Config) *gin.Engine {
 
 func rewriteURL(r *gin.Engine) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/js/application.js") {
+			c.Request.URL.Path = "/js/application_poweruser.js"
+			c.Abort()
+			r.HandleContext(c)
+			c.Next()
+			return
+		}
 		if strings.HasPrefix(c.Request.URL.Path, "/@") {
 			c.Request.URL.Path = "/"
 			c.Abort()

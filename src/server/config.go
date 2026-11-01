@@ -11,10 +11,12 @@ type HTTP struct {
 	HttpsCertFile string `json:"https_cert_file"`
 }
 
+type Database struct {
+	Datasource string `json:"datasource"`
+}
+
 type Sessions struct {
-	ConnectURI  string `json:"connect_uri"`
-	DBName      string `json:"db_name"`
-	Collection  string `json:"collection"`
-	Secret      string `json:"secret"`
-	SessionName string `json:"session_name"`
+	DB          Database `json:"db"`
+	Secret      string   `json:"secret"`
+	SessionName string   `json:"session_name"`
 }
