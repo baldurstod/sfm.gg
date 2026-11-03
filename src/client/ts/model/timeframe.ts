@@ -352,6 +352,10 @@ export class SfmTimeFrame extends Serializable {
 		this.#setDuration(json.duration as number ?? 60);
 		this.#offset = json.offset as number ?? 0;
 	}
+
+	getParent(): Serializable | null {
+		return null;
+	}
 }
 
 SfmSerializer.registerSerializable(SfmTimeFrame);

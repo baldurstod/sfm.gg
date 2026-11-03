@@ -72,10 +72,10 @@ class Application {
 	}
 
 	static async #initGraphics(): Promise<void> {
-		let contextType = ContextType.WebGL;
+		let contextType: ContextType = 'webgl';
 		const url = new URL(document.URL);
 		if (url.hash.substring(1) == 'webgpu') {
-			contextType = ContextType.WebGPU;
+			contextType = 'webgpu';
 		}
 
 		await Graphics.initCanvas({

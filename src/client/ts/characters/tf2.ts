@@ -69,7 +69,7 @@ export class Tf2Character implements Character {
 	}
 
 	getLabel(): string {
-		throw new Error("TODO");
+		return this.#template.label;
 	}
 
 	async setTeam(team: Tf2Team): Promise<void> {

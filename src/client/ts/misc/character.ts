@@ -98,16 +98,16 @@ export type Item = {
 }
 */
 
-const tf2Characters: PartialBy<CharacterTemplate, 'game' | 'slots' | 'label'>[] = [
-	{ name: 'scout', icon: scout, modelPath: 'models/player/scout', },
-	{ name: 'sniper', icon: sniper, modelPath: 'models/player/sniper', },
-	{ name: 'soldier', icon: soldier, modelPath: 'models/player/soldier', },
-	{ name: 'demoman', icon: demoman, modelPath: 'models/player/demo', },
-	{ name: 'medic', icon: medic, modelPath: 'models/player/medic', },
-	{ name: 'heavy', icon: heavy, modelPath: 'models/player/heavy', },
-	{ name: 'pyro', icon: pyro, modelPath: 'models/player/pyro', },
-	{ name: 'spy', icon: spy, modelPath: 'models/player/spy', },
-	{ name: 'engineer', icon: engineer, modelPath: 'models/player/engineer', },
+const tf2Characters: PartialBy<CharacterTemplate, 'game' | 'slots'>[] = [
+	{ name: 'scout', label: 'Scout', icon: scout, modelPath: 'models/player/scout', },
+	{ name: 'sniper', label: 'Sniper', icon: sniper, modelPath: 'models/player/sniper', },
+	{ name: 'soldier', label: 'Soldier', icon: soldier, modelPath: 'models/player/soldier', },
+	{ name: 'demoman', label: 'Demoman', icon: demoman, modelPath: 'models/player/demo', },
+	{ name: 'medic', label: 'Medic', icon: medic, modelPath: 'models/player/medic', },
+	{ name: 'heavy', label: 'Heavy', icon: heavy, modelPath: 'models/player/heavy', },
+	{ name: 'pyro', label: 'Pyro', icon: pyro, modelPath: 'models/player/pyro', },
+	{ name: 'spy', label: 'Spy', icon: spy, modelPath: 'models/player/spy', },
+	{ name: 'engineer', label: 'Engineer', icon: engineer, modelPath: 'models/player/engineer', },
 ]
 
 /**

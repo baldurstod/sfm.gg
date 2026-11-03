@@ -276,6 +276,8 @@ export class CharacterSelectorPanel extends Panel {
 		this.#selectedCharacter = undefined;
 		this.initPanel();
 		this.#htmlCharacters!.innerText = '';
+		this.#items.length = 0;
+		this.#refreshItems();
 
 		for (const characterTemplate of characters) {
 			const character = createCharacter(characterTemplate);

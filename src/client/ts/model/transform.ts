@@ -82,6 +82,10 @@ export class SfmTransform extends Serializable {
 
 		this.#init(json);
 	}
+
+	getParent(): Serializable | null {
+		return null;
+	}
 }
 
 SfmSerializer.registerSerializable(SfmTransform);
