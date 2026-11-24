@@ -1,5 +1,5 @@
 import { Camera, ContextType, FullScreenQuad, Graphics, GraphicsEvents, GraphicTickEvent, Raytracer, Repositories, RepositoryDir, Scene, ShaderMaterial, Source1MaterialManager, Source1ModelManager, Source1ParticleControler, Source2ModelManager, WebGLStats, WebRepository } from 'harmony-3d';
-import { addNotification, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, saveFile, ShortcutHandler } from 'harmony-browser-utils';
+import { addNotificationI18n, NotificationType, OptionsManager, OptionsManagerEvent, OptionsManagerEvents, saveFile, ShortcutHandler } from 'harmony-browser-utils';
 import { JSONObject } from 'harmony-types';
 import { createElement, documentStyle, I18n, I18nTranslation } from 'harmony-ui';
 import { errorOnce, setTimeoutPromise } from 'harmony-utils';
@@ -1063,19 +1063,19 @@ class Application {
 	static async #renderPicture(): Promise<void> {
 		// TODO: remove notifications and prevent them to happen
 		if (!Graphics.isWebGPU) {
-			addNotification(I18n.getString('#failed_to_render_no_webgpu'), NotificationType.Info, 15);
+			addNotificationI18n('#failed_to_render_no_webgpu', NotificationType.Info, 15);
 			return;
 		}
 
 		const filmClip = this.#session.getFilmClip();
 		if (!filmClip) {
-			addNotification(I18n.getString('#no_film_clip_to_render'), NotificationType.Info, 15);
+			addNotificationI18n('#no_film_clip_to_render', NotificationType.Info, 15);
 			return;
 		}
 
 		const clips = filmClip.getSubClipsAtTime(this.#player.getCurrentTime(), 'film');
 		if (clips.size === 0) {
-			addNotification(I18n.getString('#no_film_clip_at_the_current_time'), NotificationType.Info, 15);
+			addNotificationI18n('#no_film_clip_at_the_current_time', NotificationType.Info, 15);
 			return;
 		}
 
@@ -1093,7 +1093,7 @@ class Application {
 
 		const scene = clip.getScene()?.getEntity()?.getEngineEntity();
 		if (!scene) {
-			addNotification(I18n.getString('#no_scene_to_render'), NotificationType.Info, 15);
+			addNotificationI18n('#no_scene_to_render', NotificationType.Info, 15);
 			return;
 		}
 
